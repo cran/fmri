@@ -1,0 +1,7 @@
+export(read.AFNI,read.ANALYZE)
+export(write.AFNI,write.ANALYZE)
+export(fmri.stimulus,fmri.design,fmri.lm)
+export(fmri.smooth,fmri.pvalue)
+export(plot.fmridata,summary.fmridata,print.fmridata)
+useDynLib(fmri)
+
