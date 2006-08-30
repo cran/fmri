@@ -7,7 +7,7 @@
 }
 \usage{
 fmri.smooth(spm, hmax = 4, adaptive=TRUE,
-            lkern="Triangle", skern="Triangle")
+            lkern="Triangle", skern="Triangle", na.rm=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -23,6 +23,13 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
     penalty. Defaults to "Triangle", the alternative is "Exp".
     \code{lkern="Triangle"} allows for much faster computation (saves up
     to 50\%).}
+  \item{na.rm}{\code{na.rm} specifies how NA's in the SPM are handled. NA's may occur
+   in voxel where the time series information did not allow for estimating parameters and their variances
+   or where the time series information where constant over time. A high (1e19) value of the variance 
+   and a parameter of 0 are used to characterize NA's. If \code{na.rm=FALSE} these values are simply downweigthed
+   by their high variance and estimates in these voxels are produced as nonadaptive averages
+   of values from neighboring voxels. If \code{na.rm=TRUE} no estimates are computed (the values 
+   for mean and variance are kept) in these voxels.}
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map
@@ -37,7 +44,7 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   kernel for the statistical penalty.  
 
   The function handles zero variances by assigning a large value (1e20)
-  for these variances. 
+  to these variances. 
 }
 \value{
   object with class attributes "fmrispm" and "fmridata"
@@ -49,14 +56,15 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
     a Gaussian filter with the same bandwidth. all directions }
   \item{scorr}{ spatial correlation of original data }
   \item{weights}{ ratio of voxel dimensions }
-  \item{vwghts}{ ratio of estimated variances for the stimululi given by
+  \item{vwghts}{ ratio of estimated variances for the stimuli given by
   \code{vvector}}
   \item{hrf}{ Expected BOLD response for the specified effect }
 }
 \references{
-  Tabelow, K., Polzehl, J. and Spokoiny, V. (2005). \emph{Analysing {fMRI}
+  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2005). 
+  \emph{Analysing {fMRI}
     experiments with structure adaptive smoothing procedures},
-  WIAS-Preprint 1079. 
+  NeuroImage, accepted (2006). 
 
   Polzehl, J. and Spokoiny, V. (2006). \emph{Propagation-Separation
     Approach for Local Likelihood Estimation}, Probab. Theory

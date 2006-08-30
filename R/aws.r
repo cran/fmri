@@ -29,7 +29,7 @@
 
 vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
                    sigma2=NULL,hinit=NULL,hincr=NULL,hmax=NULL,lseq=NULL,
-                   u=NULL,graph=FALSE,demo=FALSE,wghts=NULL,
+                   u=NULL,graph=FALSE,demo=FALSE,wghts=NULL,na.rm=FALSE,
                    spmin=0,spmax=1.1,scorr=c(0,0,0),vwghts=1,vred="Partial",testprop=FALSE) {
 
   #  Auxilary functions
@@ -196,6 +196,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
                      as.double(vwghts),
                      double(dv),#swjy
                      double(dv0),#thi
+		     as.logical(na.rm),#narm
                      PACKAGE="fmri",DUP=TRUE)[c("bi","ai","hakt")]
     gc()
     dim(tobj$ai) <- dy
@@ -224,6 +225,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
 		       as.double(vwghts),
 		       double(dv),#swjy
 		       double(dv0),#thi
+                       as.logical(na.rm),#narm
 		       PACKAGE="fmri",DUP=TRUE)[c("bi","ai")]
       ptheta <- array(pobj$ai/pobj$bi,dy) 
       rm(pobj) 
@@ -299,6 +301,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
                   as.double(wghts),
                   as.double(vwghts),
                   double(dv0),#thi
+                  as.logical(na.rm),#narm
                   PACKAGE="fmri",DUP=FALSE)[c("vred","var")]
     dim(z$vred) <- dim(z$var) <- dim(sigma2)
   } else {
@@ -312,9 +315,9 @@ vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
                    as.double(lambda0),
                    as.double(theta0),# thats the theta needed for the weights
                    bi2=as.double(bi0), # thats the bi needed for the weights, sum of squared weights  \sum_j \tilde{w}_ij^2 \sigma_j^2 as output
-                   bi0=double(n), # thats the bi0 needed, sum of nonadaptive weights  \sum_j K(l_ij) / \sigma_j^2 as output
-                   Qh=double(n),#  sum of squared weights \sum_j \tilde{w}_ij^2 
-                   Qh0=double(n),#  sum of squared non-adaptive weights \sum_j K(l_ij)^2  
+                   bi0=as.double(bi0), # thats the bi0 needed, sum of nonadaptive weights  \sum_j K(l_ij) / \sigma_j^2 as output
+                   Qh=as.double(bi0),#  sum of squared weights \sum_j \tilde{w}_ij^2 
+                   Qh0=as.double(bi0),#  sum of squared non-adaptive weights \sum_j K(l_ij)^2  
                    as.integer(lkern),
                    as.integer(skern),
                    as.double(spmin),
@@ -323,6 +326,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Triangle",skern="Triangle",
                    as.double(wghts),
                    as.double(vwghts),
                    double(dv0),#thi
+                   as.logical(na.rm),#narm
                    PACKAGE="fmri",DUP=FALSE)[c("bi0","bi2","Qh","Qh0")]
     bi2 <- array(z1$bi2,dim(sigma2))
     bi0 <- array(z1$bi0,dim(sigma2))

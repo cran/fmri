@@ -6,13 +6,13 @@
   Write a 4 dimensional datacube in ANALYZE file format.
 }
 \usage{
-write.ANALYZE(ttt, header=NULL, file)
+write.ANALYZE(ttt, header=NULL, filename)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{ttt}{ 4 dimensional datacube }
   \item{header}{ header information }
-  \item{file}{ file name }
+  \item{filename}{ file name }
 }
 \details{
   Writes the datacube \code{ttt} to a file named \code{file} in ANLYZE file

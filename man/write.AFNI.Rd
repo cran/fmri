@@ -6,12 +6,12 @@
   Write BRIK/HEAD files.
 }
 \usage{
-write.AFNI(file, ttt, label, note = "", origin = c(0, 0, 0), 
+write.AFNI(filename, ttt, label, note = "", origin = c(0, 0, 0), 
                delta = c(4, 4, 4), idcode = "WIAS_noid")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{file}{ name of the file }
+  \item{filename}{ name of the file }
   \item{ttt}{ datacube }
   \item{label}{ labels (BRICK\_LABS) }
   \item{note}{ notes on data (HISTORY\_NOTE) }

@@ -1,4 +1,4 @@
-export(read.AFNI,read.ANALYZE)
+export(read.AFNI,read.ANALYZE,read.DICOM,read.NIFTI)
 export(write.AFNI,write.ANALYZE)
 export(fmri.stimulus,fmri.design,fmri.lm)
 export(fmri.smooth,fmri.pvalue)

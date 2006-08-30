@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ Linear Model for FMRI Data }
 \description{
-  Returns a design matrix for a linear model with given stimuli and
+  Return a design matrix for a linear model with given stimuli and
   possible polynomial drift terms.
 }
 \usage{

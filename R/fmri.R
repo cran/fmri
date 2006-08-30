@@ -1,4 +1,4 @@
-fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Triangle",skern="Triangle") {
+fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Triangle",skern="Triangle",na.rm=FALSE) {
   cat("fmri.smooth: entering function\n")
   
   if (!("fmrispm" %in% class(spm))) {
@@ -28,11 +28,11 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Triangle",skern="Triangl
   if (adaptive) {
     ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax,
                      wghts=weights, scorr=scorr, vwghts = spm$vwghts,
-                     lkern=lkern,skern=skern)
+                     lkern=lkern,skern=skern,na.rm=na.rm)
   } else {
     ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax,
                      qlambda = 1, wghts=weights, scorr=scorr,
-                     vwghts = spm$vwghts,lkern=lkern,skern=skern)
+                     vwghts = spm$vwghts,lkern=lkern,skern=skern,na.rm=na.rm)
   }
   cat("\n")
   
@@ -79,7 +79,7 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Triangle",skern="Triangl
   z
 }
 
-fmri.pvalue <- function(spm, mode="basic", delta=NULL) {
+fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE ) {
   cat("fmri.pvalue: entering function\n")
 
   if (!("fmrispm" %in% class(spm)) ) {
@@ -181,6 +181,10 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL) {
   mask[stat < thresh] <- 0
   pv[!mask] <- 1
   dim(pv) <- spm$dim[1:3]
+
+  if (na.rm) {
+    pv[spm$var > 9e19] <- 1
+  }
   
   cat("fmri.pvalue: exiting function\n")
 

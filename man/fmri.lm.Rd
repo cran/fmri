@@ -57,19 +57,19 @@
 }
 \value{
   object with class attributes "fmrispm" and "fmridata"
-  \item{beta}{Estimated parameters }
-  \item{cbeta}{Estimated contrast of parameters}
-  \item{var}{Estimated variance of the contrast of parameters.}
-  \item{varm}{Covariance matrix of the parameters given by \code{vvector}}
-  \item{res}{Residuals of the estimated linear model}
-  \item{arfactor}{Estimated autocorrelation parameter}
-  \item{scorr}{ spatial correlation of data }
-  \item{weights}{ ratio of voxel dimensions }
-  \item{vwghts}{ ratio of estimated variances for the stimululi given by
+  \item{beta}{estimated parameters }
+  \item{cbeta}{estimated contrast of parameters}
+  \item{var}{estimated variance of the contrast of parameters.}
+  \item{varm}{covariance matrix of the parameters given by \code{vvector}}
+  \item{res}{residuals of the estimated linear model}
+  \item{arfactor}{estimated autocorrelation parameter}
+  \item{scorr}{spatial correlation of data }
+  \item{weights}{ratio of voxel dimensions }
+  \item{vwghts}{ratio of estimated variances for the stimululi given by
   \code{vvector}}
   \item{rxyz}{array of smoothness from estimated correlation for each
     voxel in resel space (for analysis without smoothing)}
-  \item{hrf}{ Expected BOLD response for contrast }
+  \item{hrf}{expected BOLD response for contrast }
 }
 \references{ Worsley, K.J. (2005). Spatial smoothing of autocorrelations
   to control the degrees of freedom in fMRI analysis. NeuroImage,

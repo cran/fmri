@@ -6,11 +6,11 @@
   Read HEAD/BRIK file.
 }
 \usage{
-read.AFNI(file)
+read.AFNI(filename)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{file}{ name of the file (without extension) }
+  \item{filename}{ name of the file (without extension) }
 }
 \details{
   The function reads a HEAD/BRIK file.

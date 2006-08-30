@@ -16,7 +16,7 @@ print.fmridata(x, ...)
   \item{\dots}{ further arguments passed to or from other methods. }
 }
 \details{
-  The methods tries to print information on data, like data dimension,
+  The method tries to print information on data, like data dimension,
   voxel size, value range.
 }
 \value{

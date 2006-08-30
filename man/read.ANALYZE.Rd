@@ -48,8 +48,9 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \references{Biomedical Imaging Resource (2001). Analyze Program. Mayo Foundation.
 }
-\note{   Since numbering and naming of ANALYZE files widely varies, this
-  function may not meet your personal needs. See Details for a description.
+\note{   Since numbering and naming of ANALYZE files widely vary, this
+  function may not meet your personal needs. See Details section above for 
+  a description.
 }
 \seealso{ \code{\link{write.ANALYZE}}, \code{\link{read.AFNI}} }
 \examples{ \dontrun{analyze <- read.ANALYZE("analyze",TRUE,"file",31,107)}}
