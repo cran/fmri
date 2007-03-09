@@ -1,0 +1,17 @@
+Changes with version 1.1-1 
+
+New functionality:
+
+function ngca to perform non-Gaussian component analysis 
+
+Changes in existing functions:
+
+fmri.smooth: An additional option "Plateau" for skern and lkern 
+allows to specify a kernel that is 1 for arguments in (0,.3), decreases
+linearly in (.3,1) and equals 0 otherwise. 
+Defaults for lkern and skern have been changed in 
+to skern="Plateau" and lkern="Gaussian". Defaults for the parameter lambda
+have been readjusted internally to meet a propagation condition with the new default kernels. This may lead to slightly different (more reliable) results.
+
+Errors in demo(fmri) have been corrected.
+

@@ -13,20 +13,18 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function lkern(kern,xsq)
       implicit logical (a-z)
       integer kern
-      real*8 xsq,z
+      real*8 xsq
       IF (xsq.ge.1) THEN
          lkern=0.d0
       ELSE IF (kern.eq.1) THEN
-         lkern=1.d0
+         IF(xsq.le.0.5d0) THEN
+            lkern=1.d0
+         ELSE
+            lkern=2.d0*(1.d0-xsq)
+         END IF
       ELSE IF (kern.eq.2) THEN
          lkern=1.d0-xsq
       ELSE IF (kern.eq.3) THEN
-         z=1.d0-xsq
-         lkern=z*z
-      ELSE IF (kern.eq.4) THEN
-         z=1.d0-xsq
-         lkern=z*z*z
-      ELSE IF (kern.eq.5) THEN
          lkern=dexp(-xsq*8.d0)
       ELSE
 C        use Epanechnikov
@@ -59,6 +57,9 @@ C  compute distance in sij
       IF (sij.gt.spmax) THEN
          wj=0.d0
       ELSE IF (skern.eq.1) THEN
+C  skern == "Triangle"
+         wj=wj*dmin1(1.d0,1.d0-spf*(sij-spmin))
+      ELSE IF (skern.eq.2) THEN
 C  skern == "Triangle"
          wj=wj*(1.d0-sij)
       ELSE
@@ -94,7 +95,7 @@ C
      1       ai(n1,n2,n3,dv),lambda,spmax,wght(2),si2(n1,n2,n3),
      1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
-     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n,ij(6)
+     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
       real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
@@ -176,7 +177,7 @@ C
 C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine chawsvr(si2,n1,n2,n3,dv,dv0,hakt,lambda,theta,bi,
+      subroutine chawsvr(si2,n1,n2,n3,dv0,hakt,lambda,theta,bi,
      1   var,vred,kern,skern,spmin,spmax,lwght,gwght,swght,dgw,wght,
      2   vwghts,thi,narm)
 C   
@@ -193,7 +194,7 @@ C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C   
       implicit logical (a-z)
-      integer n1,n2,n3,kern,skern,dv,dv0,dgw(3)
+      integer n1,n2,n3,kern,skern,dv0,dgw(3)
       logical aws,narm
       real*8 theta(n1,n2,n3,dv0),bi(n1,n2,n3),lambda,var(n1,n2,n3),
      1     swght(n1,n2,n3),hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),
@@ -319,7 +320,7 @@ C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C   
       implicit logical (a-z)
-      integer n1,n2,n3,kern,skern,dv,dv0
+      integer n1,n2,n3,kern,skern,dv0
       logical aws,narm
       real*8 theta(n1,n2,n3,dv0),bi2(n1,n2,n3),vi2(n1,n2,n3),
      1       vi20(n1,n2,n3),lambda,spmax,wght(2),si2(n1,n2,n3),
@@ -424,7 +425,7 @@ C
       integer i1,i2,i3,dlw1,dlw2,dlw3,n,
      1        dgw1,dgw2,dgw3,j1a,j1e,j2a,j2e,j3a,j3e,
      2        clw10,clw20,clw30,cn1,cn2,cn3,i1c,i2c,i3c,cr1,cr2,cr3
-      real*8 swj2,hakt2,swj2vr,varc,vredc
+      real*8 swj2,hakt2,vredc
       integer ngw
       hakt2=hakt*hakt
       dgw1=dgw(1)
@@ -461,7 +462,7 @@ C
       i2=cn3
       i1=cn1
       call fillwgh0(n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3,lwght,
-     1              swght,wght,hakt2)      
+     1              swght)
 C
 C     now the convolution
 C
@@ -488,7 +489,7 @@ C   we are in the center and can use vred
 	          vred(i1,i2,i3)=vredc
 	       ELSE
                   call fillwgh0(n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3,
-     1                          lwght,swght,wght,hakt2)      
+     1                          lwght,swght)      
 C
 C     now the convolution
 C
@@ -531,65 +532,13 @@ C
       RETURN
       END
 C
-C            Arrange cube of weights
-C
-      subroutine fillwght(n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3,si2,lwght,
-     1                    swght,wght,hakt2)
-      implicit logical (a-z)
-      integer n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3
-      real*8 si2(n1,n2,n3),swght(n1,n2,n3),lwght(dlw1,dlw2,dlw3),
-     1       wght(2),hakt2
-      integer clw1,clw2,clw3,j1a,j1e,j2a,j2e,j3a,j3e,clw10,clw20,
-     1        clw30,j1,j2,j3,jw1,jw2,jw3
-      real*8 wj
-      clw1=(dlw1+1)/2
-      clw2=(dlw2+1)/2
-      clw3=(dlw3+1)/2
-      clw10=clw1-1
-      clw20=clw2-1
-      clw30=clw3-1
-      j3a=max0(i3-clw30,1)
-      j3e=min0(clw30+i3,n3)
-      j2a=max0(i2-clw20,1)
-      j2e=min0(clw20+i2,n2)
-      j1a=max0(i1-clw10,1)
-      j1e=min0(clw10+i1,n1)
-      DO j1=j1a,j1e
-         DO j2=j2a,j2e
-            DO j3=j3a,j3e
-	       swght(j1,j2,j3)=0.d0
-            END DO
-         END DO
-      END DO
-      DO jw3=1,dlw3
-	 j3=jw3-clw3+i3
-	 if(j3.lt.1.or.j3.gt.n3) CYCLE
-         DO jw2=1,dlw2
-	    j2=jw2-clw2+i2
-	    if(j2.lt.1.or.j2.gt.n2) CYCLE
-            DO jw1=1,dlw1
-	       wj=lwght(jw1,jw2,jw3)
-	       if(wj.le.0.d0) CYCLE
-C  first stochastic term
-	       j1=jw1-clw1+i1
-	       if(j1.lt.1.or.j1.gt.n1) CYCLE
-               swght(j1,j2,j3)=wj*si2(j1,j2,j3)
-            END DO
-         END DO
-      END DO
-C
-C     swght contains location weights for point i1,i2,i3
-C
-      RETURN
-      END
-C
 C            Arrange cube of weights (homogeneous case)
 C
       subroutine fillwgh0(n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3,lwght,
-     1                    swght,wght,hakt2)
+     1                    swght)
       implicit logical (a-z)
       integer n1,n2,n3,i1,i2,i3,dlw1,dlw2,dlw3
-      real*8 swght(n1,n2,n3),lwght(dlw1,dlw2,dlw3),wght(2),hakt2
+      real*8 swght(n1,n2,n3),lwght(dlw1,dlw2,dlw3)
       integer clw1,clw2,clw3,j1a,j1e,j2a,j2e,j3a,j3e,clw10,clw20,
      1        clw30,j1,j2,j3,jw1,jw2,jw3
       real*8 wj

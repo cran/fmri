@@ -61,10 +61,10 @@ read.ANALYZE.volume <- function(filename) {
   file.img <- paste(file.name, ".img", sep = "")
 
   header <- read.ANALYZE.header(file.hdr)
-  dx <- header$dimension[2]
-  dy <- header$dimension[3]
-  dz <- header$dimension[4]
-  dt <- header$dimension[5]
+  (dx <- header$dimension[2]) || (dx <- 1)
+  (dy <- header$dimension[3]) || (dy <- 1)
+  (dz <- header$dimension[4]) || (dz <- 1)
+  (dt <- header$dimension[5]) || (dt <- 1)
   endian <- header$endian
   if (header$datatype == 1) { # logical
     what <- "raw"
@@ -159,33 +159,40 @@ write.ANALYZE.header <- function(header,filename) {
   close(con)
 }
 
-write.ANALYZE.volume <- function(ttt,filename) {
+write.ANALYZE.volume <- function(ttt,filename,size) {
   con <- file(paste(filename, ".img", sep=""), "wb")
   dim(ttt) <- NULL
-  writeBin(as.integer(ttt), con, 2)
+  writeBin(as.integer(ttt), con, size)
   close(con)
 }
 
-read.ANALYZE <- function(prefix = "", numbered = FALSE, postfix = "", picstart = 1, numbpic = 1) {
+read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1) {
   counter <- c(paste("00", 1:9, sep=""), paste("0", 10:99, sep=""),paste(100:999,sep=""));
 
+  prefix <- strsplit(prefix,".img")
+  filename <- character(length(prefix))
   if (numbered) {
-    file.img <- paste(prefix, counter[picstart], postfix, ".img", sep="")
+    for (i in picstart:(picstart+numbpic-1)) {
+      filename[i] <- paste(prefix[[1]][1], counter[i], postfix, ".img", sep="")
+    }
   } else {
-    file.img <- paste(prefix, ".img", sep="")
+    for (i in 1:length(prefix)) {
+      if (length(prefix[[i]]) > 1)
+        warning("filename",paste(prefix[[i]],collapse=""),"probably misinterpreted due to extension-like .img in name!")
+      filename[i] <- paste(prefix[[i]][1], ".img", sep="")
+    }
   }
-  
-  if (!is.na(file.info(file.img)$size)) {
-    analyze <- read.ANALYZE.volume(file.img);
+
+  if (!is.na(file.info(filename[1])$size)) {
+    analyze <- read.ANALYZE.volume(filename[1]);
     ttt <- analyze$ttt
     dt <- dim(ttt)
     cat(".")
     header <- analyze$header;
     
     if ((numbpic > 1) && !numbered) { 
-      for (i in (picstart+1):(picstart+numbpic-1)) {
-        filename <- paste(prefix, counter[i], postfix, ".img", sep="")
-        a <- read.ANALYZE.volume(filename)$ttt
+      for (i in 2:numbpic) {
+        a <- read.ANALYZE.volume(filename[i])$ttt
         if (sum() != 0)
           cat("Error: wrong spatial dimension in picture",i)
         ttt <- c(ttt,a);
@@ -204,9 +211,9 @@ read.ANALYZE <- function(prefix = "", numbered = FALSE, postfix = "", picstart =
       weights <- NULL
     }
     
-    z <- list(ttt=ttt,format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,orient=NULL,dim=header$dimension[2:5],weights=weights,header=header)
+    z <- list(ttt=ttt,format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,orient=NULL,dim=dim(ttt),weights=weights,header=header)
   } else {
-    warning(paste("Error: file",filename,"does not exist!"))
+    warning(paste("Error: file",filename[1],"does not exist!"))
     z <- list(ttt=NULL,format="ANALYZE",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=NULL)
   }
 
@@ -217,12 +224,12 @@ read.ANALYZE <- function(prefix = "", numbered = FALSE, postfix = "", picstart =
 
   class(z) <- "fmridata"
 
-  if (numbered) {
-    attr(z,"file") <- paste(prefix, counter[picstart], postfix, ".hdr/img", "...",
-                            prefix, counter[picstart+numbpic-1], postfix, ".hdr/img",
+  if (length(filename) > 1) {
+    attr(z,"file") <- paste(filename[1], "...",
+                            filename[length(filename)],
                             sep="")
   } else {
-    attr(z,"file") <- paste(prefix, ".hdr/img", sep="")
+    attr(z,"file") <- paste(filename[1], sep="")
   }
   
   invisible(z)
@@ -277,9 +284,43 @@ write.ANALYZE <- function(ttt, header=NULL, filename) {
   if (!("smax" %in% names(header))) header$smax <- c(0)
   if (!("smin" %in% names(header))) header$smin <- c(0)
 
+  if (header$datatype == 1) { # logical
+    what <- "raw"
+    signed <- TRUE
+    size <- 1
+  } else if (header$datatype == 2) { # unsigned char????
+    what <- "int"
+    signed <- FALSE
+    size <- if (header$bitpix) header$bitpix/8 else 2
+  } else if (header$datatype == 4) { # signed short
+    what <- "int"
+    signed <- TRUE
+    size <- if (header$bitpix) header$bitpix/8 else 2
+  } else if (header$datatype == 8) { # signed integer
+    what <- "int"
+    signed <- TRUE
+    size <- if (header$bitpix) header$bitpix/8 else 4
+  } else if (header$datatype == 16) { # float
+    what <- "double"
+    signed <- TRUE
+    size <- if (header$bitpix) header$bitpix/8 else 4
+  } else if (header$datatype == 32) { # complex
+    what <- "complex"
+    signed <- TRUE
+    size <- if (header$bitpix) header$bitpix/8 else 8
+  } else if (header$datatype == 64) { # double
+    what <- "double"
+    signed <- TRUE
+    size <- if (header$bitpix) header$bitpix/8 else 8
+  } else { # all other
+    what <- "raw"
+    signed <- TRUE
+    size <- 1
+  }
+
   write.ANALYZE.header(header,filename)
 
-  write.ANALYZE.volume(ttt, filename)
+  write.ANALYZE.volume(ttt, filename,size)
 }
 
 
@@ -615,6 +656,8 @@ read.DICOM <- function(filename,includedata=TRUE) {
     z <- list(header=header,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   }
   close(con)
+  class(z) <- "fmridata"
+
   attr(z,"file") <- filename
   invisible(z)
 }

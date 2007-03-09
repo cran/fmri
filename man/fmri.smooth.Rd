@@ -7,7 +7,7 @@
 }
 \usage{
 fmri.smooth(spm, hmax = 4, adaptive=TRUE,
-            lkern="Triangle", skern="Triangle", na.rm=FALSE)
+            lkern="Gaussian", skern="Plateau", na.rm=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -15,14 +15,17 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   \item{hmax}{ maximum bandwidth to smooth }
   \item{adaptive}{ logical. TRUE (default) for adaptive smoothing }
   \item{lkern}{ \code{lkern} specifies the location kernel. Defaults to
-    "Triangle", other choices are "Gaussian", "Quadratic", "Cubic" and
-    "Uniform". Note that the location kernel is applied to
+    "Gaussian", other choices are "Triangle" and "Plateau". Note that the location kernel is applied to
     \code{(x-x_j)^2/h^2}, i.e. the use of "Triangle" corresponds to the
-    Epanechnicov kernel in nonparametric kernel regression. }
+    Epanechnicov kernel in nonparametric kernel regression. "Plateau" specifies a kernel that is equal to 1 in the interval (0,.3),
+    decays linearly in (.5,1) and is 0 for arguments larger than 1.
+    }
   \item{skern}{ \code{skern} specifies the kernel for the statistical
-    penalty. Defaults to "Triangle", the alternative is "Exp".
-    \code{lkern="Triangle"} allows for much faster computation (saves up
-    to 50\%).}
+    penalty. Defaults to "Plateau", the alternatives are "Triangle" and "Exp".
+    "Plateau" specifies a kernel that is equal to 1 in the interval (0,.3),
+    decays linearly in (.3,1) and is 0 for arguments larger than 1.
+    \code{lkern="Plateau"} and \code{lkern="Triangle"} allow for much faster computation (saves up
+    to 50\% CPU-time). \code{lkern="Plateau"} produces a less random weighting scheme.}
   \item{na.rm}{\code{na.rm} specifies how NA's in the SPM are handled. NA's may occur
    in voxel where the time series information did not allow for estimating parameters and their variances
    or where the time series information where constant over time. A high (1e19) value of the variance 
@@ -39,9 +42,14 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   \code{adaptive} as \code{FALSE} for non adaptive
   smoothing. \code{lkern} can be used for specifying the
   localization kernel. For comparison with non adaptive methods use
-  "Gaussian" (hmax given in FWHM), for better adaptation use "Triangle"
-  (default, hmax given in voxel). \code{skern} can be used for specifying the
-  kernel for the statistical penalty.  
+  "Gaussian" (hmax given in FWHM), for better adaptation use "Plateau" or "Triangle"
+  (default, hmax given in voxel). For \code{lkern="Plateau"} and \code{lkern="Triangle"} thresholds may be inaccurate, due to a violation of
+    the Gaussian random field assumption under homogeneity. \code{lkern="Plateau"} 
+    is expected to provide best results with adaptive smoothing.
+   
+  \code{skern} can be used for specifying the
+  kernel for the statistical penalty. "Plateau" is expected to provide the best results,
+  due to a less random weighting scheme.
 
   The function handles zero variances by assigning a large value (1e20)
   to these variances. 

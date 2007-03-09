@@ -11,7 +11,8 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{prefix}{ string. part of the file name before the number }
+  \item{prefix}{ string(s). part of the file name before the
+    number or vector of strings for filename (if \code{numbered} is \code{FALSE}) }
   \item{numbered}{ logical. if \code{FALSE} only \code{prefix} is taken
     as file name (default).}
   \item{postfix}{ string. part of the file name after the number}
@@ -20,11 +21,11 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
 }
 \details{
   This function reads fMRI data files in ANALYZE format.
-  It takes the strings in \code{prefix} and \code{postfix} and
-  a number of the form "007" in between to create the file name.
-
-  If \code{numbered} is \code{FALSE}, only the string in \code{prefix}
+  If \code{numbered} is \code{FALSE}, only the vector of strings in \code{prefix}
   is used for file name (default).
+
+  If \code{numbered} is \code{TRUE}, it takes the first string in \code{prefix} and \code{postfix} and
+  a number of the form "007" in between to create the file name.
 
   The number is assumed to be 3 digits (including leading zeros). First
   number is given in \code{picstart}, while \code{numbpic} defines the

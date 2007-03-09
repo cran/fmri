@@ -54,16 +54,16 @@ mask[34:65,34:65,] <- mask[32:1,32:1,]
 mask
 }
 
-create.sig <- function(signal=1.5,factor=1.2){
+create.sig <- function(signal=1.5,efactor=1.2){
 sig <- array(0,dim=c(65,65,26))
 sig[29:37,38:65,] <- signal
-sig[38:65,38:65,] <- signal * factor
-sig[38:65,29:37,] <- signal * factor^2
-sig[38:65,1:28,] <- signal * factor^3
-sig[29:37,1:28,] <- signal * factor^4
-sig[1:28,1:28,] <- signal * factor^5
-sig[1:28,29:37,] <- signal * factor^6
-sig[1:28,38:65,] <- signal * factor^7
+sig[38:65,38:65,] <- signal * efactor
+sig[38:65,29:37,] <- signal * efactor^2
+sig[38:65,1:28,] <- signal * efactor^3
+sig[29:37,1:28,] <- signal * efactor^4
+sig[1:28,1:28,] <- signal * efactor^5
+sig[1:28,29:37,] <- signal * efactor^6
+sig[1:28,38:65,] <- signal * efactor^7
 sig * create.mask()
 }
 # some values describing the data
@@ -88,7 +88,7 @@ sig <- array(0,dim=c(i,j,k))
 mask <- create.mask()
 
 # assign amplitudes of signals to activated areas 
-sig <- create.sig(signal,factor)
+sig <- create.sig(signal)
 
 # expected BOLD response for some stimulus
 hrf <- signal * fmri.stimulus(scans, c(18, 48, 78), 15, 2)
@@ -119,16 +119,16 @@ spm <- fmri.lm(data1,z)
 
 # adaptively smooth the spm
 resultaws <- fmri.smooth(spm,hmax=hmax,lkern="Gaussian")
-detectaws <- fmri.detect(resultaws)
-pmask <- apply(detectaws$detect>-log(0.05),c(1,2),sum)
+detectaws <- fmri.pvalue(resultaws)
+pmask <- apply(detectaws$pvalue<0.05,c(1,2),sum)
 
 # smooth non adaptively
-resultnonaws <- fmri.smooth(spm,hmax=hmax,qlambda=1,lkern="Gaussian")
-detectnonaws <- fmri.detect(resultnonaws)
-npmask <- apply(detectnonaws$detect>-log(0.05),c(1,2),sum)
+resultnonaws <- fmri.smooth(spm,hmax=hmax,adaptive=FALSE,lkern="Gaussian")
+detectnonaws <- fmri.pvalue(resultnonaws)
+npmask <- apply(detectnonaws$pvalue<0.05,c(1,2),sum)
 
 # at last show some nice images
-X11(width=11,height=4,canvas="lightyellow")
+X11(width=11,height=4)
 par(mfrow=c(1,3),mar=c(2.5,2.5,3,0.5))
 image(1:i,1:j,sig[,,1],col=grey(0:255/255),xlab="",ylab="",main="True activation")
 image(1:i,1:j,pmask,xlab="",ylab="",main="Detected using AWS")
