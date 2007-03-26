@@ -6,16 +6,19 @@
   Create the expected BOLD response for a given task indicator function.
 }
 \usage{
-  fmri.stimulus(scans = 1, onsets = c(1), length = c(1), rt = 3,
-                mean = TRUE,
+  fmri.stimulus(scans = 1, onsets = c(1), durations = c(1), rt = 3,
+                times= NULL, mean = TRUE,
                 a1 = 6, a2 = 12, b1 = 0.9, b2 = 0.9, cc = 0.35)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{scans}{ number of scans }
   \item{onsets}{ vector of onset times (in scans) }
-  \item{length}{ vector of length of ON stimulus (in scans) }
+  \item{durations}{ vector of duration of ON stimulus in scans or
+    seconds (if \code{!is.null(times)})  }
   \item{rt}{ time between scans in seconds (TR) }
+  \item{times}{ onset times in seconds. If present \code{onsets}
+    arguments is ignored. }
   \item{mean}{ logical. if TRUE the mean is substracted from the resulting vector }
   \item{a1}{ parameter of the hemodynamic response function (see details) }
   \item{a2}{ parameter of the hemodynamic response function (see details) }
@@ -38,6 +41,8 @@
   \code{a1}, \code{a2}, \code{b1}, \code{b2}, \code{cc}.
   
   The dimension  of the function value is set to \code{c(scans,1)}.
+
+  If \code{!is.null(times)} durations are specified in seconds. 
 
   If \code{mean} is TRUE (default) the resulting vector is
   corrected to have zero mean.

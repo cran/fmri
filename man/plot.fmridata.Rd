@@ -41,7 +41,7 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
   of class "fmrispm" a slider is created to remove  information for voxels with
   smaller signals than a cut-off value from the plot. 
   Use pvalues for statistical evaluation. If \code{spm} is
-  \code{TRUE} the estimated BOLD response together with a confidence
+  \code{FALSE} the estimated BOLD response together with a confidence
   interval corresponding to \code{maxpvalue} is drawn. For objects of class
   "fmripvalue" the pvalues with overlay are shown.
 }

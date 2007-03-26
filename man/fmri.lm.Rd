@@ -88,8 +88,8 @@
 \examples{
   # Example 1
   data <- list(ttt=array(rnorm(32*32*32*107),c(32,32,32,107)),
-               mask=array(1,c(32,32,32)))
-  class(data) <- "fmri.data"
+               mask=array(1,c(32,32,32)),dim=c(32,32,32))
+  class(data) <- "fmridata"
   hrf <- fmri.stimulus(107, c(18, 48, 78), 15, 2)
   z <- fmri.design(hrf,2)
   model <- fmri.lm(data,z,keep="all")

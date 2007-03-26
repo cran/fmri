@@ -272,7 +272,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue =
     signal[is.infinite(signal)] <- 0
 
     ## check !!!!
-    quant <- if (!is.null(attr(spm, "smooth"))) qnorm(1-maxpvalue) else qt(1-maxpvalue,length(hrf)) 
+    quant <- if (!is.null(attr(spm, "smooth"))) qnorm(1-maxpvalue) else qt(1-maxpvalue,length(x$hrf)) 
     
     if (type == "3d") {
       if (spm) {

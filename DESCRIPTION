@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.1-1
-Date: 2007-03-09
+Version: 1.1-3
+Date: 2007-03-26
 Title: Analysis of fMRI experiments
 Author: Karsten Tabelow <tabelow@wias-berlin.de>
         Joerg Polzehl <polzehl@wias-berlin.de>
@@ -15,4 +15,4 @@ License: GPL version 2 or newer
 URL: http://www.wias-berlin.de/project-areas/stat/a3/
 Note: This software comes with NO warranty! It is NOT intended to be used 
       in clinical applications!
-Packaged: Fri Mar  9 11:28:18 2007; polzehl
+Packaged: Mon Mar 26 11:13:07 2007; tabelow
