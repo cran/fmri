@@ -1,13 +1,23 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   extract element of 3D array
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      real*8 function getlwght(lwght,dw1,dw2,dw3,j1,j2,j3)
+      integer dw1,dw2,dw3,j1,j2,j3
+      real*8 lwght(dw1,dw2,dw3)
+      getlwght=lwght(j1,j2,j3)
+      RETURN 
+      END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
 C
 C          Compute Location Kernel (Compact support only, based on x^2
 C                                   ignores scaling)
 C
-C          Kern=1     Uniform
+C          Kern=1     Plateau
 C          Kern=2     Epanechnicov
-C          Kern=3     Biweight
-C          Kern=4     Triweight
+C          Kern=3     Gaussian
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function lkern(kern,xsq)
@@ -26,6 +36,8 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
          lkern=1.d0-xsq
       ELSE IF (kern.eq.3) THEN
          lkern=dexp(-xsq*8.d0)
+      ELSE IF (kern.eq.4) THEN
+         lkern=dexp(-xsq*18.d0)
       ELSE
 C        use Epanechnikov
          lkern=1.d0-xsq
@@ -73,8 +85,9 @@ C
 C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine chaws2(y,si2,n1,n2,n3,dv,dv0,hakt,lambda,theta,bi,
-     1    ai,kern,skern,spmin,spmax,lwght,wght,vwghts,swjy,thi,narm)
+      subroutine chaws2(y,si2,mask,wlse,n1,n2,n3,dv,dv0,hakt,lambda,
+     1                  theta,bi,thn,kern,skern,spmin,spmax,lwght,
+     2                  wght,vwghts,swjy,thi)
 C   
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -90,13 +103,14 @@ C   wght     scaling factor for second and third dimension (larger values shrink
 C   
       implicit logical (a-z)
       integer n1,n2,n3,kern,skern,dv,dv0
-      logical aws,narm
+      logical aws,wlse,mask(n1,n2,n3)
       real*8 y(n1,n2,n3,dv),theta(n1,n2,n3,dv0),bi(n1,n2,n3),
-     1       ai(n1,n2,n3,dv),lambda,spmax,wght(2),si2(n1,n2,n3),
-     1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0)
-      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
+     1       thn(n1,n2,n3,dv),lambda,spmax,wght(2),si2(n1,n2,n3),
+     1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),getlwght
+      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
-      real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i
+      real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i,swjv
+      external getlwght
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
       ih1=hakt
@@ -121,13 +135,18 @@ C
       call rchkusr()
       DO i3=1,n3
          DO i2=1,n2
-             DO i1=1,n1
-	        si2i=si2(i1,i2,i3)
-                if(narm.and.si2i.lt.1d-18) CYCLE
-C    si2j.lt.1d-18   indicates that we have an NA in (j1,j2,j3)
+            DO i1=1,n1
+               if(mask(i1,i2,i3)) THEN
+                  DO k=1,dv
+                     thn(i1,i2,i3,k)=0.d0
+                  END DO
+                  CYCLE
+               END IF
+	       si2i=si2(i1,i2,i3)
                bii=bi(i1,i2,i3)/lambda
 C   scaling of sij outside the loop
                swj=0.d0
+               swjv=0.d0
 	       DO k=1,dv
                   swjy(k)=0.d0
 	       END DO
@@ -137,35 +156,41 @@ C   scaling of sij outside the loop
                DO jw3=1,dlw3
 	          j3=jw3-clw3+i3
 	          if(j3.lt.1.or.j3.gt.n3) CYCLE
-		  jwind3=(jw3-1)*dlw1*dlw2
                   DO jw2=1,dlw2
 	             j2=jw2-clw2+i2
 	             if(j2.lt.1.or.j2.gt.n2) CYCLE
-		     jwind2=jwind3+(jw2-1)*dlw1
                      DO jw1=1,dlw1
 C  first stochastic term
-                        wj=lwght(jw1+jwind2)
-			if(wj.le.0.d0) CYCLE
 	                j1=jw1-clw1+i1
+                        IF(mask(j1,j2,j3)) CYCLE
+                        wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
+			if(wj.le.0.d0) CYCLE
 	                if(j1.lt.1.or.j1.gt.n1) CYCLE
 			si2j=si2(j1,j2,j3)
-                        if(narm.and.si2j.lt.1d-18) CYCLE
-C    si2j.lt.1d-18   indicates that we have an NA in (j1,j2,j3)
                         IF (aws) THEN
                            call awswghts(n1,n2,n3,j1,j2,j3,dv0,thi,
      1                     theta,vwghts,skern,spf,spmin,spmax,bii,wj)
                         END IF
-                        swj=swj+wj*si2j
-			DO k=1,dv
-                           swjy(k)=swjy(k)+wj*y(j1,j2,j3,k)*si2j
+                        if(wlse) THEN 
+                           wj=wj*si2j
+                        ELSE
+                           swjv=swjv+wj/si2j
+                        END IF
+                        swj=swj+wj
+       			DO k=1,dv
+                           swjy(k)=swjy(k)+wj*y(j1,j2,j3,k)
 			END DO
                      END DO
                   END DO
                END DO
 	       DO k=1,dv
-                  ai(i1,i2,i3,k)=swjy(k)
+                  thn(i1,i2,i3,k)=swjy(k)/swj
 	       END DO
-               bi(i1,i2,i3)=swj
+               IF(wlse) THEN
+                  bi(i1,i2,i3)=swj
+               ELSE
+                  bi(i1,i2,i3)=swj*swj/swjv
+               END IF
                call rchkusr()
             END DO
          END DO
@@ -177,9 +202,222 @@ C
 C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine chawsvr(si2,n1,n2,n3,dv0,hakt,lambda,theta,bi,
-     1   var,vred,kern,skern,spmin,spmax,lwght,gwght,swght,dgw,wght,
-     2   vwghts,thi,narm)
+      subroutine ihaws2(y,si2,mask,wlse,n1,n2,n3,dv,dv0,hakt,lambda,
+     1                  theta,bi,thn,kern,skern,spmin,spmax,lwght,
+     2                  wght,vwghts,swjy,thi)
+C   
+C   y        observed values of regression function
+C   n1,n2,n3    design dimensions
+C   hakt     actual bandwidth
+C   lambda   lambda or lambda*sigma2 for Gaussian models
+C   theta    estimates from last step   (input)
+C   bi       \sum  Wi   (output)
+C   ai       \sum  Wi Y     (output)
+C   model    specifies the probablilistic model for the KL-Distance
+C   kern     specifies the location kernel
+C   spmax    specifies the truncation point of the stochastic kernel
+C   wght     scaling factor for second and third dimension (larger values shrink)
+C   
+      implicit logical (a-z)
+      integer dv,dv0,n1,n2,n3,y(n1,n2,n3,dv),thn(n1,n2,n3,dv),kern,
+     1        skern
+      logical aws,wlse,mask(n1,n2,n3)
+      real*8 theta(n1,n2,n3,dv0),bi(n1,n2,n3),
+     1       lambda,spmax,wght(2),si2(n1,n2,n3),
+     1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),getlwght
+      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
+     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
+      real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i,swjv
+      external getlwght
+      hakt2=hakt*hakt
+      spf=spmax/(spmax-spmin)
+      ih1=hakt
+      aws=lambda.lt.1d40
+C
+C   first calculate location weights
+C
+      ih3=hakt/wght(2)
+      ih2=hakt/wght(1)
+      ih1=hakt
+      n=n1*n2*n3
+      dlw1=min0(2*n1-1,2*ih1+1)
+      dlw2=min0(2*n2-1,2*ih2+1)
+      dlw3=min0(2*n3-1,2*ih3+1)
+      clw1=(dlw1+1)/2
+      clw2=(dlw2+1)/2
+      clw3=(dlw3+1)/2
+C
+C    get location weights
+C
+      call locwghts(dlw1,dlw2,dlw3,wght,hakt2,kern,lwght)
+      call rchkusr()
+      DO i3=1,n3
+         DO i2=1,n2
+            DO i1=1,n1
+               if(mask(i1,i2,i3)) THEN
+                  DO k=1,dv
+                     thn(i1,i2,i3,k)=0.d0
+                  END DO
+                  CYCLE
+               END IF
+	       si2i=si2(i1,i2,i3)
+               bii=bi(i1,i2,i3)/lambda
+C   scaling of sij outside the loop
+               swj=0.d0
+               swjv=0.d0
+	       DO k=1,dv
+                  swjy(k)=0.d0
+	       END DO
+	       DO k=1,dv0
+	          thi(k)=theta(i1,i2,i3,k)
+	       END DO
+               DO jw3=1,dlw3
+	          j3=jw3-clw3+i3
+	          if(j3.lt.1.or.j3.gt.n3) CYCLE
+                  DO jw2=1,dlw2
+	             j2=jw2-clw2+i2
+	             if(j2.lt.1.or.j2.gt.n2) CYCLE
+                     DO jw1=1,dlw1
+C  first stochastic term
+	                j1=jw1-clw1+i1
+                        IF(mask(j1,j2,j3)) CYCLE
+                        wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
+			if(wj.le.0.d0) CYCLE
+	                if(j1.lt.1.or.j1.gt.n1) CYCLE
+			si2j=si2(j1,j2,j3)
+                        IF (aws) THEN
+                           call awswghts(n1,n2,n3,j1,j2,j3,dv0,thi,
+     1                     theta,vwghts,skern,spf,spmin,spmax,bii,wj)
+                        END IF
+                        if(wlse) THEN 
+                           wj=wj*si2j
+                        ELSE
+                           swjv=swjv+wj/si2j
+                        END IF
+                        swj=swj+wj
+       			DO k=1,dv
+                           swjy(k)=swjy(k)+wj*y(j1,j2,j3,k)
+			END DO
+                     END DO
+                  END DO
+               END DO
+	       DO k=1,dv
+                  thn(i1,i2,i3,k)=swjy(k)/swj
+	       END DO
+               IF(wlse) THEN
+                  bi(i1,i2,i3)=swj
+               ELSE
+                  bi(i1,i2,i3)=swj*swj/swjv
+               END IF
+               call rchkusr()
+            END DO
+         END DO
+      END DO
+      RETURN
+      END
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   Perform one iteration in local constant three-variate aws (gridded)
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      subroutine smooth3d(y,si2,mask,wlse,n1,n2,n3,dv,hakt,
+     1                    thn,kern,lwght,wght,swjy)
+C   
+C   y        observed values of regression function
+C   n1,n2,n3    design dimensions
+C   hakt     actual bandwidth
+C   lambda   lambda or lambda*sigma2 for Gaussian models
+C   theta    estimates from last step   (input)
+C   bi       \sum  Wi   (output)
+C   ai       \sum  Wi Y     (output)
+C   model    specifies the probablilistic model for the KL-Distance
+C   kern     specifies the location kernel
+C   spmax    specifies the truncation point of the stochastic kernel
+C   wght     scaling factor for second and third dimension (larger values shrink)
+C   
+      implicit logical (a-z)
+      integer n1,n2,n3,kern,dv
+      logical wlse,mask(n1,n2,n3)
+      real*8 y(n1,n2,n3,dv),thn(n1,n2,n3,dv),wght(2),
+     1       si2(n1,n2,n3),hakt,lwght(1),getlwght
+      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
+     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
+      real*8 swj,swjy(dv),wj,hakt2
+      external getlwght
+      hakt2=hakt*hakt
+      ih1=hakt
+C
+C   first calculate location weights
+C
+      ih3=hakt/wght(2)
+      ih2=hakt/wght(1)
+      ih1=hakt
+      n=n1*n2*n3
+      dlw1=min0(2*n1-1,2*ih1+1)
+      dlw2=min0(2*n2-1,2*ih2+1)
+      dlw3=min0(2*n3-1,2*ih3+1)
+      clw1=(dlw1+1)/2
+      clw2=(dlw2+1)/2
+      clw3=(dlw3+1)/2
+C
+C    get location weights
+C
+      call locwghts(dlw1,dlw2,dlw3,wght,hakt2,kern,lwght)
+      call rchkusr()
+      DO i3=1,n3
+         DO i2=1,n2
+            DO i1=1,n1
+               if(mask(i1,i2,i3)) THEN
+                  DO k=1,dv
+                     thn(i1,i2,i3,k)=0.d0
+                  END DO
+                  CYCLE
+               END IF
+C   scaling of sij outside the loop
+               swj=0.d0
+	       DO k=1,dv
+                  swjy(k)=0.d0
+	       END DO
+               DO jw3=1,dlw3
+	          j3=jw3-clw3+i3
+	          if(j3.lt.1.or.j3.gt.n3) CYCLE
+                  DO jw2=1,dlw2
+	             j2=jw2-clw2+i2
+	             if(j2.lt.1.or.j2.gt.n2) CYCLE
+                     DO jw1=1,dlw1
+C  first stochastic term
+	                j1=jw1-clw1+i1
+                        IF(mask(j1,j2,j3)) CYCLE
+	                if(j1.lt.1.or.j1.gt.n1) CYCLE
+                        wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
+			if(wj.le.0.d0) CYCLE
+                        if(wlse) THEN 
+                           wj=wj*si2(j1,j2,j3)
+                        END IF
+                        swj=swj+wj
+       			DO k=1,dv
+                           swjy(k)=swjy(k)+wj*y(j1,j2,j3,k)
+			END DO
+                     END DO
+                  END DO
+               END DO
+	       DO k=1,dv
+                  thn(i1,i2,i3,k)=swjy(k)/swj
+	       END DO
+               call rchkusr()
+            END DO
+         END DO
+      END DO
+      RETURN
+      END
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   Perform one iteration in local constant three-variate aws (gridded)
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      subroutine chawsvr(si2,mask,wlse,n1,n2,n3,dv0,hakt,lambda,theta,
+     1       bi,var,vred,kern,skern,spmin,spmax,lwght,gwght,swght,dgw,
+     2       wght,vwghts,thi)
 C   
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -195,16 +433,17 @@ C   wght     scaling factor for second and third dimension (larger values shrink
 C   
       implicit logical (a-z)
       integer n1,n2,n3,kern,skern,dv0,dgw(3)
-      logical aws,narm
+      logical aws,wlse,mask(n1,n2,n3)
       real*8 theta(n1,n2,n3,dv0),bi(n1,n2,n3),lambda,var(n1,n2,n3),
      1     swght(n1,n2,n3),hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),
-     2     si2(n1,n2,n3),spmax,wght(2),gwght(1),vred(n1,n2,n3)
-      integer i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
+     2     si2(n1,n2,n3),spmax,wght(2),gwght(1),vred(n1,n2,n3),getlwght
+      integer i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n,
      2        dgw1,dgw2,dgw3,j1a,j1e,j2a,j2e,j3a,j3e,
      3        clw10,clw20,clw30
       real*8 bii,swj,swj2,wj,hakt2,swj2vr,spf,si2i,si2j
       integer ngw
+      external getlwght
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
       aws=lambda.lt.1d40
@@ -235,10 +474,9 @@ C
       call rchkusr()
       DO i3=1,n3
          DO i2=1,n2
-             DO i1=1,n1
-	        si2i=si2(i1,i2,i3)
-                if(narm.and.si2i.lt.1d-18) CYCLE
-C    si2j.lt.1d-18   indicates that we have an NA in (j1,j2,j3)
+            DO i1=1,n1
+               if(mask(i1,i2,i3)) CYCLE
+	       si2i=si2(i1,i2,i3)
                bii=bi(i1,i2,i3)/lambda
 C   scaling of sij outside the loop
                swj=0.d0
@@ -263,24 +501,22 @@ C   fill swght with zeros where needed
                DO jw3=1,dlw3
 	          j3=jw3-clw3+i3
 	          if(j3.lt.1.or.j3.gt.n3) CYCLE
-		  jwind3=(jw3-1)*dlw1*dlw2
                   DO jw2=1,dlw2
 	             j2=jw2-clw2+i2
 	             if(j2.lt.1.or.j2.gt.n2) CYCLE
-		     jwind2=jwind3+(jw2-1)*dlw1
                      DO jw1=1,dlw1
-                        wj=lwght(jw1+jwind2)
-			if(wj.le.0.d0) CYCLE
 	                j1=jw1-clw1+i1
+                        if(mask(j1,j2,j3)) CYCLE
+                        wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
+			if(wj.le.0.d0) CYCLE
 	                if(j1.lt.1.or.j1.gt.n1) CYCLE
 	                si2j=si2(j1,j2,j3)
-                        if(narm.and.si2j.lt.1d-18) CYCLE
-C    si2j.lt.1d-18   indicates that we have an NA in (j1,j2,j3)
                         IF (aws) THEN
                            call awswghts(n1,n2,n3,j1,j2,j3,dv0,thi,
      1                     theta,vwghts,skern,spf,spmin,spmax,bii,wj)
                         END IF
-                        swght(j1,j2,j3)=wj*si2j
+                        IF(wlse) wj=wj*si2j
+                        swght(j1,j2,j3)=wj
                      END DO
                   END DO
                END DO
@@ -304,8 +540,9 @@ C                Q_{h,aws} = \sum_j \tilde{w}_ij^2                  in vi2
 C                Q_{h,loc} = \sum_j K_h(i,j)^2                      in vi20
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine chawsvr1(si2,n1,n2,n3,dv0,hakt,lambda,theta,bi2,bi0,
-     1    vi2,vi20,kern,skern,spmin,spmax,lwght,wght,vwghts,thi,narm)
+      subroutine chawsvr1(si2,mask,wlse,n1,n2,n3,dv0,hakt,lambda,theta,
+     1                    bi2,bi0,vi2,vi20,kern,skern,spmin,spmax,
+     2                    lwght,wght,vwghts,thi)
 C   
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -321,13 +558,15 @@ C   wght     scaling factor for second and third dimension (larger values shrink
 C   
       implicit logical (a-z)
       integer n1,n2,n3,kern,skern,dv0
-      logical aws,narm
+      logical aws,wlse,mask(n1,n2,n3)
       real*8 theta(n1,n2,n3,dv0),bi2(n1,n2,n3),vi2(n1,n2,n3),
      1       vi20(n1,n2,n3),lambda,spmax,wght(2),si2(n1,n2,n3),
-     2       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),bi0(n1,n2,n3)
-      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
+     2       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),bi0(n1,n2,n3),
+     3       getlwght
+      integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
       real*8 bii,swj,swj0,swj00,slwj0,wj,hakt2,spf,si2i,si2j
+      external getlwght
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
       aws=lambda.lt.1d40
@@ -348,9 +587,9 @@ C
       call rchkusr()
       DO i3=1,n3
          DO i2=1,n2
-             DO i1=1,n1
-	        si2i=si2(i1,i2,i3)
-                if(narm.and.si2i.lt.1d-18) CYCLE
+            DO i1=1,n1
+               if(mask(i1,i2,i3)) CYCLE
+	       si2i=si2(i1,i2,i3)
                bii=bi2(i1,i2,i3)/lambda
 C   scaling of sij outside the loop
                swj=0.d0
@@ -363,29 +602,26 @@ C   scaling of sij outside the loop
                DO jw3=1,dlw3
 	          j3=jw3-clw3+i3
 	          if(j3.lt.1.or.j3.gt.n3) CYCLE
-		  jwind3=(jw3-1)*dlw1*dlw2
                   DO jw2=1,dlw2
 	             j2=jw2-clw2+i2
 	             if(j2.lt.1.or.j2.gt.n2) CYCLE
-		     jwind2=jwind3+(jw2-1)*dlw1
                      DO jw1=1,dlw1
 C  first stochastic term
-                        wj=lwght(jw1+jwind2)
-			if(wj.le.0.d0) CYCLE
 	                j1=jw1-clw1+i1
+                        if(mask(j1,j2,j3)) CYCLE
+                        wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
+			if(wj.le.0.d0) CYCLE
 	                if(j1.lt.1.or.j1.gt.n1) CYCLE
 	                si2j=si2(j1,j2,j3)
-                        if(narm.and.si2j.lt.1d-18) CYCLE
-C    si2j.lt.1d-18   indicates that we have an NA in (j1,j2,j3)
  			swj00=swj00+wj*wj
-			wj=wj*si2(j1,j2,j3)
+			if(wlse) wj=wj*si2j
 			slwj0=slwj0+wj
                         IF (aws) THEN
                            call awswghts(n1,n2,n3,j1,j2,j3,dv0,thi,
      1                     theta,vwghts,skern,spf,spmin,spmax,bii,wj)
                         END IF
 			wj=wj*wj
-                        swj=swj+wj/si2j  
+                        swj=swj+wj/si2j
 			swj0=swj0+wj
                      END DO
                   END DO

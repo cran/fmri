@@ -17,8 +17,8 @@ read.AFNI(filename)
 }
 \value{
   Object of class "fmridata" with the following list entries:
-  \item{ttt}{4 dimensional datacube, the first three dimensions are voxel
-    dimensions, the fourth dimension denotes the time }
+  \item{ttt}{raw vector (numeric size 4) containing the four dimensional data cube (the first three dimensions are voxel
+    dimensions, the fourth dimension denotes the time).}
   \item{header}{header information list}
   \item{format}{data source. string "HEAD/BRIK"}
   \item{delta}{voxel size in mm}

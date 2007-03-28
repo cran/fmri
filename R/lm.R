@@ -72,6 +72,7 @@ fmri.design <- function(hrf, order=2) {
   if (order != 0) {
     for (i in (stimuli+2):(stimuli+order+1)) {
       z[,i] <- (1:scans)^(i-stimuli-1)
+      z[,i] <- z[,i]/mean(z[,i])
       hz <- numeric(stimuli)
       for (j in 1:stimuli) {
         hz[j] <- z[,j]%*%z[,i]
@@ -86,16 +87,14 @@ fmri.design <- function(hrf, order=2) {
 
 
 
-
-
-fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contrast=c(1),vvector=c(1),keep="essential") {
+fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contrast=c(1),vvector=c(1),keep="all") {
   cat("fmri.lm: entering function\n")
 
   if (!class(data) == "fmridata") {
     warning("fmri.lm: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
 
-  ttt <- data$ttt
+  ttt <- extract.data(data)
 
   if (length(dim(ttt)) != 4) {
     stop("Hmmmm, this does not seem to be a fMRI time series. I better stop executing! Sorry!\n")
@@ -194,7 +193,8 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
       dim(arfactor) <- dy[1:3]
       # now smooth (if actype is such) with AWS
       hinit <- 1
-      arfactor <- gkernsm(arfactor,rep(hmax,3)*0.42445)$gkernsm
+#      arfactor <- gkernsm(arfactor,rep(hmax,3)*0.42445)$gkernsm
+      arfactor <- smooth3D(arfactor,lkern="Gaussian",hmax=hmax,wghts=data$weights,mask=data$mask)
       dim(arfactor) <- voxelcount
       cat("fmri.lm: finished\n")
     }
@@ -230,6 +230,14 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
         }
         gc()
       }
+#  prewhitened residuals don't have zero mean, therefore sweep mean over time from them
+      residuals <- .Fortran("sweepm",residuals=as.double(residuals),
+                                     as.integer(dy[1]),
+                                     as.integer(dy[2]),
+                                     as.integer(dy[3]),
+                                     as.integer(dy[4]),
+                                     PACKAGE="fmri",DUP=FALSE)$residuals
+      dim(residuals) <- c(prod(dy[1:3]),dy[4])
       b <- rep(1/dy[4],length=dy[4])
       variance <- ((residuals^2 %*% b) * dim(z)[1] / (dim(z)[1]-dim(z)[2])) * variancepart
       if (length(vvector) > 1) variancem <- as.vector((residuals^2 %*% b) * dim(z)[1] / (dim(z)[1]-dim(z)[2])) * t(variancepartm)
@@ -247,7 +255,6 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
     if (length(vvector) > 1) variancem <- ((residuals^2 %*% b) * dim(z)[1] / (dim(z)[1]-dim(z)[2])) %*% as.vector(xtx[as.logical(vvector),as.logical(vvector)])
     variance <- ((residuals^2 %*% b) * dy[4] / (dy[4]-dim(z)[2])) %*% cxtx
   }
-  
   cbeta <- beta %*% contrast
   # re-arrange dimensions
   dim(beta) <- c(dy[1:3],dim(z)[2])
@@ -259,23 +266,28 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
 
   cat("fmri.lm: calculating spatial correlation\n")
 
-  corr <- .Fortran("corr",
-                    as.double(residuals),
-                    as.logical(data$mask),
-                    as.integer(dy[1]),
-                    as.integer(dy[2]),
-                    as.integer(dy[3]),
-                    as.integer(dy[4]),
-                    scorr=double(3),
-                    DUP=FALSE,
-                    PACKAGE="fmri")$scorr
-  gc()
-
-  bwx <- get.bw.gauss(corr[1])
-  bwy <- get.bw.gauss(corr[2])
-  bwz <- get.bw.gauss(corr[3])
-
-  rxyz <- c(resel(1,bwx), resel(1,bwy), resel(1,bwz))
+  lags <- c(5,5,3)
+  corr <- .Fortran("mcorr",as.double(residuals),
+                     as.logical(data$mask),
+                     as.integer(dy[1]),
+                     as.integer(dy[2]),
+                     as.integer(dy[3]),
+                     as.integer(dy[4]),
+                     scorr=double(prod(lags)),
+                     as.integer(lags[1]),
+                     as.integer(lags[2]),
+                     as.integer(lags[3]),
+                     PACKAGE="fmri",DUP=FALSE)$scorr
+  dim(corr) <- lags                     
+  scale <- NULL
+  if(keep=="all"){
+     qscale <- range(residuals)
+     scale <- max(abs(qscale))/32767
+     residuals <- writeBin(as.integer(residuals/scale),raw(),2)
+  }
+  bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),lag=lags,data=corr)$par  
+  bw[bw<=.25] <- 0
+  rxyz <- c(resel(1,bw[1]), resel(1,bw[2]), resel(1,bw[3]))
   dim(rxyz) <- c(1,3)
 
   variance[variance == 0] <- 1e20
@@ -288,20 +300,33 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
   } else {
     vwghts <- 1
   }
-  
+
+  cat("fmri.lm: determining df: ")
+  if (actype == "smooth") {
+    white <- 1
+  } else if (actype == "accalc") {
+    white <- 2
+  } else {
+    white <- 3
+  }
+  cx <- u %*% lambda1 %*% vt %*% contrast
+  tau1 <- sum(cx[-1] * cx[-length(cx)]) / sum(cx * cx)
+  df <- switch(white,abs(diff(dim(z))) / (1 + 2*(1 + 2 * prod(hmax/bw)^0.667)^(-1.5) * tau1^2) ,
+                     abs(diff(dim(z))) / (1 + 2* tau1^2)  ,
+                     abs(diff(dim(z))) )
+  cat(df,"\n")
+
   cat("fmri.lm: exiting function\n")
   
   if (keep == "all") {
     result <- list(beta = beta, cbeta = cbeta, var = variance, res =
               residuals, arfactor = arfactor, rxyz = rxyz, scorr = corr, weights =
-              data$weights, vwghts = vwghts, dim =
-              data$dim, hrf = z %*% contrast)
-  } else if (keep == "diagnostic") {
-    result <- list(cbeta = cbeta, var = variance, res = residuals, rxyz = rxyz, scorr =
-              corr, weights = data$weights, vwghts = vwghts, dim = data$dim, hrf = z %*% contrast)
+              data$weights, vwghts = vwghts, mask=data$mask, dim =
+              data$dim, hrf = z %*% contrast, resscale=scale, bw=bw, df=df)
   } else {
     result <- list(cbeta = cbeta, var = variance, rxyz = rxyz, scorr = corr, weights =
-              data$weights, vwghts = vwghts, dim = data$dim, hrf = z %*% contrast)
+              data$weights, vwghts = vwghts, mask=data$mask, dim = data$dim, 
+              hrf = z %*% contrast, res=NULL, resscale=NULL, bw=bw, df=df)
   }
 
   if (length(vvector) > 1) {
@@ -311,18 +336,12 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
   class(result) <- c("fmridata","fmrispm")
 
   attr(result, "file") <- attr(data, "file")
-  if (actype == "smooth") {
-    attr(result, "white") <-
-      paste("Prewhitening performed with smoothed (bandwidth",hmax,") map\nof autocorrelation parameter in AR(1) model for time series!\n")
-  } else if (actype == "accalc") {
-    attr(result, "white") <-
-      paste("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n")
-  } else {
-    attr(result, "white") <-
-      paste("No prewhitening performed!\n")
-  }
   attr(result, "design") <- z
+  attr(result, "white") <- white
+  attr(result, "residuals") <- !is.null(scale)
     
   invisible(result)
 }
+
+
 

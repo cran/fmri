@@ -48,7 +48,7 @@
   corrected to have zero mean.
 }
 \value{
-  Vector with dimension \code{c(scans,1)}.
+  Vector with dimension \code{c(scans, 1)}.
 }
 \references{ Worsley, K.J., Liao, C., Aston, J., Petre, V., Duncan,
   G.H., Morales, F., Evans, A.C. (2002). A general statistical analysis

@@ -211,16 +211,15 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
       weights <- NULL
     }
     
-    z <- list(ttt=ttt,format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,orient=NULL,dim=dim(ttt),weights=weights,header=header)
+     mask <- array(TRUE,dt[1:3])
+     mask[ttt[,,,1] < quantile(ttt[,,,1],0.75)] <- FALSE
+
+    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,
+              orient=NULL,dim=dim(ttt),weights=weights,header=header, mask=mask)
   } else {
     warning(paste("Error: file",filename[1],"does not exist!"))
-    z <- list(ttt=NULL,format="ANALYZE",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=NULL)
+    z <- list(ttt=NULL,format="ANALYZE",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=NULL,mask=NULL)
   }
-
-  mask <- ttt[,,,1]
-  mask[mask < quantile(mask,0.75)] <- 0
-  mask[mask != 0] <- 1
-  z$mask <- mask
 
   class(z) <- "fmridata"
 
@@ -405,17 +404,14 @@ read.AFNI <- function(filename) {
         cat(range(myttt[,,,k]),"\n")
       }
     }
+  mask <- array(TRUE,c(dx,dy,dz))
+  mask[myttt[,,,1] < quantile(myttt[,,,1],0.75)] <- FALSE
     z <-
-      list(ttt=myttt,format="HEAD/BRIK",delta=values$DELTA,origin=values$ORIGIN,orient=values$ORIENT_SPECIFIC,dim=c(dx,dy,dz,dt),weights=weights, header=values)
+      list(ttt=writeBin(as.numeric(myttt),raw(),4),format="HEAD/BRIK",delta=values$DELTA,origin=values$ORIGIN,orient=values$ORIENT_SPECIFIC,dim=c(dx,dy,dz,dt),weights=weights, header=values,mask=mask)
   } else {
     warning("Error reading file: Could not detect size per voxel\n")
-    z <- list(ttt=NULL,format="HEAD/BRIK",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=values)    
+    z <- list(ttt=NULL,format="HEAD/BRIK",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=values,mask=NULL)    
   }
-
-  mask <- myttt[,,,1]
-  mask[mask < quantile(mask,0.75)] <- 0
-  mask[mask != 0] <- 1
-  z$mask <- mask
 
   class(z) <- "fmridata"
   attr(z,"file") <- paste(filename,".HEAD/BRIK",sep="")
@@ -651,7 +647,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
       ttt <- array(readBin(con,"integer",length/depth,depth,signed=FALSE,endian=endian),c(xdim,ydim))
     }
     
-    z <- list(header=header,ttt=ttt,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
+    z <- list(header=header,ttt=writeBin(as.numeric(ttt),raw(),4),format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   } else {
     z <- list(header=header,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   }
@@ -804,14 +800,33 @@ read.NIFTI <- function(filename) {
   }
   dim(ttt) <- c(dx,dy,dz,dt)
 
-  z <- list(ttt=ttt,format="NIFTI",delta=header$pixdim[2:4],origin=NULL,orient=NULL,dim=header$dimension[2:5],weights=weights,header=header)
+  mask <- array(TRUE,c(dx,dy,dz))
+  mask[ttt[,,,1] < quantile(ttt[,,,1],0.75)] <- FALSE
 
-  mask <- ttt[,,,1]
-  mask[mask < quantile(mask,0.75)] <- 0
-  mask[mask != 0] <- 1
-  z$mask <- mask
+  z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="NIFTI",delta=header$pixdim[2:4],
+                origin=NULL,orient=NULL,dim=header$dimension[2:5],weights=weights,header=header,mask=mask)
 
   class(z) <- "fmridata"
 
   invisible(z)
+}
+
+extract.data <- function(z,what="data") {
+  if (!("fmridata"%in%class(z))) {
+    warning("extract.data: data not of class <fmridata>. Try to proceed but strange things may happen")
+  }
+  if (what=="residuals") {  
+      if(!is.null(z$resscale)){
+          ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale 
+          dim(ttt) <- z$dim
+          } else {
+          warning("extract.data: No residuals available, returning NULL")
+          ttt <- NULL
+      }
+      } else { 
+      ttt <- readBin(z$ttt,"numeric",prod(z$dim),4)
+      dim(ttt) <- z$dim
+      }
+ 
+  invisible(ttt)
 }

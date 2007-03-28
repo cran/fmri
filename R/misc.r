@@ -1,3 +1,6 @@
+fwhm2bw <- function(hfwhm) hfwhm/sqrt(8*log(2))
+bw2fwhm <- function(h) h*sqrt(8*log(2))
+
 Varcor.gauss<-function(h,interv = 1){
 #
 #   Calculates a correction for the variance estimate obtained by (IQRdiff(y)/1.908)^2
@@ -9,7 +12,9 @@ Varcor.gauss<-function(h,interv = 1){
 #  interv>>1 should be used to handle intrinsic correlation (smoothing preceeding 
 #  discretisation into voxel) 
 #
-  h<-h/2.3548*interv
+#  h in FWHM
+#
+  h<-fwhm2bw(h)*interv
   ih<-trunc(4*h)+1
   dx<-2*ih+1
   d<-length(h)
@@ -34,9 +39,11 @@ Spatialvar.gauss<-function(h,h0,d,interv=1){
 #  interv>>1 should be used to handle intrinsic correlation (smoothing preceeding 
 #  discretisation into voxel) 
 #
+#  h and h0 in FWHM
+#
   h0 <- pmax(h0,1e-5)
   h <- pmax(h,1e-5)
-  h<-h/2.3548*interv
+  h<-fwhm2bw(h)*interv
   if(length(h)==1) h<-rep(h,d)
   ih<-trunc(4*h)
   ih<-pmax(1,ih)
@@ -45,7 +52,7 @@ Spatialvar.gauss<-function(h,h0,d,interv=1){
   if(d==2) penl<-outer(dnorm(((-ih[1]):ih[1])/h[1]),dnorm(((-ih[2]):ih[2])/h[2]),"*")
   if(d==3) penl<-outer(dnorm(((-ih[1]):ih[1])/h[1]),outer(dnorm(((-ih[2]):ih[2])/h[2]),dnorm(((-ih[3]):ih[3])/h[3]),"*"),"*")
   dim(penl)<-dx
-  h0<-h0/2.3548*interv
+  h0<-fwhm2bw(h0)*interv
   if(length(h0)==1) h0<-rep(h0,d)
   ih<-trunc(4*h0)
   ih<-pmax(1,ih)
@@ -109,6 +116,9 @@ get3Dh.gauss <- function(vred,vwghts,step=1.002,interv=1){
 }
 
 gkernsm <- function(y,h=1) {
+#
+# h in SD
+#
   grid <- function(d) {
     d0 <- d%/%2+1
     gd <- seq(0,1,length=d0)
@@ -131,8 +141,7 @@ gkernsm <- function(y,h=1) {
 }
 
 get.bw.gauss <- function(corr, step = 1.001,interv=2) {
-  
-  # get the   bandwidth for lkern corresponding to a given correlation
+  #  get the corresponding FWHM bandwidth for lkern and a given correlation
   #  keep it simple result does not depend on d
 
   #  interv allows for further discretization of the Gaussian Kernel, result depends on
@@ -158,7 +167,10 @@ get.corr.gauss <- function(h,interv=1) {
     #   Calculates the correlation of 
     #   colored noise that was produced by smoothing with "gaussian" kernel and bandwidth h
     #   Result does not depend on d for "Gaussian" kernel !!
-    h <- h/2.3548*interv
+    #
+    #   h in FWHM
+    #
+    h <- fwhm2bw(h)*interv
     ih <- trunc(4*h+ 2*interv-1)
     dx <- 2*ih+1
     penl <- dnorm(((-ih):ih)/h)
@@ -190,4 +202,30 @@ correlation <- function(res,mask = array(1,dim=dim(res)[1:3])) {
   } else {
     warning("Error: can only handle 3 dimensional arrays\n")    
   }    
+}
+
+corrrisk <- function(bw,lag,data){
+  mean((data-thcorr3D(bw,lag))^2)
+}
+
+thcorr3D <- function(bw,lag=rep(5,3)){
+  g <- trunc(fwhm2bw(bw)*4)
+  gw1 <- dnorm(-(g[1]):g[1],0,fwhm2bw(bw[1])) 
+  gw2 <- dnorm(-(g[2]):g[2],0,fwhm2bw(bw[2]))
+  gw3 <- dnorm(-(g[3]):g[3],0,fwhm2bw(bw[3]))
+  gwght <- outer(gw1,outer(gw2,gw3,"*"),"*")
+  gwght <- gwght/sum(gwght)
+  dgw <- dim(gwght)
+  scorr <- .Fortran("thcorr",as.double(gwght),
+                    as.integer(dgw[1]),
+                    as.integer(dgw[2]),
+                    as.integer(dgw[3]),
+                    scorr=double(prod(lag)),
+                    as.integer(lag[1]),
+                    as.integer(lag[2]),
+                    as.integer(lag[3]),
+                    PACKAGE="fmri",DUP=TRUE)$scorr
+  # bandwidth in FWHM in voxel units
+  dim(scorr) <- lag
+  scorr
 }

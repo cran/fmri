@@ -1,4 +1,4 @@
-fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau",na.rm=FALSE) {
+fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau",weighted=TRUE) {
   cat("fmri.smooth: entering function\n")
   
   if (!("fmrispm" %in% class(spm))) {
@@ -18,26 +18,34 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   } else {
     weights <- spm$weights
   }
-  if (is.null(spm$scorr)) {
-    scorr <- 0
+  if (is.null(spm$bw)) {
+    bw <- rep(0,3)
   } else {
-    scorr <- spm$scorr
+    bw <- spm$bw
   }
 
   cat("fmri.smooth: smoothing the Statistical Paramteric Map\n")
   if (adaptive) {
-    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax,
-                     wghts=weights, scorr=scorr, vwghts = spm$vwghts,
-                     lkern=lkern,skern=skern,na.rm=na.rm)
+    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
+                     wghts=weights, h0=bw, vwghts = spm$vwghts,
+                     lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
+                     resscale=spm$resscale, dim=spm$dim)
   } else {
-    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax,
-                     qlambda = 1, wghts=weights, scorr=scorr,
-                     vwghts = spm$vwghts,lkern=lkern,skern=skern,na.rm=na.rm)
+    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
+                     qlambda = 1, wghts=weights, h0=bw,
+                     vwghts = spm$vwghts,lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
+                     resscale=spm$resscale, dim=spm$dim)
   }
   cat("\n")
   
   cat("fmri.smooth: determine local smoothness\n")
-  bw <- get3Dh.gauss(ttthat$vred,weights)
+  if(is.null(ttthat$scorr)){
+     bw <- get3Dh.gauss(ttthat$vred,weights)
+  } else {
+     bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),lag=c(5,5,3),data=ttthat$scorr)$par  
+     bw[bw<=.25] <- 0
+     dim(bw) <- c(1,3)
+  } 
   rxyz <- c(resel(1,bw[,1]), resel(1,bw[,2]), resel(1,bw[,3]))
   dim(rxyz) <- c(dim(bw)[1],3)
   bw0 <- get3Dh.gauss(ttthat$vred0,weights)
@@ -48,11 +56,11 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   if (dim(ttthat$theta)[4] == 1) {
     z <- list(cbeta = ttthat$theta[,,,1], var = ttthat$var, rxyz =
               rxyz, rxyz0 = rxyz0, scorr = spm$scorr, weights =
-              spm$weights, vwghts = spm$vwghts,
+              spm$weights, vwghts = spm$vwghts, bw=bw, 
               hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf)
   } else {
     z <- list(cbeta = ttthat$theta, var = ttthat$var, rxyz = rxyz, rxyz0 = rxyz0, 
-              scorr = spm$scorr, weights = spm$weights, vwghts = spm$vwghts,
+              scorr = spm$scorr, weights = spm$weights, vwghts = spm$vwghts, bw=bw,
               hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf)
   }    
 
@@ -61,6 +69,7 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   attr(z, "file") <- attr(spm, "file")
   attr(z, "white") <- attr(spm, "white")
   attr(z, "design") <- attr(spm, "design")
+  attr(z, "residuals") <- attr(spm, "residuals")
 
   if (!is.null(attr(spm, "smooth"))) {
     attr(z, "smooth") <-
@@ -79,33 +88,46 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   z
 }
 
-fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE ) {
+fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal=0 ) {
   cat("fmri.pvalue: entering function\n")
 
   if (!("fmrispm" %in% class(spm)) ) {
     warning("fmri.pvalue: data not of class <fmrispm>. Try to proceed but strange things may happen")
   }
 
+  if (!is.null(attr(spm, "smooth"))) {
+    if (!is.null(attr(spm, "residuals"))) {
+      type <- "t"
+      df <- abs(diff(dim(attr(spm, "design"))))
+    } else {
+      type <- "norm"
+      df <- abs(diff(dim(attr(spm, "design")))) # this is actually not needed, placeholder
+    }
+  } else {
+    type <- "t"
+    df <- spm$df
+  }
+
   if (length(dim(spm$cbeta)) < 4) {
 
-    stat <- spm$cbeta/sqrt(spm$var)
+    stat <- (spm$cbeta-minimum.signal)/sqrt(spm$var)
     dim(stat) <- prod(spm$dim[1:3])
     cat("fmri.pvalue: calculate treshold and p-value method:",mode,"\n")
     if (mode == "local") {
-      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="norm")
-      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="norm")
+      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type=type,df=df)
+      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type=type,df=df)
     } else if (mode == "global") {
       rxyz <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
-      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="norm")
-      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="norm")
+      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type=type,df=df)
+      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type=type,df=df)
     } else {
       if ("rxyz0" %in% names(spm)) {
         rxyz0 <- c(median(spm$rxyz0[,1]),median(spm$rxyz0[,2]),median(spm$rxyz0[,3]))
       } else {
         rxyz0 <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
       }        
-      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="norm")
-      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="norm")
+      thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type=type,df=df)
+      pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type=type,df=df)
     }
 
   } else if (!is.null(delta)) {
@@ -177,8 +199,8 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE ) {
 
   }
   cat("fmri.pvalue: thresholding\n")
-  mask <- rep(1,length=prod(spm$dim[1:3]))
-  mask[stat < thresh] <- 0
+  mask <- rep(TRUE,length=prod(spm$dim[1:3]))
+  mask[stat < thresh] <- FALSE
   pv[!mask] <- 1
   dim(pv) <- spm$dim[1:3]
 
@@ -208,8 +230,7 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE ) {
 
 
 
-plot.fmridata <- function(x, anatomic = NULL , maxpvalue =
-                          0.05, spm = TRUE,
+plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
                             pos = c(-1,-1,-1), type="slice",
                             device="X11", file="plot.png",...) {
   mri.colors <- function (n1, n2, factor=n1/(n1+n2), from=0, to=.2) {
@@ -290,7 +311,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue =
                           type="spm",pos=pos)
     }
   } else if ("fmridata" %in% class(x)) {
-    signal <- x$ttt
+    signal <- extract.data(x)
     
     # re-scale signal to 0 ... 1
     scale <- range(signal,finite=TRUE)
@@ -655,7 +676,9 @@ summary.fmridata <- function(object,...) {
     cat("Data Range      :", values[1], "...", values[2], "\n")
     cat("File(s)", attr(object, "file"),"\n\n")
     cat("Design Dimension:", dim(attr(object, "design")), "\n")
-    cat(attr(object, "white"), "\n")
+    switch(attr(object, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
     if (!is.null(attr(object, "smooth"))) cat(attr(object, "smooth"),"\n")
     cat(attr(object, "mode"), "\n")
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
@@ -667,14 +690,16 @@ summary.fmridata <- function(object,...) {
     cat("Data Range      :", values[1], "...", values[2], "\n")
     cat("File(s)         :", attr(object, "file"),"\n\n")
     cat("Design Dimension:", dim(attr(object, "design")), "\n")
-    cat(attr(object, "white"), "\n")
+    switch(attr(object, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
     if (!is.null(attr(object, "smooth"))) cat(attr(object, "smooth"))
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
               z=attr(object, "design")))
   } else {
     dt <- object$dim
     cat("Data Dimension:", dt,"\n")
-    values <- range(object$ttt)
+    values <- range(extract.data(object))
     cat("Data Range    :", values[1], "...", values[2], "\n")
     delta <- object$delta
     cat("Voxel Size    :", delta,"\n")
@@ -691,7 +716,9 @@ print.fmridata <- function(x,...) {
     cat("Data Range    :", values[1], "...", values[2], "\n")
     cat("File(s)", attr(x, "file"),"\n\n")
     cat("Design Dimension:", dim(attr(x, "design")), "\n")
-    cat(attr(x, "white"), "\n")
+    switch(attr(x, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
     if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"),"\n")
     cat(attr(x, "mode"), "\n")
   } else if ("fmrispm" %in% class(x)) {
@@ -700,14 +727,16 @@ print.fmridata <- function(x,...) {
     cat("Data Range    :", values[1], "...", values[2], "\n")
     cat("File(s)", attr(x, "file"),"\n\n")
     cat("Design Dimension:", dim(attr(x, "design")), "\n")
-    cat(attr(x, "white"), "\n")
+    switch(attr(x, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
     if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"))
 #    lmcall <- attr(x, "lm")
 #    cat("Linear Model - Number of stimuli
   } else {
     cat("Data Dimension: ", x$dim,"\n")
     cat("Voxel Size    :", x$delta,"\n")
-    values <- range(x$ttt)
+    values <- range(extract.data(x))
     cat("Data Range    :", values[1], "...", values[2], "\n")
     cat("File(s)", attr(x, "file"),"\n")
   }

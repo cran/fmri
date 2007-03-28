@@ -6,7 +6,7 @@
   Determine p-values.
 }
 \usage{
-fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE)
+fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,8 @@ fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE)
    or where the time series information where constant over time. A high (1e19) value of the variance 
    and a parameter of 0 are used to characterize NA's. If \code{na.rm=TRUE} the pvalue for the corresponding voxels
    is set to 1. Otehrwise pvalues are assigned according to the information found in the SPM at the voxel.}
+  \item{minimum.signal}{allows to specify a (positive) minimum value for detected signals. If minimum.signal >0
+   the thresholds are to conservative, this case needs further improvements.}
 }
 \details{
   If only a contrast is given in \code{spm}, we simply use a t-statistic
@@ -51,10 +53,10 @@ fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE)
   \item{hrf}{ expected BOLD response for contrast (single stimulus only)}
 }
 \references{
-  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2005). 
+  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V.. 
 \emph{Analysing {fMRI}
     experiments with structure adaptive smoothing procedures},
-  NeuroImage, accepted (2006). 
+  NeuroImage, 33:55-62 (2006). 
   
   Worsley, K.J., and Taylor, J.E., \emph{Detecting fMRI activation
     allowing for unknown latency of the hemodynamic response},

@@ -7,7 +7,7 @@
 }
 \usage{
 fmri.smooth(spm, hmax = 4, adaptive=TRUE,
-            lkern="Gaussian", skern="Plateau", na.rm=FALSE)
+            lkern="Gaussian", skern="Plateau", weighted=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -26,13 +26,10 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
     decays linearly in (.3,1) and is 0 for arguments larger than 1.
     \code{lkern="Plateau"} and \code{lkern="Triangle"} allow for much faster computation (saves up
     to 50\% CPU-time). \code{lkern="Plateau"} produces a less random weighting scheme.}
-  \item{na.rm}{\code{na.rm} specifies how NA's in the SPM are handled. NA's may occur
-   in voxel where the time series information did not allow for estimating parameters and their variances
-   or where the time series information where constant over time. A high (1e19) value of the variance 
-   and a parameter of 0 are used to characterize NA's. If \code{na.rm=FALSE} these values are simply downweigthed
-   by their high variance and estimates in these voxels are produced as nonadaptive averages
-   of values from neighboring voxels. If \code{na.rm=TRUE} no estimates are computed (the values 
-   for mean and variance are kept) in these voxels.}
+  \item{weighted}{ \code{weighted} (logical) determines if weights contain the inverse of local 
+   variances as a factor (Weighted Least Squares). \code{weighted=FALSE} does not employ the
+   heteroscedasticity of variances for the weighting scheme and is preferable if variance estimates
+   are highly variable, e.g. for short time series.} 
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map
@@ -52,7 +49,7 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   due to a less random weighting scheme.
 
   The function handles zero variances by assigning a large value (1e20)
-  to these variances. 
+  to these variances. Smoothing is restricted to voxel with \code{spm$mask}.
 }
 \value{
   object with class attributes "fmrispm" and "fmridata"
@@ -62,17 +59,19 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   \item{rxyz}{ smoothness in resel space. all directions }
   \item{rxyz0}{ smoothness in resel space as would be achieved by
     a Gaussian filter with the same bandwidth. all directions }
-  \item{scorr}{ spatial correlation of original data }
+  \item{scorr}{array of spatial correlations with maximal lags 5, 5, 3 in x,y and z-direction. }
+  \item{bw}{vector of bandwidths (in FWHM) corresponding to the spatial correlation within the data.}
+  \item{dim}{dimension of the data cube and residuals}
   \item{weights}{ ratio of voxel dimensions }
   \item{vwghts}{ ratio of estimated variances for the stimuli given by
   \code{vvector}}
   \item{hrf}{ Expected BOLD response for the specified effect }
 }
 \references{
-  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2005). 
-  \emph{Analysing {fMRI}
+  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V.. 
+\emph{Analysing {fMRI}
     experiments with structure adaptive smoothing procedures},
-  NeuroImage, accepted (2006). 
+  NeuroImage, 33:55-62 (2006). 
 
   Polzehl, J. and Spokoiny, V. (2006). \emph{Propagation-Separation
     Approach for Local Likelihood Estimation}, Probab. Theory

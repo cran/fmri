@@ -8,7 +8,7 @@
 \usage{
   fmri.lm(data, z, actype = "accalc", hmax = 3.52, vtype = "var",
           step = 0.01, contrast = c(1), vvector = c(1),
-          keep = "essential")
+          keep = "all")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -27,8 +27,12 @@
   \item{vvector}{ vector defining the parameters for which the
     covariance matrix is returned as well as the corresponding length of
     the vector \code{cbeta} in each voxel}
-  \item{keep}{ string describing the amount of data returned:
-    "essential", "diagnostic", "all" }
+  \item{keep}{ string describing the amount of data returned. If \code{keep=="all"} residuals 
+    are included in the returned object. This triggers variance estimation 
+    in \code{fmri.smooth} to based on adaptively smoothed residuals.
+    Otherwise variance estimation is based on the estimated smootheness of the measured
+    data. This is less memory and time consuming, but expected to be
+    less accurate. }
 }
 \details{
   This function performs parameter estimation in the linear model.
@@ -61,14 +65,20 @@
   \item{cbeta}{estimated contrast of parameters}
   \item{var}{estimated variance of the contrast of parameters.}
   \item{varm}{covariance matrix of the parameters given by \code{vvector}}
-  \item{res}{residuals of the estimated linear model}
+  \item{res}{raw (integer size 2) vector containing residuals of the estimated linear model
+             up to scale factor resscale.}
+  \item{resscale}{\code{resscale*extract.data(object,"residuals")} are the residuals. }
+  \item{dim}{dimension of the data cube and residuals}
   \item{arfactor}{estimated autocorrelation parameter}
-  \item{scorr}{spatial correlation of data }
+  \item{rxyz}{array of smoothness from estimated correlation for each
+    voxel in resel space (for analysis without smoothing)}
+  \item{scorr}{array of spatial correlations with maximal lags 5, 5, 3 in x,y and z-direction. }
+  \item{bw}{vector of bandwidths (in FWHM) corresponding to the spatial correlation within the data.}
   \item{weights}{ratio of voxel dimensions }
   \item{vwghts}{ratio of estimated variances for the stimululi given by
   \code{vvector}}
-  \item{rxyz}{array of smoothness from estimated correlation for each
-    voxel in resel space (for analysis without smoothing)}
+  \item{mask}{head mask.}
+  \item{df}{Degrees of freedom for t-statistics.}
   \item{hrf}{expected BOLD response for contrast }
 }
 \references{ Worsley, K.J. (2005). Spatial smoothing of autocorrelations
@@ -87,14 +97,14 @@
 \seealso{ \code{\link{fmri.design}}, \code{\link{fmri.stimulus}} }
 \examples{
   # Example 1
-  data <- list(ttt=array(rnorm(32*32*32*107),c(32,32,32,107)),
-               mask=array(1,c(32,32,32)),dim=c(32,32,32))
+  data <- list(ttt=writeBin(rnorm(32*32*32*107),raw(),4),
+               mask=array(1,c(32,32,32)),dim=c(32,32,32,107))
   class(data) <- "fmridata"
   hrf <- fmri.stimulus(107, c(18, 48, 78), 15, 2)
   z <- fmri.design(hrf,2)
   model <- fmri.lm(data,z,keep="all")
-  plot(data$ttt[16,16,16,])
-  lines(data$ttt[16,16,16,] - model$res[16,16,16,],col=2)
+  plot(extract.data(data)[16,16,16,])
+  lines(extract.data(data)[16,16,16,] - extract.data(model,"residuals")[16,16,16,],col=2)
 }
 \keyword{ regression }% at least one, from doc/KEYWORDS
 

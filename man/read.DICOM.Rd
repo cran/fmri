@@ -19,7 +19,7 @@ read.DICOM(filename,includedata = TRUE)
 \value{
   Object with the following list entries:
   \item{header}{header information as raw data}
-  \item{ttt}{ image data if requested}
+  \item{ttt}{ image data if requested. raw vector (numeric size 4) containing the four dimensional data cube (the first three dimensions are voxel dimensions, the fourth dimension denotes the time).}
   \item{format}{data source. string "DICOM"}
   \item{delta}{voxel size in mm}
   \item{series}{series identifier}
