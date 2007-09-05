@@ -35,9 +35,9 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       ELSE IF (kern.eq.2) THEN
          lkern=1.d0-xsq
       ELSE IF (kern.eq.3) THEN
-         lkern=dexp(-xsq*8.d0)
+         lkern=exp(-xsq*8.d0)
       ELSE IF (kern.eq.4) THEN
-         lkern=dexp(-xsq*18.d0)
+         lkern=exp(-xsq*18.d0)
       ELSE
 C        use Epanechnikov
          lkern=1.d0-xsq
@@ -70,13 +70,13 @@ C  compute distance in sij
          wj=0.d0
       ELSE IF (skern.eq.1) THEN
 C  skern == "Triangle"
-         wj=wj*dmin1(1.d0,1.d0-spf*(sij-spmin))
+         wj=wj*min(1.d0,1.d0-spf*(sij-spmin))
       ELSE IF (skern.eq.2) THEN
 C  skern == "Triangle"
          wj=wj*(1.d0-sij)
       ELSE
 C  skern == "Exp"
-         IF (sij.gt.spmin) wj=wj*dexp(-spf*(sij-spmin))
+         IF (sij.gt.spmin) wj=wj*exp(-spf*(sij-spmin))
       ENDIF
       RETURN
       END
@@ -122,9 +122,9 @@ C
       ih2=hakt/wght(1)
       ih1=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*ih1+1)
-      dlw2=min0(2*n2-1,2*ih2+1)
-      dlw3=min0(2*n3-1,2*ih3+1)
+      dlw1=min(2*n1-1,2*ih1+1)
+      dlw2=min(2*n2-1,2*ih2+1)
+      dlw3=min(2*n3-1,2*ih3+1)
       clw1=(dlw1+1)/2
       clw2=(dlw2+1)/2
       clw3=(dlw3+1)/2
@@ -240,9 +240,9 @@ C
       ih2=hakt/wght(1)
       ih1=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*ih1+1)
-      dlw2=min0(2*n2-1,2*ih2+1)
-      dlw3=min0(2*n3-1,2*ih3+1)
+      dlw1=min(2*n1-1,2*ih1+1)
+      dlw2=min(2*n2-1,2*ih2+1)
+      dlw3=min(2*n3-1,2*ih3+1)
       clw1=(dlw1+1)/2
       clw2=(dlw2+1)/2
       clw3=(dlw3+1)/2
@@ -353,9 +353,9 @@ C
       ih2=hakt/wght(1)
       ih1=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*ih1+1)
-      dlw2=min0(2*n2-1,2*ih2+1)
-      dlw3=min0(2*n3-1,2*ih3+1)
+      dlw1=min(2*n1-1,2*ih1+1)
+      dlw2=min(2*n2-1,2*ih2+1)
+      dlw3=min(2*n3-1,2*ih3+1)
       clw1=(dlw1+1)/2
       clw2=(dlw2+1)/2
       clw3=(dlw3+1)/2
@@ -458,9 +458,9 @@ C
       clw20=hakt/wght(1)
       clw10=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*clw10+1)
-      dlw2=min0(2*n2-1,2*clw20+1)
-      dlw3=min0(2*n3-1,2*clw30+1)
+      dlw1=min(2*n1-1,2*clw10+1)
+      dlw2=min(2*n2-1,2*clw20+1)
+      dlw3=min(2*n3-1,2*clw30+1)
       clw1=(dlw1+1)/2
       clw2=(dlw2+1)/2
       clw3=(dlw3+1)/2
@@ -485,12 +485,12 @@ C   scaling of sij outside the loop
 	          thi(k)=theta(i1,i2,i3,k)
 	       END DO
 C   fill swght with zeros where needed
-               j3a=max0(i3-clw30,1)
-               j3e=min0(clw30+i3,n3)
-               j2a=max0(i2-clw20,1)
-               j2e=min0(clw20+i2,n2)
-               j1a=max0(i1-clw10,1)
-               j1e=min0(clw10+i1,n1)
+               j3a=max(i3-clw30,1)
+               j3e=min(clw30+i3,n3)
+               j2a=max(i2-clw20,1)
+               j2e=min(clw20+i2,n2)
+               j1a=max(i1-clw10,1)
+               j1e=min(clw10+i1,n1)
                DO j1=j1a,j1e
                   DO j2=j2a,j2e
                      DO j3=j3a,j3e
@@ -574,9 +574,9 @@ C
       ih2=hakt/wght(1)
       ih1=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*ih1+1)
-      dlw2=min0(2*n2-1,2*ih2+1)
-      dlw3=min0(2*n3-1,2*ih3+1)
+      dlw1=min(2*n1-1,2*ih1+1)
+      dlw2=min(2*n2-1,2*ih2+1)
+      dlw3=min(2*n3-1,2*ih3+1)
       clw1=(dlw1+1)/2
       clw2=(dlw2+1)/2
       clw3=(dlw3+1)/2
@@ -672,9 +672,9 @@ C
       clw20=hakt/wght(1)
       clw10=hakt
       n=n1*n2*n3
-      dlw1=min0(2*n1-1,2*clw10+1)
-      dlw2=min0(2*n2-1,2*clw20+1)
-      dlw3=min0(2*n3-1,2*clw30+1)
+      dlw1=min(2*n1-1,2*clw10+1)
+      dlw2=min(2*n2-1,2*clw20+1)
+      dlw3=min(2*n3-1,2*clw30+1)
       clw10=(dlw1-1)/2
       clw20=(dlw2-1)/2
       clw30=(dlw3-1)/2
@@ -702,12 +702,12 @@ C
 C
 C     now the convolution
 C
-      j3a=max0(i3-clw30,1)
-      j3e=min0(clw30+i3,n3)
-      j2a=max0(i2-clw20,1)
-      j2e=min0(clw20+i2,n2)
-      j1a=max0(i1-clw10,1)
-      j1e=min0(clw10+i1,n1)
+      j3a=max(i3-clw30,1)
+      j3e=min(clw30+i3,n3)
+      j2a=max(i2-clw20,1)
+      j2e=min(clw20+i2,n2)
+      j1a=max(i1-clw10,1)
+      j1e=min(clw10+i1,n1)
       call conv3D0(n1,n2,n3,dgw1,dgw2,dgw3,
      1       j1a,j1e,j2a,j2e,j3a,j3e,gwght,swght,swj2)
       vredc=swj2
@@ -729,12 +729,12 @@ C   we are in the center and can use vred
 C
 C     now the convolution
 C
-                  j3a=max0(i3-clw30,1)
-                  j3e=min0(clw30+i3,n3)
-                  j2a=max0(i2-clw20,1)
-                  j2e=min0(clw20+i2,n2)
-                  j1a=max0(i1-clw10,1)
-                  j1e=min0(clw10+i1,n1)
+                  j3a=max(i3-clw30,1)
+                  j3e=min(clw30+i3,n3)
+                  j2a=max(i2-clw20,1)
+                  j2e=min(clw20+i2,n2)
+                  j1a=max(i1-clw10,1)
+                  j1e=min(clw10+i1,n1)
                   call conv3D0(n1,n2,n3,dgw1,dgw2,dgw3,j1a,j1e,
      1                   j2a,j2e,j3a,j3e,gwght,swght,swj2)
 	          vred(i1,i2,i3)=swj2
@@ -784,12 +784,12 @@ C
       clw10=clw1-1
       clw20=clw2-1
       clw30=clw3-1
-      j3a=max0(i3-clw30,1)
-      j3e=min0(clw30+i3,n3)
-      j2a=max0(i2-clw20,1)
-      j2e=min0(clw20+i2,n2)
-      j1a=max0(i1-clw10,1)
-      j1e=min0(clw10+i1,n1)
+      j3a=max(i3-clw30,1)
+      j3e=min(clw30+i3,n3)
+      j2a=max(i2-clw20,1)
+      j2e=min(clw20+i2,n2)
+      j1a=max(i1-clw10,1)
+      j1e=min(clw10+i1,n1)
       DO j1=j1a,j1e
          DO j2=j2a,j2e
             DO j3=j3a,j3e
@@ -939,11 +939,11 @@ C
 	 END DO
          z3=(clw3-j3)*wght(2)
          z3=z3*z3
-         ih2=dsqrt(hakt2-z3)/wght(1)
+         ih2=sqrt(hakt2-z3)/wght(1)
          DO j2=clw2-ih2,clw2+ih2
             z2=(clw2-j2)*wght(1)
             z2=z3+z2*z2
-            ih1=dsqrt(hakt2-z2)
+            ih1=sqrt(hakt2-z2)
             DO j1=clw1-ih1,clw1+ih1
                z1=clw1-j1
                lwght(j1,j2,j3)=lkern(kern,(z1*z1+z2)/hakt2)

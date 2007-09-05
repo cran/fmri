@@ -1,0 +1,19 @@
+2007-09-05 version 1.2-2
+
+  - write.AFNI() completely re-written, it has new arguments header (AFNI-header 
+    list with entries such as DATASET_RANK etc.) and logical taxis, which controls,
+    whether sub-bricks contain time series data. All other (old) arguments are 
+    depreciated, but the function should behave as in former version when called 
+    as such. This will be removed in some future version!
+  - read.AFNI() now does not include ' and ~ in string-attributes in header
+
+2007-07-02 version 1.2-1
+
+  - bugfix in fmri.lm() which was unable to calculate spatial correlation for
+    some datasets with optimize().
+
+2007-04-23 version 1.2-0
+
+  - to save memory fmri datasets are now stored in in the $ttt list element in 
+    raw() format. This allows for handling much larger time series. To directly
+    access the data (including dimension) use the extract.data() function.

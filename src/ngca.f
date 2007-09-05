@@ -1,45 +1,45 @@
       real*8 function f1(z,s)
       real*8 z,s,z2
       z2=z*z
-      f1=1.66d0*z*z2*dexp(-z2/2.d0/s/s)
+      f1=1.66d0*z*z2*exp(-z2/2.d0/s/s)
       RETURN
       END
       real*8 function f1d1(z,s)
       real*8 z,s,z2,s2
       z2=z*z
       s2=s*s
-      f1d1=1.66d0*z2*(3.d0-z2/s2)*dexp(-z2/2.d0/s2)
+      f1d1=1.66d0*z2*(3.d0-z2/s2)*exp(-z2/2.d0/s2)
       RETURN
       END
       real*8 function f2(z,s)
       real*8 z,s
-      f2=2.d0*dtanh(s*z)
+      f2=2.d0*tanh(s*z)
       RETURN
       END
       real*8 function f2d1(z,s)
       real*8 z,s,chsz
-      chsz=dcosh(z*s)
+      chsz=cosh(z*s)
       f2d1=2.d0*s/chsz/chsz
       RETURN
       END
       real*8 function f3(z,s)
       real*8 z,s
-      f3=dsin(s*z)
+      f3=sin(s*z)
       RETURN
       END
       real*8 function f3d1(z,s)
       real*8 z,s
-      f3d1=s*dcos(s*z)
+      f3d1=s*cos(s*z)
       RETURN
       END
       real*8 function f4(z,s)
       real*8 z,s
-      f4=dcos(s*z)
+      f4=cos(s*z)
       RETURN
       END
       real*8 function f4d1(z,s)
       real*8 z,s
-      f4d1=-s*dsin(s*z)
+      f4d1=-s*sin(s*z)
       RETURN
       END
       Subroutine fastica(y,omega,d,n,l,t,beta,v,normv,s)
@@ -94,13 +94,13 @@ C this is just to avoid some warnings
                z=beta(o)
                nbeta=nbeta+z*z
             END DO
-            srnbeta=dsqrt(nbeta)
+            srnbeta=sqrt(nbeta)
             DO o=1,d
                omega(o,k,ifunct)=beta(o)/srnbeta
             END DO
          END DO
          nk=nk/n-nbeta
-         nk=dsqrt(n/nk)
+         nk=sqrt(n/nk)
          zv=0.d0
          DO o=1,d
             z=beta(o)*nk
@@ -108,7 +108,7 @@ C this is just to avoid some warnings
             zv=zv+z*z
          END DO
          IF(nbeta.gt.1d-4) THEN
-            normv(k,ifunct)=dsqrt(zv)
+            normv(k,ifunct)=sqrt(zv)
          ELSE
             normv(k,ifunct)=0.d0
          END IF

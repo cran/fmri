@@ -58,6 +58,13 @@
   the variances of the parameter for the stimuli indicated in
   \code{vvector}. \code{cbeta} then contains the corresponding parameter
   estimates and thus is a vector of corresponding length in each voxel.
+
+  If warning "Local smoothness characterized by large bandwidth" occurs,
+  check \code{scorr} elements. If correlation drops with lag towards
+  zero, data has been pre-smoothed. Adaption can then only be of limited
+  use. If correlation does not go to zero, check the residuals of the
+  linear model for unexplained structure (spin saturation in first
+  scans? discuard them!).
 }
 \value{
   object with class attributes "fmrispm" and "fmridata"

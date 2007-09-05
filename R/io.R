@@ -364,6 +364,8 @@ read.AFNI <- function(filename) {
       tmpvalue <- sub("^ +","",tmpvalue)
       if ((tmptype == "integer-attribute") || (tmptype == "float-attribute")) {
         tmpvalue <- as.numeric(strsplit(tmpvalue," +")[[1]])
+      } else {
+        tmpvalue <- sub("~$","",sub("^\'","",tmpvalue))
       }
       values <- c(values,list(value=tmpvalue))
     }        
@@ -418,65 +420,258 @@ read.AFNI <- function(filename) {
   invisible(z)
 }
 
+write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=NULL, idcode=NULL, header=NULL, taxis = FALSE) {
 
+  afni.header <- list()
+  # afni.header$NAME <- c("NAME", "type", category, count, reserved-count, multiple)
+  # "NAME"         : Attribute name (string)
+  # "type"         : Attribute type (one of "string", "integer", "float")
+  # category       : according to AFNI Doc. 0 is mandatory, 1 only for time series
+  # count          : number of parameters (used), 0 is unknown, or not implemented
+  # reserved-count : number of parameters (reserved), 0 is unknown, or not implemented
+  # multiple       : is this a multiple argument like NOTE_NUMBER_001
 
+  # Mandatory Attributes
+  afni.header$DATASET_RANK <- c("DATASET_RANK", "integer", 0, 2, 8, FALSE)
+  afni.header$DATASET_DIMENSIONS <- c("DATASET_DIMENSION", "integer", 0, 3, 5, FALSE)
+  afni.header$TYPESTRING <- c("TYPESTRING", "string", 0, 1, 1, FALSE)
+  afni.header$SCENE_DATA <- c("SCENE_DATA", "integer", 0, 3, 8, FALSE)
+  afni.header$ORIENT_SPECIFIC <- c("ORIENT_SPECIFIC", "integer", 0, 3, 3, FALSE)
+  afni.header$ORIGIN <- c("ORIGIN", "float", 0, 3, 3, FALSE)
+  afni.header$DELTA <- c("DELTA", "float", 0, 3, 3, FALSE)
 
-write.AFNI <- function(filename, ttt, label, note="", origin=c(0,0,0), delta=c(4,4,4), idcode="WIAS_noid") {
-  ## TODO:
-  ## 
-  ## create object oriented way!!!!
+  # Time-dependent Dataset Attributes
+  afni.header$TAXIS_NUMS <- c("TAXIS_NUMS", "integer", 1, 3, 8, FALSE)
+  afni.header$TAXIS_FLOATS <- c("TAXIS_FLOATS", "float", 1, 5, 8, FALSE)
+  afni.header$TAXIS_OFFSETS <- c("TAXIS_OFFSETS", "float", 1, 0, 0, FALSE)
+
+  # Almost Mandatory Attributes
+  afni.header$IDCODE_STRING <- c("IDCODE_STRING", "string", 2, 1, 1, FALSE)
+  afni.header$IDCODE_DATE <- c("IDCODE_DATE", "string", 2, 1, 1, FALSE)
+  afni.header$BYTEORDER_STRING <- c("BYTEORDER_STRING", "string", 2, 1, 1, FALSE)
+  afni.header$BRICK_STATS <- c("BRICK_STATS", "float", 2, 0, 0, FALSE)
+  afni.header$BRICK_TYPES <- c("BRICK_TYPES", "integer", 2, 0, 0, FALSE)
+  afni.header$BRICK_FLOAT_FACS <- c("BRICK_FLOAT_FACS", "float", 2, 0, 0, FALSE)
+  afni.header$BRICK_LABS <- c("BRICK_LABS", "string", 2, 0, 0, FALSE)
+  afni.header$BRICK_STATAUX <- c("BRICK_STATAUX", "float", 2, 0, 0, FALSE)
+  afni.header$STAT_AUX <- c("STAT_AUX", "float", 2, 0, 0, FALSE) # depreciated
+
+  # Note Attributes
+  afni.header$HISTORY_NOTE <- c("HISTORY_NOTE", "string", 3, 1, 1, FALSE)
+  afni.header$NOTES_COUNT <- c("NOTES_COUNT", "integer", 3, 1, 1, FALSE)
+  afni.header$NOTE_NUMBER <- c("NOTE_NUMBER", "string", 3, 0, 0, TRUE) # more than one!!!
+
+  # Registration Attributes
+  afni.header$TAGALIGN_MATVEC <- c("TAGALIGN_MATVEC", "float", 4, 12, 12, FALSE)
+  afni.header$VOLREG_MATVEC <- c("VOLREG_MATVEC", "float", 4, 12, 12, TRUE) # more than one!!!
+  afni.header$VOLREG_ROTCOM <- c("VOLREG_ROTCOM", "string", 4, 1, 1, TRUE) # more than one!!!
+  afni.header$VOLREG_CENTER_OLD <- c("VOLREG_CENTER_OLD", "float", 4, 3, 3, FALSE)
+  afni.header$VOLREG_CENTER_BASE <- c("VOLREG_CENTER_BASE", "float", 4, 3, 3, FALSE)
+  afni.header$VOLREG_ROTPARENT_IDCODE <- c("VOLREG_ROTPARENT_IDCODE", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_ROTPARENT_NAME <- c("VOLREG_ROTPARENT_NAME", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_GRIDPARENT_IDCODE <- c("VOLREG_GRIDPARENT_IDCODE", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_GRIDPARENT_NAME <- c("VOLREG_GRIDPARENT_NAME", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_INPUT_IDCODE <- c("VOLREG_INPUT_IDCODE", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_INPUT_NAME <- c("VOLREG_INPUT_NAME", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_BASE_IDCODE <- c("VOLREG_BASE_IDCODE", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_BASE_NAME <- c("VOLREG_BASE_NAME", "string", 4, 1, 1, FALSE)
+  afni.header$VOLREG_ROTCOM_NUM <- c("VOLREG_ROTCOM_NUM", "integer", 4, 1, 1, FALSE)
+
+  # Miscellaneous Attributes
+  afni.header$IDCOE_ANAT_PARENT <- c("IDCOE_ANAT_PARENT", "string", 5, 1, 1, FALSE)
+  afni.header$TO3D_ZPAD <- c("TO3D_ZPAD", "integer", 5, 3, 3, FALSE)
+
+  # Warping Attributes
+  afni.header$IDCOE_WARP_PARENT <- c("IDCOE_WARP_PARENT", "string", 6, 1, 1, FALSE)
+  afni.header$WARP_TYPE <- c("WARP_TYPE", "integer", 6, 2, 2, FALSE)
+  afni.header$WARP_DATA <- c("WARP_DATA", "float", 6, 0, 0, FALSE)
+
+  # Talairach Markers Attributes
+  afni.header$MARKS_XYZ <- c("MARKS_XYZ", "float", 7, 30, 30, FALSE)
+  afni.header$MARKS_LAB <- c("MARKS_LAB", "string", 7, 1, 1, FALSE)
+  afni.header$MARKS_HELP <- c("MARKS_HELP", "string", 7, 1, 1, FALSE)
+  afni.header$MARKS_FLAGS <- c("MARKS_FLAGS", "integer", 7, 2, 2, FALSE)
+
+  # Attributes for User-Defined Tags
+  afni.header$TAGSET_NUM <- c("TAGSET_NUM", "integer", 8, 2, 2, FALSE)
+  afni.header$TAGSET_FLOATS <- c("TAGSET_FLOATS", "floats", 8, 0, 0, FALSE)
+  afni.header$TAGSET_LABELS <- c("TAGSET_LABELS", "string", 8, 1, 1, FALSE)
+
+  # Nearly Useless Attributes
+  afni.header$LABEL_1 <- c("LABEL_1", "string", 9, 1, 1, FALSE)
+  afni.header$LABEL_2 <- c("LABEL_2", "string", 9, 1, 1, FALSE)
+  afni.header$DATASET_NAME <- c("DATASET_NAME", "string", 9, 1, 1, FALSE)
+  afni.header$DATASET_KEYWORDS <- c("DATASET_KEYWORDS", "string", 9, 1, 1, FALSE)
+  afni.header$BRICK_KEYWORDS <- c("BRICK_KEYWORDS", "string", 9, 1, 1, FALSE)
   
-  AFNIheaderpart <- function(type, name, value) {
-    a <- "\n"
-    a <- paste(a, "type = ", type, "\n", sep="")
-    a <- paste(a, "name = ", name, "\n", sep="")
-    if (regexpr("string",type) == 1) {
-      value <- paste("'", value, "~", sep="")
-      a <- paste(a, "count = ", nchar(value) - 1, "\n", sep ="")
-      a <- paste(a, value, "\n", sep="")
-    } else {
-      a <- paste(a, "count = ", length(value), "\n", sep ="")
-      j <- 0
-      while (j<length(value)) {
-        left <- length(value) - j
-        if (left>4) left <- 5
-        a <- paste(a, paste(value[(j+1):(j+left)],collapse="  "), "\n", sep="  ")
-        j <- j+5
+  AFNIheaderpart <- function(name, value, conhead, check=NULL) {
+    if (regexpr("_[0-9]*$", name)) if (!is.null(afni.header[[sub("_[0-9]*$","", name)]])) {
+      if (as.logical(afni.header[[sub("_[0-9]*$","", name)]][6])) {
+        header.entry <- afni.header[[sub("_[0-9]*$","", name)]]
+      } else {
+        header.entry <- afni.header[[name]]
       }
+    } else {
+      header.entry <- afni.header[[name]]
     }
-    a
+    if (!(is.null(header.entry[2]))) {
+      # now we know, that entry "name" is valid attribute
+      a <- "\n"
+      type <- header.entry[2]
+      a <- paste(a, "type = ", type, "-attribute\n", sep="")
+      a <- paste(a, "name = ", name, "\n", sep="")
+      if (is.null(value)) {
+        if (header.entry[3] == 0) {
+          stop("not found mandatory attribute ",name," in header", call.=FALSE)
+        } else if ((header.entry[3] == 1) && taxis) {
+          stop("not found mandatory attribute ",name," in header", call.=FALSE)
+        } else {
+          stop("attempt to write attribute ",name,", which was not found", call.=FALSE)
+        }
+      }
+
+      if (regexpr("string",type) == 1) {
+        if (!is.null(check)) if (!(value %in% check)) 
+          warning("value ", value, " for attribute ", name," does not seem to be valid! Please check!", call.=FALSE)
+        value <- paste("'", value, "~", sep="")                         # make syntax highlightening work:'
+        a <- paste(a, "count = ", nchar(value) - 1, "\n", sep ="")
+        a <- paste(a, value, "\n", sep="")
+      } else {
+        if (header.entry[4] != 0) {
+          if (length(value) < header.entry[4]) {
+            warning("too few values for ",name,", expecting ", header.entry[4] ," values, filling with zeros!\n", call.=FALSE)
+          }
+          length(value) <- as.integer(header.entry[5])
+          value[is.na(value)] <- 0
+          if (!is.null(check)) {
+            length(check) <- as.integer(header.entry[5])
+            check[is.na(check)] <- 0
+            if (!as.logical(prod((value[1:as.integer(header.entry[4])] == check[1:as.integer(header.entry[4])])))) 
+              warning("value ", value, " for attribute ", name," does not seem to be valid or match dataset! Please check!", call.=FALSE)
+          }
+        }
+        a <- paste(a, "count = ", length(value), "\n", sep ="")
+        j <- 0
+        while (j<length(value)) {
+          left <- length(value) - j
+          if (left>4) left <- 5
+          a <- paste(a, paste(value[(j+1):(j+left)],collapse="  "), "\n", sep="  ")
+          j <- j+5
+        }
+      }
+      writeChar(a,conhead,eos=NULL)
+    } else {
+      warning("attempt to write unknown attribute ",name," ...skipping!", call.=FALSE)
+    }
   }
-  
+
+  if (!is.null(c(label, note, origin, delta, idcode))) warning("The use of any of the arguments label, note, origin, delta, idcode is depreciated. Please use header and taxis argument, see documentation. THEY WILL VANISH IN SOME FUTURE RELAESE OF THIS SOFTWARE!", call.=FALSE)
+
+  # checking dataset!!!
+  if ((length(dim(ttt)) < 3) || (length(dim(ttt)) > 4) || any(dim(ttt)[1:3] == 1)) stop("bad dimension",dim(ttt) ,"for dataset!")
+  if (length(dim(ttt)) == 3) dim(ttt) <- c(dim(ttt),1)
+
+  if (is.null(header)) header <- list()
+
   conhead <- file(paste(filename, ".HEAD", sep=""), "w")
-  writeChar(AFNIheaderpart("string-attribute","HISTORY_NOTE",note),conhead,eos=NULL)
-  writeChar(AFNIheaderpart("string-attribute","TYPESTRING","3DIM_HEAD_FUNC"),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("string-attribute","IDCODE_STRING",idcode),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("string-attribute","IDCODE_DATE",date()),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("integer-attribute","SCENE_DATA",c(0,11,1,-999,-999,-999,-999,-999)),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("integer-attribute","ORIENT_SPECIFIC",c(0,3,4)),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("float-attribute","ORIGIN",origin),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("float-attribute","DELTA",delta),conhead,eos=NULL)  
-  minmax <- function(y) {r <- NULL;for (k in 1:dim(y)[4]) {r <- c(r,min(y[,,,k]),max(y[,,,k]))}; r}
-  mm <- minmax(ttt)
-  writeChar(AFNIheaderpart("float-attribute","BRICK_STATS",mm),conhead,eos=NULL)
-  writeChar(AFNIheaderpart("integer-attribute","DATASET_RANK",c(3,dim(ttt)[4],0,0,0,0,0,0)),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("integer-attribute","DATASET_DIMENSIONS",c(dim(ttt)[1:3],0,0)),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("integer-attribute","BRICK_TYPES",rep(1,dim(ttt)[4])),conhead,eos=NULL)  
+  # write mandatory attributes
+  if (is.null(header$DATASET_RANK)) header$DATASET_RANK <- c(3,dim(ttt)[4])
+  AFNIheaderpart("DATASET_RANK",header$DATASET_RANK, conhead,c(3,dim(ttt)[4]))
+  header$DATASET_RANK <- NULL
+  if (is.null(header$DATASET_DIMENSIONS)) header$DATASET_DIMENSIONS <- c(dim(ttt)[1:3])
+  AFNIheaderpart("DATASET_DIMENSIONS",header$DATASET_DIMENSIONS, conhead,c(dim(ttt)[1:3]))
+  header$DATASET_DIMENSIONS <- NULL
+  if (is.null(header$TYPESTRING)) {header$TYPESTRING <- "3DIM_HEAD_FUNC"; warning("TYPESTRING not given, setting to 3DIM_HEAD_FUNC for backward compatibility", call.=FALSE) }
+  AFNIheaderpart("TYPESTRING",header$TYPESTRING, conhead,c("3DIM_HEAD_ANAT","3DIM_HEAD_FUNC","3DIM_GEN_ANAT","3DIM_GEN_ANAT"))
+  header$TYPESTRING <- NULL
+  if (is.null(header$SCENE_DATA)) {header$SCENE_DATA <- c(0,11,1,-999,-999,-999,-999,-999); warning("SCENE_DATA not given, setting to c(0,11,1,-999,-999,-999,-999,-999) for backward compatibility", call.=FALSE) }
+  AFNIheaderpart("SCENE_DATA",header$SCENE_DATA, conhead)
+  header$SCENE_DATA <- NULL
+  if (is.null(header$ORIENT_SPECIFIC)) {header$ORIENT_SPECIFIC <- c(0,3,4); warning("ORIENT_SPECIFIC not given, setting to c(0,3,4) for backward compatibility", call.=FALSE) }
+  AFNIheaderpart("ORIENT_SPECIFIC",header$ORIENT_SPECIFIC, conhead)
+  header$ORIENT_SPECIFIC <- NULL
+  if (!is.null(origin)) header$ORIGIN <- origin
+  if (is.null(header$ORIGIN)) { header$ORIGIN <- c(0,0,0); warning("ORIGIN not given, setting to c(0,0,0) for backward compatibility", call.=FALSE) }
+  AFNIheaderpart("ORIGIN",header$ORIGIN, conhead)
+  header$ORIGIN <- NULL
+  if (!is.null(delta)) header$DELTA <- delta
+  if (is.null(header$DELTA)) { header$DELTA <- c(4,4,4); warning("DELTA not given, setting to c(4,4,4) for backward compatibility", call.=FALSE) }
+  AFNIheaderpart("DELTA",header$DELTA, conhead)
+  header$DELTA <- NULL
 
-  scale <- rep(0,dim(ttt)[4])
-  for (k in 1:dim(ttt)[4]) {
-    scale[k] <- max(abs(mm[2*k-1]),abs(mm[2*k]))/32767
-    ttt[,,,k] <- ttt[,,,k] / scale[k]
+  # write mandatory attributes for time series
+  if (taxis) {
+    if (is.null(header$TAXIS_NUMS)) stop("TAXIS_NUMS not given")
+    AFNIheaderpart("TAXIS_NUMS",header$TAXIS_NUMS, conhead)
+    if (is.null(header$TAXIS_FLOATS)) stop("TAXIS_FLOATS not given")
+    AFNIheaderpart("TAXIS_FLOATS",header$TAXIS_FLOATS, conhead)
+    header$TAXIS_FLOATS <- NULL
+    if (!is.null(header$TAXIS_NUMS[2])) if (header$TAXIS_NUMS[2] != 0) if (is.null(header$TAXIS_OFFSETS)) {
+      stop("TAXIS_OFFSETS not given", call.=FALSE) } else { AFNIheaderpart("TAXIS_OFFSETS",header$TAXIS_OFFSETS, conhead); header$TAXIS_OFFSETS <- NULL }
+    header$TAXIS_NUMS <- NULL
+  } 
+
+  # almost mandatory attributes
+  if (!is.null(idcode)) header$IDCODE_STRING <- idcode
+  if (is.null(header$IDCODE_STRING)) {header$IDCODE_STRING <- "WIAS_noid"; warning("IDCODE_STRING not given, setting to WIAS_noid", call.=FALSE) }
+  AFNIheaderpart("IDCODE_STRING",header$IDCODE_STRING, conhead)
+  header$IDCODE_STRING <- NULL
+  header$IDCODE_DATE <- date()
+  AFNIheaderpart("IDCODE_DATE",header$IDCODE_DATE, conhead)
+  header$IDCODE_DATE <- NULL
+  if (is.null(header$BYTEORDER_STRING)) {
+    endian <- .Platform$endian
+    header$BYTEORDER_STRING <- switch(endian, "little" = "LSB_FIRST",
+                                       "big" = "MSB_FIRST")
+  } else {
+    if (!(header$BYTEORDER_STRING%in% c("MSB_FIRST","LSB_FIRST"))) header$BYTEORDER <- "MSB_FIRST"
+    endian <- switch(header$BYTEORDER_STRING, "MSB_FIRST" = "big",
+                                       "LSB_FIRST" = "little")
   }
+  AFNIheaderpart("BYTEORDER_STRING",header$BYTEORDER_STRING, conhead,c("MSB_FIRST","LSB_FIRST"))
+  header$BYTEORDER_STRING <- NULL
+  header$BRICK_STATS <- apply(ttt,4,range)
+  dim(header$BRICK_STATS) <- NULL
+  AFNIheaderpart("BRICK_STATS",header$BRICK_STATS, conhead)
+  header$BRICK_FLOAT_FACS <- rep(0,dim(ttt)[4])
+  if (is.null(header$BRICK_TYPES)) {
+    warning("no BRICK_TYPES given, assuming short", call.=FALSE)
+    header$BRICK_TYPES <- rep(1,dim(ttt)[4])
+  }
+  bricktypes <- header$BRICK_TYPES[1]
+  if ((bricktypes == 1) && (max(abs(header$BRICK_STATS)) > 32767)) { 
+    for (k in 1:dim(ttt)[4]) {
+      header$BRICK_FLOAT_FACS[k] <- max(abs(header$BRICK_STATS[2*k-1]),abs(header$BRICK_STATS[2*k]))/32767
+      ttt[,,,k] <- ttt[,,,k] / header$BRICK_FLOAT_FACS[k]
+    }
+  }
+  header$BRICK_STATS <- NULL
+  AFNIheaderpart("BRICK_TYPES",header$BRICK_TYPES, conhead)
+  header$BRICK_TYPES <- NULL
+  AFNIheaderpart("BRICK_FLOAT_FACS",header$BRICK_FLOAT_FACS, conhead)
+  header$BRICK_FLOAT_FACS <- NULL
+  if (!is.null(label)) header$BRICK_LABS <- paste(label,collapse="~")
+  if (!is.null(header$BRICK_LABS)) AFNIheaderpart("BRICK_LABS",header$BRICK_LABS, conhead)
+  header$BRICK_LABS <- NULL
 
-  writeChar(AFNIheaderpart("float-attribute","BRICK_FLOAT_FACS",scale),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("string-attribute","BRICK_LABS",paste(label,collapse="~")),conhead,eos=NULL)  
-  writeChar(AFNIheaderpart("string-attribute","BYTEORDER_STRING","MSB_FIRST"),conhead,eos=NULL)  
+  # note attributes
+  if (!(is.null(note))) header$HISTORY_NOTE <- paste(header$HISTORY_NOTE,note)
+  if (is.null(header$HISTORY_NOTE)) header$HISTORY_NOTE <- ""
+  AFNIheaderpart("HISTORY_NOTE",header$HISTORY_NOTE, conhead)
+  header$HISTORY_NOTE <- NULL
+
+  for (name in names(header)) {
+    AFNIheaderpart(name,header[[name]], conhead)
+    header[[name]] <- NULL
+  }
   close(conhead)
 
+  if (!(bricktypes %in% c(1,3,5))) stop("Sorry, cannot write this BRICK_TYPES.", call.=FALSE)
   conbrik <- file(paste(filename, ".BRIK", sep=""), "wb")
   dim(ttt) <- NULL
-  writeBin(as.integer(ttt), conbrik,size=2, endian="big")
+  switch(bricktypes, "1" = writeBin(as.integer(ttt), conbrik, size=2, endian=endian),
+                     "3" = writeBin(as.numeric(ttt), conbrik, size=4, endian=endian),
+                     "5" = writeBin(as.complex(ttt), conbrik, size=16, endian=endian))
   close(conbrik)
 }
 
