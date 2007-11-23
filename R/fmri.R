@@ -107,6 +107,7 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
     type <- "t"
     df <- spm$df
   }
+  if (df>171) type <- "norm"
 
   if (length(dim(spm$cbeta)) < 4) {
 

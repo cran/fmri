@@ -6,14 +6,17 @@
   Read HEAD/BRIK file.
 }
 \usage{
-read.AFNI(filename)
+read.AFNI(filename,vol=NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{filename}{ name of the file (without extension) }
+  \item{vol}{vector of volumes of the dataset to be read}
 }
 \details{
-  The function reads a HEAD/BRIK file.
+  The function reads a HEAD/BRIK file. If \code{vol} is given (defaults to
+  \code{NULL}), only volumes in this vector are read, in order to save 
+  memory.
 }
 \value{
   Object of class "fmridata" with the following list entries:

@@ -1,3 +1,14 @@
+2007-11-12 version 1.2-3
+
+  - read.AFNI() has a new argument 'vol' which contains a vector of 
+    volumes to be read. This hopefully enables to read parts of large datastes 
+    without running into memory problems.
+  - if in fmri.pvalue() the df is larger than 171, a Gaussian Random Field instead of t-field is used.
+    gamma() is not defined otherwise. On the other df is large enough!
+  - bugfix in read.NIFTI which contained a misinterpretation of the header entries 
+    (bitpix, dim)
+  - new function write.NIFTI()
+
 2007-09-05 version 1.2-2
 
   - write.AFNI() completely re-written, it has new arguments header (AFNI-header 
