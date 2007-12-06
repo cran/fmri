@@ -1,0 +1,2 @@
+- on 64bit, the read() function has problems ? still?
+- extract.data() on "fmrispm", and "fmripvlaue" objects fails (of course!)

@@ -166,7 +166,7 @@ write.ANALYZE.volume <- function(ttt,filename,size) {
   close(con)
 }
 
-read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1) {
+read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1,level=0.75) {
   counter <- c(paste("00", 1:9, sep=""), paste("0", 10:99, sep=""),paste(100:999,sep=""));
 
   prefix <- strsplit(prefix,".img")
@@ -190,7 +190,7 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
     cat(".")
     header <- analyze$header;
     
-    if ((numbpic > 1) && !numbered) { 
+    if ((numbpic > 1) && numbered) { 
       for (i in 2:numbpic) {
         a <- read.ANALYZE.volume(filename[i])$ttt
         if (sum() != 0)
@@ -211,11 +211,16 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
       weights <- NULL
     }
     
-     mask <- array(TRUE,dt[1:3])
-     mask[ttt[,,,1] < quantile(ttt[,,,1],0.75)] <- FALSE
+    mask <- array(TRUE,dt[1:3])
+    mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+    dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
+    na <- ttt %*% rep(1,dim(ttt)[2])
+    mask[is.na(na)] <- FALSE
+    ttt[is.na(na),] <- 0
+    dim(mask) <- dt[1:3]
 
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,
-              orient=NULL,dim=dim(ttt),weights=weights,header=header, mask=mask)
+              orient=NULL,dim=dt,weights=weights,header=header, mask=mask)
   } else {
     warning(paste("Error: file",filename[1],"does not exist!"))
     z <- list(ttt=NULL,format="ANALYZE",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=NULL,mask=NULL)
@@ -324,7 +329,7 @@ write.ANALYZE <- function(ttt, header=NULL, filename) {
 
 
 
-read.AFNI <- function(filename,vol=NULL) {
+read.AFNI <- function(filename,vol=NULL,level=0.75) {
   fileparts <- strsplit(filename,"\\.")[[1]]
   ext <- tolower(fileparts[length(fileparts)])
 
@@ -379,6 +384,19 @@ read.AFNI <- function(filename,vol=NULL) {
   dt <- values$DATASET_RANK[2]
   scale <- values$BRICK_FLOAT_FACS
   size <- file.info(filename.brik)$size/(dx*dy*dz*dt)
+  bricktypes <- values$BRICK_TYPES[1]
+
+  if (is.null(bricktypes)) {
+    if (size == 2) { what <- "int" }
+    else if (size == 4) { what <- "double" }
+    else if (size == 16) { what <- "complex" }
+    else { what <- "int" }
+  } else {
+    if (bricktypes == 1) { what <- "int" }
+    else if (bricktypes == 3) { what <- "double" }
+    else if (bricktypes == 5) { what <- "complex" }
+    else { what <- "int" }
+  }
 
   if (regexpr("MSB",values$BYTEORDER_STRING[1]) != -1) {
     endian <- "big"
@@ -401,7 +419,7 @@ read.AFNI <- function(filename,vol=NULL) {
     conbrik <- file(filename.brik,"rb")
     for (k in 1:dt) {
       if (k %in% vol) {
-        temp <- readBin(conbrik, "int", n=dx*dy*dz, size=size,
+        temp <- readBin(conbrik, what, n=dx*dy*dz, size=size,
                         signed=TRUE, endian=endian)
         dim(temp) <- c(dx,dy,dz)
         myttt[,,,kk] <- temp
@@ -414,12 +432,17 @@ read.AFNI <- function(filename,vol=NULL) {
         }
         kk <- kk + 1
       } else {
-        readBin(conbrik, "int", n=dx*dy*dz, size=size, signed=TRUE, endian=endian)
+        readBin(conbrik, what, n=dx*dy*dz, size=size, signed=TRUE, endian=endian)
       }
     }
     close(conbrik)
     mask <- array(TRUE,c(dx,dy,dz))
-    mask[myttt[,,,1] < quantile(myttt[,,,1],0.75)] <- FALSE
+    mask[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
+    dim(myttt) <- c(prod(dim(myttt)[1:3]),dim(myttt)[4])
+    na <- myttt %*% rep(1,dim(myttt)[2])
+    mask[is.na(na)] <- FALSE
+    myttt[is.na(na),] <- 0
+    dim(mask) <- c(dx,dy,dz)
     z <-
       list(ttt=writeBin(as.numeric(myttt),raw(),4),format="HEAD/BRIK",delta=values$DELTA,origin=values$ORIGIN,orient=values$ORIENT_SPECIFIC,dim=c(dx,dy,dz,length(vol)),weights=weights, header=values,mask=mask)
   } else {
@@ -681,9 +704,9 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
   if (!(bricktypes %in% c(1,3,5))) stop("Sorry, cannot write this BRICK_TYPES.", call.=FALSE)
   conbrik <- file(paste(filename, ".BRIK", sep=""), "wb")
   dim(ttt) <- NULL
-  switch(bricktypes, "1" = writeBin(as.integer(ttt), conbrik, size=2, endian=endian),
-                     "3" = writeBin(as.numeric(ttt), conbrik, size=4, endian=endian),
-                     "5" = writeBin(as.complex(ttt), conbrik, size=16, endian=endian))
+  switch(as.character(bricktypes), "1" = writeBin(as.integer(ttt), conbrik, size=2, endian=endian),
+                                   "3" = writeBin(as.numeric(ttt), conbrik, size=4, endian=endian),
+                                   "5" = writeBin(as.complex(ttt), conbrik, size=16, endian=endian))
   close(conbrik)
 }
 
@@ -735,8 +758,28 @@ read.DICOM <- function(filename,includedata=TRUE) {
           if (groupelement == "fffe,e0dd") break
           length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
           bytes <- bytes + 4
-          value <- readBin(con,"raw",length,1)
-          bytes <- bytes + length
+          if (length == -1) {
+            sqv <- readBin(con,"raw",4,1)
+            bytes <- bytes + 4
+            while (TRUE) {
+              if (endian == "little") {
+                testelement <- paste(paste(rev(sqv[(length(sqv)-3):(length(sqv)-2)]),collapse=""),paste(rev(sqv[(length(sqv)-1):length(sqv)]),collapse=""),sep=",")
+              } else {
+                testelement <- paste(paste(sqv[(length(sqv)-3):(length(sqv)-2)],collapse=""),paste(sqv[(length(sqv)-1):length(sqv)],collapse=""),sep=",")
+              }    
+              if (testelement == "fffe,e00d") {
+                length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
+                bytes <- bytes + 4
+                if (length != 0) warning("no valid delimiter in data sequence")
+                break
+              }
+              sqv <- c(sqv,readBin(con,"raw",1,1))
+              bytes <- bytes + 1
+            }
+          } else {
+            value <- readBin(con,"raw",length,1)
+            bytes <- bytes + length
+          }
         }
         length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
         bytes <- bytes + 4
@@ -919,7 +962,7 @@ read.NIFTI.header <- function(con) {
   header
 }
 
-read.NIFTI <- function(filename) {
+read.NIFTI <- function(filename,level=0.75) {
   fileparts <- strsplit(filename,"\\.")[[1]]
   ext <- tolower(fileparts[length(fileparts)])
 
@@ -1011,7 +1054,12 @@ read.NIFTI <- function(filename) {
 
   if (dd == 1) {
     mask <- array(TRUE,c(dx,dy,dz))
-    mask[ttt[,,,1] < quantile(ttt[,,,1],0.75)] <- FALSE
+    mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+    dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
+    na <- ttt %*% rep(1,dim(ttt)[2])
+    mask[is.na(na)] <- FALSE
+    ttt[is.na(na),] <- 0
+    dim(mask) <- c(dx,dy,dz)
 
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="NIFTI",delta=header$pixdim[2:4],
               origin=NULL,orient=NULL,dim=header$dimension[2:5],weights=weights,header=header,mask=mask)

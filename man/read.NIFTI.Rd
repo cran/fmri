@@ -6,11 +6,12 @@
   Read fMRI data from NIFTI file(s).
 }
 \usage{
-read.NIFTI(filename)
+read.NIFTI(filename, level = 0.75)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{filename}{ name of the NIFTI file }
+  \item{level}{Quantile level defining the mask}
 }
 \details{
   This function reads fMRI data files in NIFTI format.

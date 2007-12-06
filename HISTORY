@@ -1,3 +1,25 @@
+2008-01-21 version 1.2-5
+
+  - read.AFNI() can read BRICK_TYPES 3 and 5 now. Beware: all sub-bricks are assumed to have 
+    the same BRICK_TYPE
+  - bugfix in write.AFNI() for writing BRICKTYPES 3 (float) and 5 (complex)
+  - bugfix for numbered ANALYZE files in read.ANALYZE() which lead to reading only one file.
+  - set level for mask in all read functions as argument. reset data to zero only 
+    for NA values not for !mask
+  - bugfix for SQ in read.DICOM which caused incorrect reading of data sequences
+    of unknown length
+  - dimension setting bugfix in read.ANALYZE()
+  - several corrections for ngca, 
+  - function ngca now works for matrix- and fmridata-objects
+  - new fastICA function for fmri (fmriica)
+  - fmriica allows to restrict data cube by arguments xind, yind, zind and tind
+
+2007-12-07 version 1.2-4
+
+  - if dataset contains NA, set mask at these voxels to FALSE, set data to zero.
+  - to determine the (head) mask the quantile function in all read functions 
+    has na.rm = TRUE now. This avoids error for datasets with NaN in datacube.
+
 2007-11-12 version 1.2-3
 
   - read.AFNI() has a new argument 'vol' which contains a vector of 

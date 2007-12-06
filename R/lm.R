@@ -78,7 +78,7 @@ fmri.design <- function(hrf, order=2) {
         hz[j] <- z[,j]%*%z[,i]
       }
       tmp <- lm(-hz~ortho-1)
-      z[,i] <- z[,i] + as.vector(hrf %*% as.vector(tmp$coeff))
+      z[,i] <- z[,i] + as.vector(as.matrix(hrf) %*% as.vector(tmp$coeff))
     }
   }
   
@@ -160,7 +160,7 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
   if ((actype == "smooth") || (actype == "accalc") || (actype == "ac")) { 
     progress = 0
     cat("fmri.lm: calculating AR(1) model\n")
-    for (i in 1:voxelcount) {
+    for (i in (1:voxelcount)[data$mask]) {
       if (i > progress/100*voxelcount) {
         cat(progress,"% . ",sep="")
         progress = progress + 10
@@ -217,7 +217,7 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
                                                       arlist[i+1]))
         if(sum(indar)>0){
           a <- create.arcorrection(dy[4],mean(arlist[i:(i+1)])) # create prewhitening matrix
-          zprime <- a %*% z
+          zprime <- a %*% as.matrix(z)
           svdresult <- svd(zprime) # calc SVD of prewhitened design
           v <- svdresult$v
           vt <- t(v)
@@ -232,6 +232,7 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
       }
 #  prewhitened residuals don't have zero mean, therefore sweep mean over time from them
       residuals <- .Fortran("sweepm",residuals=as.double(residuals),
+                                     as.logical(data$mask),
                                      as.integer(dy[1]),
                                      as.integer(dy[2]),
                                      as.integer(dy[3]),

@@ -7,7 +7,7 @@
 }
 \usage{
 read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
-             picstart = 1, numbpic = 1)
+             picstart = 1, numbpic = 1, level = 0.75)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,7 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
   \item{postfix}{ string. part of the file name after the number}
   \item{picstart}{ number of the first image to be read. }
   \item{numbpic}{ number of images to be read }
+  \item{level}{Quantile level defining the mask}
 }
 \details{
   This function reads fMRI data files in ANALYZE format.

@@ -40,16 +40,18 @@ C  correlation in x
       scorr=z/k
       return
       end
-      subroutine sweepm(res,n1,n2,n3,nv)
+      subroutine sweepm(res,mask,n1,n2,n3,nv)
 
       implicit logical(a-z)
       integer n1,n2,n3,nv
       real*8 res(n1,n2,n3,nv)
+      logical mask(n1,n2,n3)
       integer i1,i2,i3,k
       real*8 z
       Do i1=1,n1
          Do i2=1,n2
             Do i3=1,n3
+               if (.not.mask(i1,i2,i3)) CYCLE
                z=0.d0
                DO k=1,nv
                   z=z+res(i1,i2,i3,k)
