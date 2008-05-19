@@ -1,7 +1,7 @@
-export(read.AFNI,read.ANALYZE,read.DICOM,read.NIFTI,extract.data)
+export(read.AFNI,read.ANALYZE,read.DICOM,read.NIFTI,extract.data,cutroi)
 export(write.AFNI,write.ANALYZE,write.NIFTI)
 export(fmri.stimulus,fmri.design,fmri.lm)
 export(fmri.smooth,fmri.pvalue)
 export(plot.fmridata,summary.fmridata,print.fmridata,ngca,fmriica)
 useDynLib(fmri)
-#export(vaws3D,smooth3D)
+

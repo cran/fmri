@@ -1,2 +1,7 @@
 - on 64bit, the read() function has problems ? still?
 - extract.data() on "fmrispm", and "fmripvlaue" objects fails (of course!)
+- plot.fmridata() should swap the orientation to radiological convention, this 
+  should not be done in the read functions, since it is an output property
+- plot.fmridata() still is missing the functionality for some file formats.
+- ... should(?) show data in correct voxeldimension
+_ ... it is not clear whether the argument slice should refer to the ROI (currently) or original data!

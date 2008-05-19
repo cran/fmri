@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.2-5
-Date: 2007-12-06
+Version: 1.2-6
+Date: 2008-05-19
 Title: Analysis of fMRI experiments
 Author: Karsten Tabelow <tabelow@wias-berlin.de>,
         Joerg Polzehl <polzehl@wias-berlin.de>
@@ -17,4 +17,4 @@ Copyright: This package is Copyright (C) 2006-2008 Weierstrass Institute for
 URL: http://www.wias-berlin.de/projects/matheon_a3/
 Note: This software comes with NO warranty! It is NOT intended to be used 
       in clinical applications! For evaluation only!
-Packaged: Fri Mar 28 14:59:28 2008; tabelow
+Packaged: Mon May 19 14:38:28 2008; tabelow

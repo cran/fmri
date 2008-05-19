@@ -8,12 +8,13 @@
 \usage{
 plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
               spm = TRUE, pos = c(-1, -1, -1), type = "slice",
-              device = "X11", file = "plot.png",...)
+              device = "X11", file = "plot.png", slice =  1, view = "axial" ,zlim.u =
+              NULL, zlim.o = NULL,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{ object of class "fmripvalue", "fmrispm" or "fmridata" }
-  \item{anatomic}{ overlay of same dimension as the functional data }
+  \item{anatomic}{ overlay of same dimension as the functional data, or fmridata object (if of x is fmripvalue object) }
   \item{maxpvalue}{ maximum p-value for thresholding }
   \item{spm}{ logical. if class is "fmrispm" decide whether to plot
     the t-statistics for the estimated effect (\code{spm=TRUE}) or the estimated effect
@@ -24,6 +25,10 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
   \item{device}{ output device if \code{type} is \code{slice}. "png",
     "jpeg", "ppm", default is "X11"}
   \item{file}{ name of output file if \code{device} is not "X11" }
+  \item{slice}{ number of slice in x, if anatomic is of "fmridata" class}
+  \item{view}{ "axial", "coronal", or "sagittal", if anatomic is of "fmridata" class }
+  \item{zlim.u}{ full range for anatomical underlay used for color scale, if anatomic is of "fmridata" class }
+  \item{zlim.o}{ full range for functional overlay used for color scale, if anatomic is of "fmridata" class }
   \item{...}{ additional arguments for plot}
 }
 \details{

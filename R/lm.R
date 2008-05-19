@@ -334,6 +334,17 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
   if (length(vvector) > 1) {
     result$varm <- variancem
   }
+
+  result$roixa <- data$roixa
+  result$roixe <- data$roixe
+  result$roiya <- data$roiya
+  result$roiye <- data$roiye
+  result$roiza <- data$roiza
+  result$roize <- data$roize
+  result$roit <- data$roit
+  result$header <- data$header
+  result$format <- data$format
+  result$dim0 <- data$dim0
   
   class(result) <- c("fmridata","fmrispm")
 

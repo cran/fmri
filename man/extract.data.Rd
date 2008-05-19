@@ -15,6 +15,8 @@ extract.data(z, what = "data")
   \item{what}{ either \code{"data"} or \code{"residuals"}. }
 }
 \details{
+  The function extracts data stored as raw within an object of class
+'fmridata'.
 }
 \value{
   an array of dimension \code{data$dim} containing either the
@@ -22,6 +24,4 @@ extract.data(z, what = "data")
 }
 \author{ Joerg Polzehl \email{polzehl@wias-berlin.de} }
 \seealso{\code{\link{fmri.lm}} }
-\examples{
-}
 \keyword{ utilities }% at least one, from doc/KEYWORDS

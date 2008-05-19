@@ -70,10 +70,10 @@ read.ANALYZE.volume <- function(filename) {
     what <- "raw"
     signed <- TRUE
     size <- 1
-  } else if (header$datatype == 2) { # unsigned char????
+  } else if (header$datatype == 2) { # unsigned int 1-byte
     what <- "int"
     signed <- FALSE
-    size <- if (header$bitpix) header$bitpix/8 else 2
+    size <- if (header$bitpix) header$bitpix/8 else 1
   } else if (header$datatype == 4) { # signed short
     what <- "int"
     signed <- TRUE
@@ -101,11 +101,7 @@ read.ANALYZE.volume <- function(filename) {
   }
   
   con <- file(filename,"rb")
-  if (header$datatype == 2) {
-    ttt <- readChar(con,file.info(filename)$size)
-  } else {
-    ttt <- readBin(con, what, n=dx*dy*dz*dt*size, size=size, signed=signed, endian=endian)
-  }
+  ttt <- readBin(con, what, n=dx*dy*dz*dt*size, size=size, signed=signed, endian=endian)
   close(con)
 
   dim(ttt) <- c(dx,dy,dz,dt)
@@ -186,7 +182,7 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
   if (!is.na(file.info(filename[1])$size)) {
     analyze <- read.ANALYZE.volume(filename[1]);
     ttt <- analyze$ttt
-    dt <- dim(ttt)
+    ddim <- dim(ttt)
     cat(".")
     header <- analyze$header;
     
@@ -196,13 +192,13 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
         if (sum() != 0)
           cat("Error: wrong spatial dimension in picture",i)
         ttt <- c(ttt,a);
-        dt[4] <- dt[4] + dim(a)[4]
+        ddim[4] <- ddim[4] + dim(a)[4]
         cat(".")
       }
     }
     
     cat("\n")
-    dim(ttt) <- dt
+    dim(ttt) <- ddim
     
     if (min(abs(header$pixdim[2:4])) != 0) {
       weights <-
@@ -210,20 +206,87 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
     } else {
       weights <- NULL
     }
-    
-    mask <- array(TRUE,dt[1:3])
+#    orientation <- switch(header$orient, "0", c(),
+#                                         "1", c(),
+#                                         "2", c(),
+#                                         "3", c(),
+#                                         "4", c(),
+#                                         "5", c(),
+#                                         "6", c(),
+#                                         c(0,2,5))
+#   if (any(sort((orientation)%/%2) != 0:2)) stop("invalid orientation",orientation,"found! \n")
+    delta <- header$pixdim[2:4]
+#
+#   set correct orientation
+#   DO IT IN plot.fmridata()
+#
+#    xyz <- (orientation)%/%2+1
+#    swap <- orientation-2*(orientation%/%2)
+#    if(any(xyz!=1:3)) {
+#      abc <- 1:3
+#      abc[xyz] <- abc
+#      ttt <- aperm(ttt,c(abc,4))
+#      swap[xyz] <- swap
+#      delta[xyz] <- delta
+#      weights[xyz] <- weights
+#      ddim[xyz]<- ddim[1:3]
+#    }
+#    if(swap[1]==1) {
+#      ttt <- ttt[ddim[1]:1,,,,drop=FALSE]
+#    }
+#    if(swap[2]==1) {
+#      ttt <- ttt[,ddim[2]:1,,,drop=FALSE]
+#    }
+#    if(swap[3]==0) {
+#      ttt <- ttt[,,ddim[3]:1,,drop=FALSE]
+#    }
+
+
+
+    mask <- array(TRUE,ddim[1:3])
     mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
     dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
     na <- ttt %*% rep(1,dim(ttt)[2])
     mask[is.na(na)] <- FALSE
     ttt[is.na(na),] <- 0
-    dim(mask) <- dt[1:3]
+    dim(mask) <- ddim[1:3]
 
-    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="ANALYZE",delta=header$pixdim[2:4],origin=NULL,
-              orient=NULL,dim=dt,weights=weights,header=header, mask=mask)
+    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
+              format="ANALYZE",
+              delta=delta,
+              origin=NULL,
+              orient=NULL,
+              dim=ddim,
+              dim0=ddim,
+              roixa=1,
+              roixe=ddim[1],
+              roiya=1,
+              roiye=ddim[2],
+              roiza=1,
+              roize=ddim[3],
+              roit=1:ddim[4],
+              weights=weights,
+              header=header, 
+              mask=mask)
   } else {
     warning(paste("Error: file",filename[1],"does not exist!"))
-    z <- list(ttt=NULL,format="ANALYZE",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=NULL,mask=NULL)
+    z <- list(ttt=NULL,
+              format="ANALYZE",
+              delta=NULL,
+              origin=NULL,
+              orient=NULL,
+              dim=NULL,
+              dim0=NULL,
+              roixa=NULL,
+              roixe=NULL,
+              roiya=NULL,
+              roiye=NULL,
+              roiza=NULL,
+              roize=NULL,
+              roit=NULL,
+              weights=NULL,
+              header=NULL,
+              mask=NULL)
   }
 
   class(z) <- "fmridata"
@@ -331,19 +394,24 @@ write.ANALYZE <- function(ttt, header=NULL, filename) {
 
 read.AFNI <- function(filename,vol=NULL,level=0.75) {
   fileparts <- strsplit(filename,"\\.")[[1]]
-  ext <- tolower(fileparts[length(fileparts)])
 
-  if (ext == "head") {
-    filename.head <- filename
-    filename.brik <- paste(c(fileparts[-length(fileparts)],"BRIK"),collapse=".")
-  } else if (ext == "brik") {
-    filename.head <- paste(c(fileparts[-length(fileparts)],"HEAD"),collapse=".")
-    filename.brik <- filename
+  if (length(fileparts) == 1) {
+    filename.head <- paste(fileparts[1],"HEAD",sep=".")
+    filename.brik <- paste(fileparts[1],"BRIK",sep=".")
   } else {
-    filename.head <- paste(filename,".HEAD",sep="")
-    filename.brik <- paste(filename,".BRIK",sep="")
+    ext <- tolower(fileparts[length(fileparts)])
+    if (ext == "head") {
+      filename.head <- filename
+      filename.brik <- paste(c(fileparts[-length(fileparts)],"BRIK"),collapse=".")
+    } else if (ext == "brik") {
+      filename.head <- paste(c(fileparts[-length(fileparts)],"HEAD"),collapse=".")
+      filename.brik <- filename
+    } else if (ext == "") {
+      filename.head <- paste(c(fileparts,"HEAD"),collapse=".")
+      filename.brik <- paste(c(fileparts,"BRIK"),collapse=".")
+    }
   }
-  
+
   conhead <- file(filename.head,"r")
   header <- readLines(conhead)
   close(conhead)
@@ -381,10 +449,14 @@ read.AFNI <- function(filename,vol=NULL,level=0.75) {
   dx <- values$DATASET_DIMENSIONS[1]
   dy <- values$DATASET_DIMENSIONS[2]
   dz <- values$DATASET_DIMENSIONS[3]
+  ddim <- c(dx,dy,dz)
   dt <- values$DATASET_RANK[2]
   scale <- values$BRICK_FLOAT_FACS
   size <- file.info(filename.brik)$size/(dx*dy*dz*dt)
   bricktypes <- values$BRICK_TYPES[1]
+#  orientation <- values$ORIENT_SPECIFIC
+#  if (any(sort((orientation)%/%2) != 0:2)) stop("invalid orientation",orientation,"found! \n")
+  delta <- values$DELTA
 
   if (is.null(bricktypes)) {
     if (size == 2) { what <- "int" }
@@ -404,9 +476,9 @@ read.AFNI <- function(filename,vol=NULL,level=0.75) {
     endian <- "little"
   }
 
-  if (min(abs(values$DELTA)) != 0) {
+  if (min(abs(delta)) != 0) {
     weights <-
-      abs(values$DELTA/min(abs(values$DELTA)))
+      abs(delta/min(abs(delta)))
   } else {
     weights <- NULL
   }
@@ -414,12 +486,12 @@ read.AFNI <- function(filename,vol=NULL,level=0.75) {
   if (is.null(vol)) vol <- 1:dt
   
   if ((as.integer(size) == size) && (length(vol) > 0)) {
-    myttt <- array(0,dim=c(dx,dy,dz,length(vol)))
+    myttt <- array(0,dim=c(ddim,length(vol)))
     kk <- 1
     conbrik <- file(filename.brik,"rb")
     for (k in 1:dt) {
       if (k %in% vol) {
-        temp <- readBin(conbrik, what, n=dx*dy*dz, size=size,
+        temp <- readBin(conbrik, what, n=prod(ddim), size=size,
                         signed=TRUE, endian=endian)
         dim(temp) <- c(dx,dy,dz)
         myttt[,,,kk] <- temp
@@ -436,18 +508,76 @@ read.AFNI <- function(filename,vol=NULL,level=0.75) {
       }
     }
     close(conbrik)
-    mask <- array(TRUE,c(dx,dy,dz))
+
+#
+#   set correct orientation
+#   DO IT IN plot.fmridata()
+#
+#    xyz <- (orientation)%/%2+1
+#    swap <- orientation-2*(orientation%/%2)
+#    if(any(xyz!=1:3)) {
+#      abc <- 1:3
+#      abc[xyz] <- abc
+#      myttt <- aperm(myttt,c(abc,4))
+#      swap[xyz] <- swap
+#      delta[xyz] <- delta
+#      weights[xyz] <- weights
+#      ddim[xyz]<- ddim
+#    }
+#    if(swap[1]==1) {
+#      myttt <- myttt[ddim[1]:1,,,,drop=FALSE]
+#    }
+#    if(swap[2]==1) {
+#      myttt <- myttt[,ddim[2]:1,,,drop=FALSE]
+#    }
+#    if(swap[3]==0) {
+#      myttt <- myttt[,,ddim[3]:1,,drop=FALSE]
+#    }
+
+    mask <- array(TRUE,ddim)
     mask[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
-    dim(myttt) <- c(prod(dim(myttt)[1:3]),dim(myttt)[4])
+    dim(myttt) <- c(prod(ddim),dim(myttt)[4])
     na <- myttt %*% rep(1,dim(myttt)[2])
     mask[is.na(na)] <- FALSE
     myttt[is.na(na),] <- 0
-    dim(mask) <- c(dx,dy,dz)
+    dim(mask) <- ddim
     z <-
-      list(ttt=writeBin(as.numeric(myttt),raw(),4),format="HEAD/BRIK",delta=values$DELTA,origin=values$ORIGIN,orient=values$ORIENT_SPECIFIC,dim=c(dx,dy,dz,length(vol)),weights=weights, header=values,mask=mask)
+      list(ttt=writeBin(as.numeric(myttt),raw(),4),
+           format="HEAD/BRIK",
+           delta=delta,
+           origin=values$ORIGIN,
+           orient=c(0,2,5),
+           dim=c(ddim,length(vol)),
+           dim0=c(ddim,length(vol)),
+           roixa=1,
+           roixe=ddim[1],
+           roiya=1,
+           roiye=ddim[2],
+           roiza=1,
+           roize=ddim[3],
+           roit=vol,
+           weights=weights, 
+           header=values,
+           mask=mask)
   } else {
     warning("Error reading file: Could not detect size per voxel\n")
-    z <- list(ttt=NULL,format="HEAD/BRIK",delta=NULL,origin=NULL,orient=NULL,dim=NULL,weights=NULL,header=values,mask=NULL)    
+    z <- list(ttt=NULL,
+              format="HEAD/BRIK",
+              delta=NULL,
+              origin=NULL,
+              orient=NULL,
+              dim=NULL,
+              dim0=NULL,
+              roixa=NULL,
+              roixe=NULL,
+              roiya=NULL,
+              roiye=NULL,
+              roiza=NULL,
+              roize=NULL,
+              roit=NULL,
+              weights=NULL,
+              header=values,
+              mask=NULL)
   }
   
   class(z) <- "fmridata"
@@ -1061,13 +1191,42 @@ read.NIFTI <- function(filename,level=0.75) {
     ttt[is.na(na),] <- 0
     dim(mask) <- c(dx,dy,dz)
 
-    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),format="NIFTI",delta=header$pixdim[2:4],
-              origin=NULL,orient=NULL,dim=header$dimension[2:5],weights=weights,header=header,mask=mask)
+    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
+              format="NIFTI",
+              delta=header$pixdim[2:4],
+              origin=NULL,
+              orient=NULL,
+              dim=header$dimension[2:5],
+              dim0=header$dimension[2:5],
+              roixa=1,
+              roixe=dx,
+              roiya=1,
+              roiye=dy,
+              roiza=1,
+              roize=dz,
+              roit=1:dt,
+              weights=weights,
+              header=header,
+              mask=mask)
 
     class(z) <- "fmridata"
   } else {
-    z <- list(ttt=ttt,format="NIFTI",delta=header$pixdim[2:4],
-              origin=NULL,orient=NULL,dim=c(dx,dy,dz,dd),weights=weights,header=header)
+    z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
+              format="NIFTI",
+              delta=header$pixdim[2:4],
+              origin=NULL,
+              orient=NULL,
+              dim=c(dx,dy,dz,dd),
+              dim0=c(dx,dy,dz,dd),
+              roixa=1,
+              roixe=dx,
+              roiya=1,
+              roiye=dy,
+              roiza=1,
+              roize=dz,
+              roit=1:dd,
+              weights=weights,
+              header=header)
   }
 
 

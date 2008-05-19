@@ -32,11 +32,8 @@ the analysis to a cube in space and certain time points.
     \item{v }{If \code{keepv==TRUE} the set of directions \code{v^{(k)}}}
     \item{normv }{If \code{keepv==TRUE} the norm of each \code{v^{(k)}}.}
 }
-\references{  }
 \author{ J\"org Polzehl polzehl@wias-berlin.de  }
 \seealso{ \code{\link{ngca}} }
-\examples{
-}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ multivariate }
