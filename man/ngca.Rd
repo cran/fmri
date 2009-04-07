@@ -6,7 +6,7 @@
   The function performs Non-Gaussian Component Analysis as described in Blanchard et.al. (2005).
 }
 \usage{
-ngca(data, L = 1000, T = 10, m = 3, eps = 1.5, npca=min(dim(x)[2],dim(x)[1]),method="spatial",sweepmean=NULL,keepv=FALSE)
+ngca(data,L=c(1000,1000,1000),T=10,m=3,eps=1.5,npca=min(dim(x)[2],dim(x)[1]),filter.time="None",filter.space=FALSE,method="temporal",h.space=3,h.time=3,keepv=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,9 +20,11 @@ ngca(data, L = 1000, T = 10, m = 3, eps = 1.5, npca=min(dim(x)[2],dim(x)[1]),met
                In fMRI this allows to reduce the dimensionality assuming that
                the interesting non-Gaussian directions are also characterized by
                larger variances.}
+  \item{filter.time}{ Choice of temporal filtering before analysis: \code{"None"}, \code{"Low"}, \code{"Both"}, \code{"High"} (default \code{"None"})}
+  \item{filter.space}{Choice of spatial filtering before analysis: logical, default \code{FALSE}}
   \item{method}{ Either \code{"spatial"} or \code{"temporal"}. Specifies the type of NGCA to perform. }
-  \item{sweepmean}{ either \code{NULL}, \code{"none"}, \code{"global"}, \code{"spatial"} or \code{"spatial"}.
-         If \code{sweepmean==NULL} the value used is determined by \code{method}.}
+  \item{h.space}{ bandwidth for spatial filtering. default 3}
+  \item{h.time}{ bandwidth for temporal filtering. default 3}
   \item{keepv}{if \code{TRUE} intermediate results from fast ICA step are kept.}
 }
 \details{

@@ -1,6 +1,15 @@
-fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau",weighted=TRUE) {
+fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,adaptation="aws",lkern="Gaussian",skern="Plateau",weighted=TRUE,...) {
   cat("fmri.smooth: entering function\n")
-  
+  if(!adaptive) adaptation <- "none"
+  if(!(tolower(adaptation)%in%c("none","aws","segment"))) {
+      adaptation
+  }
+  ladjust <- if("ladjust" %in% names(list(...))) list(...)[["ladjust"]] else 1
+  fov <- if("fov" %in% names(list(...))) list(...)[["fov"]] else NULL
+  thresh <- if("thresh" %in% names(list(...))) list(...)[["thresh"]] else 3.5
+  delta <- if("delta" %in% names(list(...))) list(...)[["delta"]] else 0
+  propagation <- if("propagation" %in% names(list(...))) list(...)[["propagation"]] else FALSE
+
   if (!("fmrispm" %in% class(spm))) {
     warning("fmri.smooth: data not of class <fmrispm>. Try to proceed but strange things may happen")
   }
@@ -24,18 +33,26 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
     bw <- spm$bw
   }
 
-  cat("fmri.smooth: smoothing the Statistical Paramteric Map\n")
-  if (adaptive) {
-    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
-                     wghts=weights, h0=bw, vwghts = spm$vwghts,
-                     lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
-                     resscale=spm$resscale, dim=spm$dim)
-  } else {
-    ttthat <- vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
-                     qlambda = 1, wghts=weights, h0=bw,
-                     vwghts = spm$vwghts,lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
-                     resscale=spm$resscale, dim=spm$dim)
-  }
+  cat("fmri.smooth: smoothing the Statistical Parametric Map\n")
+  ttthat <- switch(tolower(adaptation),
+                   "aws"=vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
+                         wghts=weights, h0=bw, vwghts = spm$vwghts,
+                         lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
+                         resscale=spm$resscale, ddim=spm$dim,ladjust=ladjust,
+                         testprop=propagation),
+                   "fullaws"=vaws3Dfull(y=spm$cbeta, sigma2=variance, hmax=hmax,
+                         mask=spm$mask,wghts=weights, vwghts = spm$vwghts,
+                         lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
+                         resscale=spm$resscale, ddim=spm$dim,ladjust=ladjust,
+                         testprop=propagation),
+                   "none"=vaws3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
+                         qlambda = 1, wghts=weights, h0=bw,
+                         vwghts = spm$vwghts,lkern=lkern,skern=skern,weighted=weighted,res=spm$res,
+                         resscale=spm$resscale, ddim=spm$dim,ladjust=ladjust),
+                   "segment"=segm3D(y=spm$cbeta, sigma2=variance, hmax=hmax, mask=spm$mask,
+                         wghts=weights, h0=bw,lkern=lkern,weighted=weighted,res=spm$res,
+                         resscale=spm$resscale, ddim=spm$dim,ladjust=ladjust,delta=delta,
+                         thresh=thresh,fov=fov))
   cat("\n")
   
   cat("fmri.smooth: determine local smoothness\n")
@@ -52,17 +69,17 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   rxyz0 <- c(resel(1,bw0[,1]), resel(1,bw0[,2]), resel(1,bw0[,3]))
   dim(rxyz0) <- c(dim(bw0)[1],3)
   cat("fmri.smooth: exiting function\n")
-    
+  if(length(dim(ttthat$theta))==3) dim(ttthat$theta) <- c(dim(ttthat$theta),1)
   if (dim(ttthat$theta)[4] == 1) {
     z <- list(cbeta = ttthat$theta[,,,1], var = ttthat$var, rxyz =
               rxyz, rxyz0 = rxyz0, scorr = spm$scorr, weights =
               spm$weights, vwghts = spm$vwghts, bw=bw, 
-              hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf)
+              hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf, segm = ttthat$segm)
   } else {
     z <- list(cbeta = ttthat$theta, var = ttthat$var, rxyz = rxyz, rxyz0 = rxyz0, 
               scorr = spm$scorr, weights = spm$weights, vwghts = spm$vwghts, bw=bw,
               hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf)
-  }    
+  }
 
   class(z) <- c("fmridata","fmrispm")
 
@@ -76,6 +93,7 @@ fmri.smooth <- function(spm,hmax=4,adaptive=TRUE,lkern="Gaussian",skern="Plateau
   z$header <- spm$header
   z$format <- spm$format
   z$dim0 <- spm$dim0
+  z$scorr <- ttthat$scorr
 
   attr(z, "file") <- attr(spm, "file")
   attr(z, "white") <- attr(spm, "white")
@@ -256,7 +274,7 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
 plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
                             pos = c(-1,-1,-1), type="slice",
                             device="X11", file="plot.png", slice =  1, view = "axial" ,zlim.u =
-                            NULL, zlim.o = NULL, ...) {
+                            NULL, zlim.o = NULL, col.o = heat.colors(256), col.u = grey(0:255/255), ...) {
   mri.colors <- function (n1, n2, factor=n1/(n1+n2), from=0, to=.2) {
     colors1 <- gray((0:n1)/(n1+n2))
     colors2 <- hsv(h = seq(from,to,length=n2),
@@ -271,7 +289,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
 
     if ("fmridata" %in% class(anatomic)) {
 
-      img <- show.slice(x, anatomic, maxpvalue = maxpvalue, slice =  slice, view = view, grey(0:255/255), heat.colors(256), zlim.u, zlim.o)
+      img <- show.slice(x, anatomic, maxpvalue = maxpvalue, slice =  slice, view = view, col.u, col.o, zlim.u, zlim.o)
       hex <- c(0:9, LETTERS[1:6])
       hex <- paste(hex[(0:255)%/%16+1],hex[(0:255)%%16+1],sep="")
       color <- paste("#",hex[img[,,1]%/%256+1],hex[img[,,2]%/%256+1],hex[img[,,3]%/%256+1],sep="")
@@ -479,7 +497,12 @@ fmri.view3d <- function(ttt, sigma=NULL,type = "data", col = grey(0:255/255), ex
   } else {
     pos <- c(pos,1,scale[1])
   }
-  posv <- lapply(pos, tclVar())
+   	
+  helpFunc <- function(a){
+  	a <- tclVar()	
+  }	
+
+  posv <- lapply(pos, helpFunc) 
 
 
   fmri.image <- function(which, factor) {
@@ -766,18 +789,30 @@ show.slice <- function(x, anatomic, maxpvalue = 0.05, slice = 1, view = "axial",
 
   if (view == "axial") {
     dfunc <- dim(pvalue)[1:2]
-    imgdata.o <- pvalue[,,slice]
-    mask <- mask[,,slice]
+    if ((slice >= 1) & (slice <= dim(pvalue)[3])) {
+      imgdata.o <- pvalue[,,slice]
+      mask <- mask[,,slice]
+    } else {
+      mask <- imgdata.o <- array(0,dim=dfunc)
+    }
     scale <- ceiling(max(abs(pixdim.func[1:2]))/min(abs(pixdim.ana)))
   } else if (view == "coronal") {
     dfunc <- dim(pvalue)[c(1,3)]
-    imgdata.o <- pvalue[,slice,]
-    mask <- mask[,slice,]
+    if ((slice >= 1) & (slice <= dim(pvalue)[2])) {
+      imgdata.o <- pvalue[,slice,]
+      mask <- mask[,slice,]
+    } else {
+      mask <- imgdata.o <- array(0,dim=dfunc)
+    }
     scale <- ceiling(max(abs(pixdim.func[c(1,3)]))/min(abs(pixdim.ana)))
   } else if (view == "sagittal") {
     dfunc <- dim(pvalue)[c(2,3)]
-    imgdata.o <- pvalue[slice,,]
-    mask <- mask[slice,,]
+    if ((slice >= 1) & (slice <= dim(pvalue)[1])) {
+      imgdata.o <- pvalue[slice,,]
+      mask <- mask[slice,,]
+    } else {
+      mask <- imgdata.o <- array(0,dim=dfunc)
+    }
     scale <- ceiling(max(abs(pixdim.func[2:3]))/min(abs(pixdim.ana)))
   } else {
     stop("unknown view",view)
@@ -813,17 +848,28 @@ show.slice <- function(x, anatomic, maxpvalue = 0.05, slice = 1, view = "axial",
       jint <- ceiling(ind.ana[2])
       kint <- ceiling(ind.ana[3])
 
-      if ((iint-1 >= 1) & (jint -1 >= 1) & (kint -1 >= 1) &
+#       if ((iint-1 >= 1) & (jint -1 >= 1) & (kint -1 >= 1) &
+#           (iint <= ddim.ana[1]) & (jint <= ddim.ana[2]) & (kint <= ddim.ana[3])) {
+#         imgdata.u[i,j] <-
+#           ttt.ana[iint-1,jint-1,kint-1] * (iint - ii) * (jint - jj) * (kint - kk) +
+#             ttt.ana[iint-1,jint,kint-1] * (iint - ii) * (jj - jint + 1) * (kint - kk) +
+#               ttt.ana[iint,jint-1,kint-1] * (ii - iint + 1) * (jint - jj) * (kint - kk) +
+#                 ttt.ana[iint,jint,kint-1] * (ii - iint + 1) * (jj - jint + 1) * (kint - kk) +
+#                   ttt.ana[iint-1,jint-1,kint] * (iint - ii) * (jint - jj) * (kk - kint + 1) +
+#                     ttt.ana[iint-1,jint,kint] * (iint - ii) * (jj - jint + 1) * (kk - kint + 1) +
+#                       ttt.ana[iint,jint-1,kint] * (ii - iint + 1) * (jint - jj) * (kk - kint + 1) +
+#                         ttt.ana[iint,jint,kint] * (ii - iint + 1) * (jj - jint + 1) * (kk - kint + 1) 
+#       }
+      if ((iint >= 1) & (jint >= 1) & (kint >= 1) &
           (iint <= ddim.ana[1]) & (jint <= ddim.ana[2]) & (kint <= ddim.ana[3])) {
-        imgdata.u[i,j] <-
-          ttt.ana[iint-1,jint-1,kint-1] * (iint - ii) * (jint - jj) * (kint - kk) +
-            ttt.ana[iint-1,jint,kint-1] * (iint - ii) * (jj - jint + 1) * (kint - kk) +
-              ttt.ana[iint,jint-1,kint-1] * (ii - iint + 1) * (jint - jj) * (kint - kk) +
-                ttt.ana[iint,jint,kint-1] * (ii - iint + 1) * (jj - jint + 1) * (kint - kk) +
-                  ttt.ana[iint-1,jint-1,kint] * (iint - ii) * (jint - jj) * (kk - kint + 1) +
-                    ttt.ana[iint-1,jint,kint] * (iint - ii) * (jj - jint + 1) * (kk - kint + 1) +
-                      ttt.ana[iint,jint-1,kint] * (ii - iint + 1) * (jint - jj) * (kk - kint + 1) +
-                        ttt.ana[iint,jint,kint] * (ii - iint + 1) * (jj - jint + 1) * (kk - kint + 1) 
+        imgdata.u[i,j] <- ttt.ana[iint,jint,kint] * (ii - iint + 1) * (jj - jint + 1) * (kk - kint + 1)
+        if (kint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint,jint,kint-1] * (ii - iint + 1) * (jj - jint + 1) * (kint - kk)
+        if (jint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint,jint-1,kint] * (ii - iint + 1) * (jint - jj) * (kk - kint + 1)
+        if (iint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint-1,jint,kint] * (iint - ii) * (jj - jint + 1) * (kk - kint + 1)
+        if ((iint > 1) & (jint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint-1,jint-1,kint] * (iint - ii) * (jint - jj) * (kk - kint + 1)
+        if ((iint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint-1,jint,kint-1] * (iint - ii) * (jj - jint + 1) * (kint - kk)
+        if ((jint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint,jint-1,kint-1] * (ii - iint + 1) * (jint - jj) * (kint - kk)
+        if ((iint > 1) & (jint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint-1,jint-1,kint-1] * (iint - ii) * (jint - jj) * (kint - kk)
       }
     }
   }
@@ -891,9 +937,9 @@ conv.ip <- function(data, what="i2p") {
       c <- data$header$quaternc
       d <- data$header$quaternd
       a <- sqrt(pmax(0,1-b*b-c*c-d*d))
-      R <- matrix(c(a*a+b*b-c*c-d*d, 2*b*c-2*a*d, 2*b*d+2*a*c,
-                  2*b*c+2*a*d, a*a+c*c-b*b-d*d, 2*c*d -2*a*b,
-                  2*b*d-2*a*c, 2*c*d+2*a*b, a*a+d*d-c*c-b*b),3,3)
+      R <- t(matrix(c(a*a+b*b-c*c-d*d, 2*b*c-2*a*d, 2*b*d+2*a*c,
+                    2*b*c+2*a*d, a*a+c*c-b*b-d*d, 2*c*d -2*a*b,
+                    2*b*d-2*a*c, 2*c*d+2*a*b, a*a+d*d-c*c-b*b),3,3))
       pixdim <- data$header$pixdim[2:4]
       qfac <- data$header$pixdim[1]
 
@@ -901,6 +947,16 @@ conv.ip <- function(data, what="i2p") {
         return(function(ind) R %*% (c(1,1,qfac) * pixdim * (ind-1)) + origin)
       } else {
         return(function(pos) (solve(R) %*% (pos - origin))/(c(1,1,qfac) * pixdim) + 1)
+      }
+    } else if (data$header$sform > 0) {
+      origin <- c(data$header$srowx[4],data$header$srowy[4],data$header$srowz[4])
+      SR <- matrix(c(data$header$srowx[1],data$header$srowy[1],data$header$srowz[1],
+                     data$header$srowx[2],data$header$srowy[2],data$header$srowz[2],
+                     data$header$srowx[3],data$header$srowy[3],data$header$srowz[3]),3,3)
+      if (what == "i2p") {
+        return(function(ind) SR %*% (ind-1) + origin)
+      } else {
+        return(function(pos) solve(SR) %*% (pos - origin) + 1)
       }
     } else if (data$header$qform == 0) {
       warning("This method is specified only for compatibility reasons to ANALYZE 7.5. May not deliver useful results")
@@ -912,7 +968,7 @@ conv.ip <- function(data, what="i2p") {
         return(function(pos) pos/pixdim + 1)
       }
     } else {
-      stop("Neither Method 1 nor 2 for real-space position applicable. Method 3 not yet implemented. See NIFTI specification!")
+      stop("Neither Method 1, 2, nor 3 for real-space position applicable. See NIFTI specification!")
     }
 
   } else if (data$format == "ANALYZE") {

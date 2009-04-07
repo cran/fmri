@@ -6,7 +6,7 @@
   Estimate the parameters and variances in a linear model. 
 }
 \usage{
-  fmri.lm(data, z, actype = "accalc", hmax = 3.52, vtype = "var",
+  fmri.lm(data, z, actype = "smooth", vtype = "var",
           step = 0.01, contrast = c(1), vvector = c(1),
           keep = "all")
 }
@@ -17,8 +17,6 @@
   and additional components for trend and other effects. }
   \item{actype}{ string describing the type of handling autocorrelation
     of time series. "nonac", "ac", "accalc", "smooth"}
-  \item{hmax}{ bandwidth for smoothing autocorrelation parameter if
-    actype = "smooth" }
   \item{vtype}{ method of estimating residual variance (only
   "var" implemented) }
   \item{step}{ step size for binning autocorrelations (see
@@ -95,6 +93,12 @@
   Worsley, K.J., Liao, C., Aston, J., Petre, V., Duncan,
   G.H., Morales, F., Evans, A.C. (2002). A general statistical analysis
   for fMRI data. NeuroImage, 15:1-15.
+
+  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2006). 
+\emph{Analysing {fMRI}
+    experiments with structure adaptive smoothing procedures},
+  NeuroImage, 33:55-62. 
+
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \note{ \code{vvector} is intended to be used for delay of the HRF using

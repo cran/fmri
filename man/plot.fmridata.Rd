@@ -9,7 +9,7 @@
 plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
               spm = TRUE, pos = c(-1, -1, -1), type = "slice",
               device = "X11", file = "plot.png", slice =  1, view = "axial" ,zlim.u =
-              NULL, zlim.o = NULL,...)
+              NULL, zlim.o = NULL,col.o = heat.colors(256), col.u = grey(0:255/255),...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -29,6 +29,8 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
   \item{view}{ "axial", "coronal", or "sagittal", if anatomic is of "fmridata" class }
   \item{zlim.u}{ full range for anatomical underlay used for color scale, if anatomic is of "fmridata" class }
   \item{zlim.o}{ full range for functional overlay used for color scale, if anatomic is of "fmridata" class }
+  \item{col.u}{ color scale for anatomical underlay, if anatomic is of "fmridata" class, default grey(0:255/255) }
+  \item{col.o}{ color scale for functional overlay, if anatomic is of "fmridata" class, default heat.colors(256) }
   \item{...}{ additional arguments for plot}
 }
 \details{
@@ -52,6 +54,11 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
 }
 \value{
   If 'type' is "3d" the Tk-object is returned. (Remove the diplay with \code{tkdestroy(object)})
+}
+\references{
+  Polzehl, J. and Tabelow, K. (2007)
+  \emph{fmri: A Package for Analyzing fmri Data},
+  R News, 7:13-17 .
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \note{ 3 dimensional plotting requires the \code{tkrplot}

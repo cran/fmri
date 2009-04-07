@@ -1,3 +1,15 @@
+Changes with version 1.3. 
+added multiscale test based segmentation algorithm fro signal detection
+(use adaptation="segment" in fmri.smooth)
+
+bugfix in handling residuals in fmri.lm
+removed unused branches from fmri.smooth/vaws3D
+fixed handling of ladjust in ...
+fixed display of bandwidth in case of lkern="Gaussian"
+reduced signal in demo
+
+mask is now forced to be connective 
+
 Changes with version 1.1-1 
 
 New functionality:

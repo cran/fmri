@@ -6,14 +6,18 @@
   Perform the adaptive weights smoothing procedure 
 }
 \usage{
-fmri.smooth(spm, hmax = 4, adaptive=TRUE,
-            lkern="Gaussian", skern="Plateau", weighted=TRUE)
+fmri.smooth(spm, hmax = 4, adaptive=TRUE,adaptation="aws",
+            lkern="Gaussian", skern="Plateau", weighted=TRUE,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{spm}{ object of class \code{fmrispm} }
   \item{hmax}{ maximum bandwidth to smooth }
   \item{adaptive}{ logical. TRUE (default) for adaptive smoothing }
+  \item{adaptation}{ character, type of adaptation. Set to \code{"none"} if \code{adaptive==FALSE}. Other values are \code{"aws"} for adaptive smoothing using an approximative correction term for spatial smoothness in the penalty (fast), \code{"fullaws"} for adaptive smoothing using variance
+  estimates from smoothed residuals in the penalty (CPU-time about twice 
+  the time compared to \code{adaptation="aws"} and \code{"segment"} for a
+  new approach based on segmentation using multi-scale tests.}
   \item{lkern}{ \code{lkern} specifies the location kernel. Defaults to
     "Gaussian", other choices are "Triangle" and "Plateau". Note that the location kernel is applied to
     \code{(x-x_j)^2/h^2}, i.e. the use of "Triangle" corresponds to the
@@ -29,7 +33,8 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   \item{weighted}{ \code{weighted} (logical) determines if weights contain the inverse of local 
    variances as a factor (Weighted Least Squares). \code{weighted=FALSE} does not employ the
    heteroscedasticity of variances for the weighting scheme and is preferable if variance estimates
-   are highly variable, e.g. for short time series.} 
+   are highly variable, e.g. for short time series.}
+  \item{...}{further internal arguments for the smoothing algorithm not to be set by the user. Allows e.g. for parameter adjustments by simulation using our propagation condition.}
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map
@@ -68,14 +73,18 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,
   \item{hrf}{ Expected BOLD response for the specified effect }
 }
 \references{
-  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V.. 
+  Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2006). 
 \emph{Analysing {fMRI}
     experiments with structure adaptive smoothing procedures},
-  NeuroImage, 33:55-62 (2006). 
+  NeuroImage, 33:55-62. 
 
   Polzehl, J. and Spokoiny, V. (2006). \emph{Propagation-Separation
     Approach for Local Likelihood Estimation}, Probab. Theory
-  Relat. Fields 135, 335-362.
+  Relat. Fields 135:335-362. 
+
+  Polzehl, J. and Tabelow, K. (2007)
+  \emph{fmri: A Package for Analyzing fmri Data},
+  R News, 7:13-17 .
 }
 \author{ Joerg Polzehl \email{polzehl@wias-berlin.de},
   Karsten Tabelow \email{tabelow@wias-berlin.de}  }

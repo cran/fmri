@@ -87,9 +87,10 @@ fmri.design <- function(hrf, order=2) {
 
 
 
-fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contrast=c(1),vvector=c(1),keep="all") {
+fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),vvector=c(1),keep="all") {
   cat("fmri.lm: entering function\n")
 
+  hmax <- 3.52
   if (!class(data) == "fmridata") {
     warning("fmri.lm: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
@@ -231,14 +232,15 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
         gc()
       }
 #  prewhitened residuals don't have zero mean, therefore sweep mean over time from them
-      residuals <- .Fortran("sweepm",residuals=as.double(residuals),
+      residuals <- .Fortran("sweepm",residuals=as.double(t(residuals)),
                                      as.logical(data$mask),
                                      as.integer(dy[1]),
                                      as.integer(dy[2]),
                                      as.integer(dy[3]),
                                      as.integer(dy[4]),
                                      PACKAGE="fmri",DUP=FALSE)$residuals
-      dim(residuals) <- c(prod(dy[1:3]),dy[4])
+      dim(residuals) <- c(dy[4],prod(dy[1:3]))
+      residuals <- t(residuals)
       b <- rep(1/dy[4],length=dy[4])
       variance <- ((residuals^2 %*% b) * dim(z)[1] / (dim(z)[1]-dim(z)[2])) * variancepart
       if (length(vvector) > 1) variancem <- as.vector((residuals^2 %*% b) * dim(z)[1] / (dim(z)[1]-dim(z)[2])) * t(variancepartm)
@@ -263,7 +265,8 @@ fmri.lm <- function(data,z,actype="accalc",hmax=3.52,vtype="var",step=0.01,contr
   dim(variance) <- dy[1:3]
   if (length(vvector) > 1) dim(variancem) <- c(dy[1:3],sum(as.logical(vvector)),sum(as.logical(vvector)))
   dim(arfactor) <- dy[1:3]
-  dim(residuals) <- dy
+  residuals <- t(residuals)
+  dim(residuals) <- dy[c(4,1:3)]
 
   cat("fmri.lm: calculating spatial correlation\n")
 

@@ -52,7 +52,12 @@
 }
 \references{ Worsley, K.J., Liao, C., Aston, J., Petre, V., Duncan,
   G.H., Morales, F., Evans, A.C. (2002). A general statistical analysis
-  for fMRI data. NeuroImage, 15:1-15. }
+  for fMRI data. NeuroImage, 15:1-15. 
+
+  Polzehl, J. and Tabelow, K. (2007)
+  \emph{fmri: A Package for Analyzing fmri Data},
+  R News, 7:13-17 .
+}
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{fmri.design}}, \code{\link{fmri.lm}} }
 \examples{

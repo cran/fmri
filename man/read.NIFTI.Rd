@@ -6,17 +6,18 @@
   Read fMRI data from NIFTI file(s).
 }
 \usage{
-read.NIFTI(filename, level = 0.75)
+read.NIFTI(filename, level = 0.75,setmask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{filename}{ name of the NIFTI file }
   \item{level}{Quantile level defining the mask}
+  \item{setmask}{Logical (default \code{TRUE}), whether to define a suitable mask based on \code{level}}
 }
 \details{
   This function reads fMRI data files in NIFTI format.
 
-  The filename can be given with our without extension. If extension is
+  The filename can be given with or without extension. If extension is
   not included, the function searches for the ".nii" file and then for
   the "hdr/img" pair.
 }
@@ -33,6 +34,11 @@ read.NIFTI(filename, level = 0.75)
   \item{weights}{weights vector coding the relative voxel sizes in x,
     y, z-direction}
   \item{mask}{head mask}
+}
+\references{
+  Polzehl, J. and Tabelow, K. (2007)
+  \emph{fmri: A Package for Analyzing fmri Data},
+  R News, 7:13-17 .
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{read.ANALYZE}}, \code{\link{read.AFNI}} }

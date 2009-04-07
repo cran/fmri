@@ -162,14 +162,14 @@ write.ANALYZE.volume <- function(ttt,filename,size) {
   close(con)
 }
 
-read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1,level=0.75) {
+read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1,level=0.75,setmask=TRUE) {
   counter <- c(paste("00", 1:9, sep=""), paste("0", 10:99, sep=""),paste(100:999,sep=""));
 
   prefix <- strsplit(prefix,".img")
   filename <- character(length(prefix))
   if (numbered) {
     for (i in picstart:(picstart+numbpic-1)) {
-      filename[i] <- paste(prefix[[1]][1], counter[i], postfix, ".img", sep="")
+      filename[i-picstart+1] <- paste(prefix[[1]][1], counter[i], postfix, ".img", sep="")
     }
   } else {
     for (i in 1:length(prefix)) {
@@ -197,7 +197,6 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
       }
     }
     
-    cat("\n")
     dim(ttt) <- ddim
     
     if (min(abs(header$pixdim[2:4])) != 0) {
@@ -244,13 +243,15 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
 
 
     mask <- array(TRUE,ddim[1:3])
-    mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
-    dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
-    na <- ttt %*% rep(1,dim(ttt)[2])
-    mask[is.na(na)] <- FALSE
-    ttt[is.na(na),] <- 0
-    dim(mask) <- ddim[1:3]
-
+    if (setmask) {
+      mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
+      na <- ttt %*% rep(1,dim(ttt)[2])
+      mask[is.na(na)] <- FALSE
+      ttt[is.na(na),] <- 0
+      dim(mask) <- ddim[1:3]
+      mask <- connect.mask(mask)
+    }
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
               format="ANALYZE",
               delta=delta,
@@ -392,7 +393,7 @@ write.ANALYZE <- function(ttt, header=NULL, filename) {
 
 
 
-read.AFNI <- function(filename,vol=NULL,level=0.75) {
+read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
   fileparts <- strsplit(filename,"\\.")[[1]]
 
   if (length(fileparts) == 1) {
@@ -535,12 +536,15 @@ read.AFNI <- function(filename,vol=NULL,level=0.75) {
 #    }
 
     mask <- array(TRUE,ddim)
-    mask[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
-    dim(myttt) <- c(prod(ddim),dim(myttt)[4])
-    na <- myttt %*% rep(1,dim(myttt)[2])
-    mask[is.na(na)] <- FALSE
-    myttt[is.na(na),] <- 0
-    dim(mask) <- ddim
+    if (setmask) {
+      mask[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      dim(myttt) <- c(prod(ddim),dim(myttt)[4])
+      na <- myttt %*% rep(1,dim(myttt)[2])
+      mask[is.na(na)] <- FALSE
+      myttt[is.na(na),] <- 0
+      dim(mask) <- ddim
+      mask <- connect.mask(mask)
+    }
     z <-
       list(ttt=writeBin(as.numeric(myttt),raw(),4),
            format="HEAD/BRIK",
@@ -1027,12 +1031,12 @@ read.DICOM <- function(filename,includedata=TRUE) {
       ttt <- array(readBin(con,"integer",length/depth,depth,signed=FALSE,endian=endian),c(xdim,ydim))
     }
     
-    z <- list(header=header,ttt=writeBin(as.numeric(ttt),raw(),4),format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
+    z <- list(header=headerdetails,ttt=writeBin(as.numeric(ttt),raw(),4),format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   } else {
-    z <- list(header=header,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
+    z <- list(header=headerdetails,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   }
   close(con)
-  class(z) <- "fmridata"
+#  class(z) <- "fmridata"
 
   attr(z,"file") <- filename
   invisible(z)
@@ -1092,7 +1096,7 @@ read.NIFTI.header <- function(con) {
   header
 }
 
-read.NIFTI <- function(filename,level=0.75) {
+read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
   fileparts <- strsplit(filename,"\\.")[[1]]
   ext <- tolower(fileparts[length(fileparts)])
 
@@ -1184,17 +1188,19 @@ read.NIFTI <- function(filename,level=0.75) {
 
   if (dd == 1) {
     mask <- array(TRUE,c(dx,dy,dz))
-    mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
-    dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
-    na <- ttt %*% rep(1,dim(ttt)[2])
-    mask[is.na(na)] <- FALSE
-    ttt[is.na(na),] <- 0
-    dim(mask) <- c(dx,dy,dz)
-
+    if (setmask) {
+      mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
+      na <- ttt %*% rep(1,dim(ttt)[2])
+      mask[is.na(na)] <- FALSE
+      ttt[is.na(na),] <- 0
+      dim(mask) <- c(dx,dy,dz)
+      mask <- connect.mask(mask)
+    }
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
               format="NIFTI",
               delta=header$pixdim[2:4],
-              origin=NULL,
+              origin=c(header$qoffsetx,header$qoffsety,header$qoffsetz),
               orient=NULL,
               dim=header$dimension[2:5],
               dim0=header$dimension[2:5],
@@ -1214,7 +1220,7 @@ read.NIFTI <- function(filename,level=0.75) {
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
               format="NIFTI",
               delta=header$pixdim[2:4],
-              origin=NULL,
+              origin=c(header$qoffsetx,header$qoffsety,header$qoffsetz),
               orient=NULL,
               dim=c(dx,dy,dz,dd),
               dim0=c(dx,dy,dz,dd),
@@ -1279,7 +1285,7 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
   if (!("srowy" %in% names(header))) header$srowy <- c(0,0,0,0)
   if (!("srowz" %in% names(header))) header$srowz <- c(0,0,0,0)
   if (!("intentname" %in% names(header))) header$intentname <- paste(rep(" ",16),collapse="")
-  if (!("magic" %in% names(header))) header$magic <- "n+1"
+  header$magic <- "n+1"
   if (!("extension" %in% names(header))) header$extension <- as.raw(rep(0,header$voxoffset-348))
 
   dd <- if (header$dimension[1] == 5) header$dimension[6] else 1
@@ -1317,7 +1323,15 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
     size <- 1
   }
 
-  con <- file(paste(filename, ".nii", sep=""), "wb")
+  fileparts <- strsplit(filename,"\\.")[[1]]
+
+  if (length(fileparts) == 1) {
+    filename <- paste(fileparts[1],"nii",sep=".")
+  } else {
+    ext <- tolower(fileparts[length(fileparts)])
+    if (ext != "nii") filename <- paste(c(fileparts,"nii"),collapse=".")
+  }
+  con <- file(filename, "wb")
 
   writeBin(as.integer(348), con, 4)
   writeChar(header$datatype1, con, 10, NULL)
@@ -1361,7 +1375,7 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
   writeBin(header$srowy, con, 4)
   writeBin(header$srowz, con, 4)
   writeChar(header$intentname, con, 16, NULL)
-  writeChar(header$magic, con, 4, NULL)
+  writeChar(header$magic, con, 3)
   bytes <- header$voxoffset - 348
   if (bytes != length(header$extension)) warning("header$extension is not of expected size ",bytes," as given by header$voxoffset. cutting!")
   writeBin(header$extension[1:bytes], con)
@@ -1372,9 +1386,6 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
 }
 
 extract.data <- function(z,what="data") {
-  if (!("fmridata"%in%class(z))) {
-    warning("extract.data: data not of class <fmridata>. Try to proceed but strange things may happen")
-  }
   if (what=="residuals") {  
       if(!is.null(z$resscale)){
           ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale 

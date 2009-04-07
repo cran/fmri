@@ -22,6 +22,11 @@ print.fmridata(x, ...)
 \value{
   none
 }
+\references{
+  Polzehl, J. and Tabelow, K. (2007)
+  \emph{fmri: A Package for Analyzing fmri Data},
+  R News, 7:13-17 .
+}
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{summary.fmridata}} }
 \examples{
