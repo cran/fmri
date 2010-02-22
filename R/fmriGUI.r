@@ -1,3 +1,6 @@
+# fmri.gui is a method of the package fmri
+# it is used to create your experimental design, to load your data and
+# to do the spm analysis and calculate the pvalues
 fmri.gui <- function() {
         require(tcltk) || stop("install package tcltk!")
 	
@@ -5,7 +8,7 @@ fmri.gui <- function() {
 
 	# select file, name saved in tclVar dataFile
 	selectFirstDataFile <- function(){
-		tclvalue(dataFileFirst) <- tkgetOpenFile(filetypes ="{{AFNI} {.BRIK .Brik .brik .HEAD .Head .head}} {{ANALYZE} {.IMG .Img .img .HDR .Hdr .hdr}} {{NIFTI} {.NII .Nii .nii .HDR .Hdr .hdr}} {{All files} *}",title="Select Data")  
+		tclvalue(dataFileFirst) <- tkgetOpenFile(filetypes ="{{ANALYZE} {.IMG .Img .img .HDR .Hdr .hdr}} {{AFNI} {.BRIK .Brik .brik .HEAD .Head .head}} {{NIFTI} {.NII .Nii .nii .HDR .Hdr .hdr}} {{All files} *}",title="Select Data")  
 	}	
 	selectDesignFileSave <- function(){
         	tclvalue(designFile) <- tkgetSaveFile(filetypes ="{{Text} {.TXT .Txt .txt}} {{All files} *}",title="Save Design")  
@@ -16,14 +19,12 @@ fmri.gui <- function() {
 
 	# view p values in 3D
 	results3D <- function(){
-#		tkmessageBox(message="Good Choice! But still under construction ... ")
-		plot(pvalue,type="3D")
+		plot(pvalue,type="3d",anatomic=data$mask)
 	}
 	
 	# view p values as slices
 	resultsSlices <- function(){
-		ttt <- extract.data(data)
-		plot(pvalue,anatomic=ttt[,,,1])
+		plot(pvalue,anatomic=data$mask)
 	}
 
 	# save design in filepath/filename.Design
@@ -75,11 +76,10 @@ fmri.gui <- function() {
 			else {
 				designFileText = paste(designFileText,".txt",sep="")
 			}		
-			print(designFileText)
 			write(textVar,designFileText) # design written	
 			print("Saving completed")
 		}
-		else {
+		else {  # no designfile chosen -> warning
 			print("Saving aborted")
 			onOk <- function(){
 					tkdestroy(ttWarning)
@@ -97,6 +97,8 @@ fmri.gui <- function() {
 		}	
 	}
 
+	# loadDesignHelp is the prefixed function of loadDesign
+        # it handles the gui for the case that the choice is renewed	
 	loadDesignHelp <- function(){
 		if (nrStep>=1){		
 			onYes <- function(){
@@ -120,6 +122,8 @@ fmri.gui <- function() {
 		}  else startDataLayout(loadPlan=1)	
 	}
 	
+	# createDesignHelp is the prefixed function of createDesign
+        # it handles the gui for the case that the choice is renewed	
 	createDesignHelp <- function(){
 		if (nrStep>=1){		
 			onYes <- function(){
@@ -253,6 +257,7 @@ fmri.gui <- function() {
 			tkgrid(warningFrame2)	
     		}
 	
+		# startDataHelp is called after defining the last condition
 		startDataHelp <- function(){
 			tkdestroy(base.design)
 			startData()
@@ -284,8 +289,6 @@ fmri.gui <- function() {
 				
 				# called for the last condition
 				# data read in and button for start smoothing added to condition window (calls function smoothing())
-
-				
 				startDataHelp2 <- function(){
 					condition.next()
 					startDataHelp()
@@ -302,7 +305,6 @@ fmri.gui <- function() {
 				SaveButton <-tkbutton(frame5, text = "Save",font="Arial 12", bg = wiaslightblue, command = saveDesign2)
 				
 				condition.next <- function(){
-					print("here i am")
 					durationsTc[globali] <<- tclvalue(currDur)
 					onsetsTc[globali] <<- tclvalue(currOnset)
 					namesTc[globali] <<- tclvalue(currName)	
@@ -328,9 +330,9 @@ fmri.gui <- function() {
 					# writing onsets and durations respectively in a vector (as numerics), using the following format
 					# (condition1 number of onsets (n), first onset, second onset, ..., n-th onset, condition2 number of onsets, ...)
 					# the same with durations
-			
 					for (i in 1: n.comp){
 						onsetsHelp[[i]] <- as.vector(onsetsTc[i]) #getting the vectors (char)
+						print(onsetsHelp[[i]])
 						durationsHelp[[i]] <- as.vector(durationsTc[i])
 						# for each vector of onsets and durations separator determined (" ","," or ";")
 						sepO = " "
@@ -355,14 +357,6 @@ fmri.gui <- function() {
 						}
 						onsSpl[i] <- strsplit(onsetsHelp[[i]],sepO) # split with above found separator	
 						durSpl[i] <- strsplit(durationsHelp[[i]],sepD) # split with above found separator
-						#currInd <<- 1						
-						#for (j in 1:length(onsSpl2[i])){
-						#	if (onsSpl2[i,j]!=""){ 	
-						#		print(currInd)	
-						#		onsSpl[i,currInd] <<- onsSpl2[i,j] 
-						#		currInd <<- currInd + 1
-						#	}	
-						#}		
 						onsVecCurr2 <- unlist(onsSpl[i]) # unlist entries
 						durVecCurr2 <- unlist(durSpl[i])
 						
@@ -391,9 +385,8 @@ fmri.gui <- function() {
 						} 	
 						globali <- globali + 1 + length(onsVecCurr)	
 						globalj <- globalj + 1 + length(durVecCurr)
+						print(onsets)
 					}
-					print(onsets)
-					print(durations)			
 				}	
 				currOnset <- tclVar()
 				currDur <- tclVar()
@@ -477,6 +470,8 @@ fmri.gui <- function() {
 
 	}
 
+	# startDataLayout is the prefixed function of startData
+	# it calls createDesign or loadDesign which later call startData
 	startDataLayout <- function(loadPlan=-1){
 		onsets <<- list()
 		durations <<- list()
@@ -485,6 +480,8 @@ fmri.gui <- function() {
 		if (loadPlan==1) loadDesign()
 	}
 
+	# is called from startDataHelp
+        # it adds the graphical elements for the data choice	
 	startData <- function(){	
 		tkgrid(objFileL,pady = 10, padx = 10,sticky="ew")
 		tkgrid(frameData1)
@@ -496,6 +493,8 @@ fmri.gui <- function() {
 		tkgrid(frameData3,sticky="ew")		
 	}
 
+	# startContrastHelp is the prefixed function of startContrast
+	# it handles the gui for the case that the choice is renewed
 	startContrastHelp <- function(){
 		if (nrStep>=2){		
 			onYes <- function(){
@@ -508,7 +507,7 @@ fmri.gui <- function() {
 			ttWarning = tktoplevel(bg=wiasblue)
 			tkwm.title(ttWarning, "Affirmation")
 			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to readjust the mask? \n All subsequent steps have to be redone", font="Arial 13", bg=wiasblue)
+			warningLabel = tklabel(warningFrame1,text="Are you sure you want to readjust the mask? \n All subsequent steps have to be redone.", font="Arial 13", bg=wiasblue)
 			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
 			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
 			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
@@ -520,13 +519,14 @@ fmri.gui <- function() {
 
 	}
 
+	# startContrast determines a mask and adds the grapical elements for the contrast choic
 	startContrast <- function(){
 		layoutFunction(2)	
-		# Read in data(AFNI, ANALYZE or NIFTI file)
-		# Report about successful read in
-
+		
 		quantile = as.numeric(tclvalue(quantileTc))
-		data$mask=extract.data(data)[,,,1]>quantile
+		anatomicHelp <- extract.data(data)[,,,1]
+		anatomicHelp[anatomicHelp<quantile] <- 0
+		data$mask <<- anatomicHelp>0
 	
 		tkgrid(objcontrastL,padx=10,pady=10)
 		tkgrid(frameContrast1)	
@@ -541,6 +541,8 @@ fmri.gui <- function() {
 		
 	}
 
+	# startEstimationHelp is the prefixed function of startEstimation
+	# it handles the gui for the case that the choice is renewed
 	startEstimationHelp <- function(){
 		if (nrStep>=3){		
 			onYes <- function(){
@@ -564,6 +566,8 @@ fmri.gui <- function() {
 		}  else startEstimation()	
 	}
 
+	# estimations 1-4.) (see below) are done here
+	# additionally the grapical elements for the contrast choice to smooth are added
 	startEstimation <- function(){
 		layoutFunction(3)
 		
@@ -663,6 +667,8 @@ fmri.gui <- function() {
 		tkgrid(frameSmoothChoice3,sticky="ew")		
 	}
 		
+	# contWithoutHelp is the prefixed function of contWithout
+	# it handles the gui for the case that the choice is renewed	
 	contWithoutHelp <- function(){
 		if (nrStep>=4){		
 			onYes <- function(){
@@ -686,8 +692,10 @@ fmri.gui <- function() {
 		}  else contWithout()	
 	}
 
+	# contWithout continues the estimations without smoothing the statiscal parametric map 
 	contWithout <- function(){
 		layoutFunction(4)
+                smoothed = FALSE
 		# calculation of the p-values and reporting about its success
 		pvalue <<-fmri.pvalue(spm)
 		print("p values calculated")
@@ -697,6 +705,8 @@ fmri.gui <- function() {
 		tkgrid(frameResults,sticky="ew");	
 	}
 
+	# startSmoothingHelp is the prefixed function of startSmoothing
+	# it handles the gui for the case that the choice is renewed	
 	startSmoothingHelp <- function(){
 		if (nrStep>=4){		
 			onYes <- function(){
@@ -720,6 +730,8 @@ fmri.gui <- function() {
 		}  else startSmoothing()	
 	}
 
+	# startSmoothing smoothes the statistical parametric map
+	# additionally the grapical elements for the pvalue estimation are added
 	startSmoothing <- function(){
 		layoutFunction(4)
 			
@@ -727,7 +739,7 @@ fmri.gui <- function() {
 		spmsmooth <<- fmri.smooth(spm,hmax=as.numeric(tclvalue(hMax)))
 					
 		print("Parametric map adaptive smoothed")
-	
+	        smoothed = TRUE
 	
 		# calculation of the p-values and reporting about its success
 		pvalue <<-fmri.pvalue(spmsmooth)
@@ -738,6 +750,9 @@ fmri.gui <- function() {
 		tkgrid(frameResults,sticky="ew");				
 	}
 
+	# the layoutFunction handles the layout of the whole program
+	# it is called after every step
+	# the layout is constructed depending on the current step
 	layoutFunction <- function(currStep){
 		if (nrStep>=1 && currStep<=1){	
 			tkgrid.forget(frameData1)
@@ -776,6 +791,7 @@ fmri.gui <- function() {
 		nrStep <<- currStep		
 	}	
 
+	# viewMask is a function which helps the user to choose a threshold for his data and there on a mask
 	viewMask <- function(width=14,height=7){
 		ttt <- extract.data(data)
 		dim <- data$dim		
@@ -819,6 +835,8 @@ fmri.gui <- function() {
 		legend(0.55*max(d0$x),0.98*max(d0$y),c("Data","Centered 75% of data","Centered 50% of data","Centered 25% of data","Threshold line"),text.col=c(1,2,3,4,6),pch=c(1,1,1,1,1),col=c(1,2,3,4,6),title="Density of",cex=1.5)
 	}
 
+	# startAdjustHelp is the prefixed function of startAdjust
+	# it handles the gui for the case that the choice is renewed	
 	startAdjustHelp <- function(){
 		if (as.character(tclvalue(dataFileFirst))==""){
 			onOk <- function(){
@@ -859,6 +877,8 @@ fmri.gui <- function() {
 		}	
 	}
 
+	# startAdjust reads in the data
+	# additionally the grapical elements for the choice of the threshold are added
 	startAdjust <- function(){
 		layoutFunction(1.5)
 
@@ -909,7 +929,7 @@ fmri.gui <- function() {
 			if (index!=-1){
 				myprefix = ""
 				mypostfix= ""
-				for (i in i:index-1){
+				for (i in 1:index-1){
 					myprefix = paste(myprefix,help2[i],sep="")
 				}
 				lastChar = nrChars-4 # .hdr / .img cutted
@@ -977,6 +997,7 @@ fmri.gui <- function() {
 		}		
 	}
 
+	# some technical shit
 	helpFunction1 <- function() { helpFunction(1) }
 	helpFunction2 <- function() { helpFunction(2) }
 	helpFunction3 <- function() { helpFunction(3) }
@@ -984,6 +1005,8 @@ fmri.gui <- function() {
 	helpFunction5 <- function() { helpFunction(5) }
 	helpFunction6 <- function() { helpFunction(6) }
 	
+	# at everey step a helpbutton can be pressed
+	# depending on the current step (represented by i) a help window is created
 	helpFunction <- function(i){	
 			onQuit <- function(){
 				tkdestroy(ttHelp)
@@ -999,59 +1022,58 @@ fmri.gui <- function() {
 			tkgrid(helpFrame1)	
 			tkgrid(helpFrame2)	
 	}
-		
+	
+	# quitAll quits the fmriGUI
+	# the user is offered several possiblities, for instance he can maintain his local workspace
+        # or export it to a file 		
 	quitAll <- function(){
-		print("ho ho jetzt wird abgeschlossen")
+
+		# quit the fmriGUI with maintaining the local workspace  
 		quitWM <- function(){
 			tkdestroy(ttQuit)
-                        assign("fmriSpm",spm,inherits=TRUE)
-                        assign("fmriSpmsmooth",spmsmooth,inherits=TRUE)
-                        assign("fmriData",data,inherits=TRUE)
-                        assign("fmriDesignMatrix",x,inherits=TRUE)
-                        assign("fmriPvalue",pvalue,inherits=TRUE)
-#         Changes to resolve warnings by R CMD check
-#			fmriSpm <<- spm
-#			fmriSpmsmooth <<- spmsmooth
-#			fmriData <<- data
-#			fmriDesignMatrix <<- x
-#			fmriPvalue <<- pvalue
+			if (nrStep>=3)   assign("fmriDesignMatrix",x,inherits=TRUE)
+			if (nrStep>=1.5) assign("fmriData",data,inherits=TRUE)
+                        if (nrStep>=3)   assign("fmriSpm",spm,inherits=TRUE)
+                        if (nrStep>=4 && smoothed)   assign("fmriSpmsmooth",spmsmooth,inherits=TRUE)
+                        if (nrStep>=4)   assign("fmriPvalue",pvalue,inherits=TRUE)
 			tkdestroy(base.aws)	
 		}
 	
+		# quit the fmriGUI without maintaining the local workspace	
 		quitWOM <- function(){
 			tkdestroy(ttQuit)
 			tkdestroy(base.aws)			
 		}
 
+		# export the local workspace to a file 
 		functSave <- function(){
 			text = unlist(strsplit(as.character(tclvalue(dataFileFirst)),""))
-			print(text)
 			if (as.character(tclvalue(dataFileFirst))!=""){
 				index = length(text)
-				print(index)
 				ind = -1 			
 				while (index>-1 && ind==-1){
-					print(index)
 					if (text[index]=="."){
 						ind = index				
 					}
 					index = index - 1
 				}
-				print(ind)
 				name = ""
 				for (i in 1:(ind-1)){
 					name = paste(name,text[i],sep="")
 				}
-				print(name)
+				fileSaveHelp <-	paste(name,"Workspace.rsc",sep="")
+				save(spm,spmsmooth,data,x,pvalue,file=fileSaveHelp,compress=TRUE)
+				print(paste("Local workspace saved in",fileSaveHelp))	
 			}	
-				
-			save(spm,spmsmooth,data,x,pvalue,file=paste(name,"Workspace.rsc",sep=""),compress=TRUE)	
+			else print("Nothing to save")		
 		}
 
+		# cancel quit
 		functCancel <- function(){
 			tkdestroy(ttQuit)
 		}
 
+		# helpmenu for this window
 		functHelp <- function(){
 			onQuit <- function(){
 				tkdestroy(ttHelp)
@@ -1083,12 +1105,84 @@ fmri.gui <- function() {
 		tkgrid(quitFrame2)	
 	}	
 	
+	# saveAll offers the user two possiblities to save his workspace
+        saveAll <- function(){
+
+		# overtake local workspace 
+		overtakeLW <- function(){
+			tkdestroy(ttSave)
+			if (nrStep>=3)   assign("fmriDesignMatrix",x,inherits=TRUE)
+			if (nrStep>=1.5) assign("fmriData",data,inherits=TRUE)
+                        if (nrStep>=3)   assign("fmriSpm",spm,inherits=TRUE)
+                        if (nrStep>=4 && smoothed)   assign("fmriSpmsmooth",spmsmooth,inherits=TRUE)
+                        if (nrStep>=4)   assign("fmriPvalue",pvalue,inherits=TRUE)
+			print("Done")
+		}
+	
+		# export the local workspace to a file 
+		functSave <- function(){
+			text = unlist(strsplit(as.character(tclvalue(dataFileFirst)),""))
+			if (as.character(tclvalue(dataFileFirst))!=""){
+				index = length(text)
+				ind = -1 			
+				while (index>-1 && ind==-1){
+					if (text[index]=="."){
+						ind = index				
+					}
+					index = index - 1
+				}
+				name = ""
+				for (i in 1:(ind-1)){
+					name = paste(name,text[i],sep="")
+				}
+				fileSaveHelp <-	paste(name,"Workspace.rsc",sep="")
+				save(spm,spmsmooth,data,x,pvalue,file=fileSaveHelp,compress=TRUE)
+				print(paste("Local workspace saved in",fileSaveHelp))	
+			}
+			else print("Nothing to save")	
+		}
+
+		# quit
+		quitttSave <- function(){
+			tkdestroy(ttSave)
+		}
+
+		# helpmenu for this window
+		functHelp <- function(){
+			onQuit <- function(){
+				tkdestroy(ttHelp)
+			}
+			ttHelp = tktoplevel(bg=wiasblue)
+			tkwm.title(ttHelp, "Help")
+			helpFrame1 = tkframe(ttHelp,bg=wiasblue)
+			helpLabel = tklabel(helpFrame1,text=helptextVec[8],font="Arial 13",bg=wiasblue)
+			helpFrame2 = tkframe(ttHelp,bg=wiasblue)	
+			helpB1 = tkbutton(helpFrame2,text="Quit",command=onQuit)
+			tkgrid(helpLabel)
+			tkgrid(helpB1,padx=10,pady=10)
+			tkgrid(helpFrame1)	
+			tkgrid(helpFrame2)
+		}
+
+		ttSave = tktoplevel(bg=wiasblue)
+		tkwm.title(ttSave, "Save Workspace")
+		saveFrame1 = tkframe(ttSave,bg=wiasblue)
+		saveFrame2 = tkframe(ttSave,bg=wiasblue)	
+		saveB1 = tkbutton(saveFrame1,text="Overtake local workspace",command=overtakeLW, bg=wiaslightblue)
+		saveB3 = tkbutton(saveFrame1,text="Export local workspace to file",command=functSave, bg=wiaslightblue)
+		saveB4 = tkbutton(saveFrame2,text="Help",command=functHelp,bg=wiaslightblue,width=15)
+		saveB5 = tkbutton(saveFrame2,text="Quit",command=quitttSave,bg=wiaslightblue,width=15)			
+		tkgrid(saveB1,saveB3,padx=10,pady=10)
+		tkgrid(saveB5,saveB4,padx=10,pady=10)	
+		tkgrid(saveFrame1)
+		tkgrid(saveFrame2)	
+	}
 
 	
 	# set variables
-	helptextVec <- c("Define the design of the experiment. You can load a previously saved \n design file here, or define a new design and save it to disk. You can \n define the design in scans or seconds, giving the onset times and \n duration of the stimulus. The expected hemodynamic response will be \n created as convolution of the task indicator function with the common \n difference of two gamma functions. \n \n See fmri.stimulus() for more details.","Load the data file(s). AFNI, ANALYZE, and NIFTI are supported file \n formats and will be automatically detected. Select either the header \n or data file. To work with a series of ANALYZE files, just select the \n first file. \n \n See read.AFNI(), read.ANALYZE(), read.NIFTI() for more details.","Smoothing will only be performed on a mask of voxels with \n sufficiently large T2-values. If you want to change the threshold for \n this cutting, adjust the mask with the help of the given density plots.","Define the contrast vector for a t-contrast, if more than one \n stimulus is defined. Otherwise, the simple t-contrast is used. \n \n See fmri.lm() for more details.","Define the maximum bandwith for structural adaptive smoothing. The \n bandwidth is defined by the largest homogeneous structure in the SPM. \n Continue without smoothing if you like to perform signal detection using \n Random Field Theory on the SPM directly. \n \n See fmri.smooth() and fmri.pvalue() for more details.","You can view the pvalues in 2D and 3D. The 2D view \n presents to you several slices. It is possible to define the\n number of slices displayed, and the direction (axial, sagittal, \n coronal). The 3D view shows you one slice of every direction. \n The slice displayed, can be chosen by a silder. ","You can quit the FMRI analysis here. It is possible to save \n the workspace to disk, to overtake the workspace to the global \n R environment or to quit without overtaking the workspace. \n Overtaking the workspace may overwrite objects in your workspace. \n Ensure, that your important objects aren't called data, x, spm,\n spmsmooth or pvalue. To abort quitting press cancel.")
+	helptextVec <- c("Define the design of the experiment. You can load a previously saved \n design file here, or define a new design and save it to disk. You can \n define the design in scans or seconds, giving the onset times and \n duration of the stimulus. The expected hemodynamic response will be \n created as convolution of the task indicator function with the common \n difference of two gamma functions. \n \n See fmri.stimulus() for more details.","Load the data file(s). AFNI, ANALYZE, and NIFTI are supported file \n formats and will be automatically detected. Select either the header \n or data file. To work with a series of ANALYZE files, just select the \n first file. \n \n See read.AFNI(), read.ANALYZE(), read.NIFTI() for more details.","Smoothing will only be performed on a mask of voxels with \n sufficiently large T2-values. If you want to change the threshold for \n this cutting, adjust the mask with the help of the given density plots.","Define the contrast vector for a t-contrast, if more than one \n stimulus is defined. Otherwise, the simple t-contrast is used. \n \n See fmri.lm() for more details.","Define the maximum bandwith for structural adaptive smoothing. The \n bandwidth is defined by the largest homogeneous structure in the SPM. \n Continue without smoothing if you like to perform signal detection using \n Random Field Theory on the SPM directly. \n \n See fmri.smooth() and fmri.pvalue() for more details.","You can view the pvalues in 2D and 3D. The 2D view \n presents to you several slices. It is possible to define the\n number of slices displayed, and the direction (axial, sagittal, \n coronal). The 3D view shows you one slice of every direction. \n The slice displayed, can be chosen by a silder. ","You can quit the FMRI analysis here. It is possible to save \n the workspace to disk, to overtake the workspace to the global \n R environment or to quit without overtaking the workspace. \n Overtaking the workspace may overwrite objects in your work- \nspace. Ensure, that your important objects aren't called fmriData, \n fmriDesignMatrix, fmriSpm, fmriSpmsmooth or fmriPvalue. To abort \n quitting press cancel.","You have got the possibility either to save the workspace to disk or to overtake \n the workspace to the global R environment. Overtaking the workspace may over- \n write objects in your workspace. Ensure, that your important objects aren't called \n fmriData, fmriDesignMatrix, fmriSpm, fmriSpmsmooth or fmriPvalue.")
 
-	wiasblue <- "#AACCDB"
+	wiasblue <- "#AACCDB" # colours of the gui
 	wiaslightblue <- "#BBDDEC"
 	nrStep <-0	
 	mycontrastTc <- tclVar()
@@ -1125,7 +1219,8 @@ fmri.gui <- function() {
 	currIndO <- 0
 	maxi <- c()
 	nrcol <- 0
-	nrrow <- 0			
+	nrrow <- 0
+	smoothed <- FALSE				
 
 	# base GUI window (base.aws)
 	if(.Platform$OS.type == "windows") flush.console()
@@ -1164,7 +1259,8 @@ fmri.gui <- function() {
 								
 	# buttons, labels, entries 	
 	objDesignL  <- tklabel(frameDesign1,text="Experimental Design",bg=wiasblue,font="Arial 13 bold")
-	objDesignB0 <- tkbutton(frameDesign1,text="Quit",width=9,command=quitAll,bg=wiaslightblue)	
+	objDesignB0 <- tkbutton(frameDesign1,text="Quit",width=9,command=quitAll,bg=wiaslightblue)
+	objDesignBSave <- tkbutton(frameDesign1,text="Save Workspace",width=15,command=saveAll, bg=wiaslightblue)	
 	objDesignB1 <- tkbutton(frameDesign2,text="Load",width=15,command=loadDesignHelp,bg=wiaslightblue)
 	objDesignB2 <- tkbutton(frameDesign2,text="Create",width=15,command=createDesignHelp,bg=wiaslightblue)
 	helpButton1 <- tkbutton(frameDesign2,text="Help",width=15,command=helpFunction1,bg=wiaslightblue)	
@@ -1199,14 +1295,14 @@ fmri.gui <- function() {
 	smoothChoiceL  <- tklabel(frameSmoothChoice1,text="Adaptive Smoothing",bg=wiasblue,font="Arial 13 bold")
 	smoothChoiceB2 <- tkbutton(frameSmoothChoice4,text="Continue without adaptive smoothing",width=33,command=contWithoutHelp,bg=wiaslightblue)
 				
-	if (as.numeric(tclRequire("Img",warn=FALSE))!=0){
+	if (as.numeric(tclRequire("Img",warn=FALSE))!=0){ # if possible add a little image
 		image1 <- tclVar()
 		tkimage.create("photo",image1,file=system.file("img/wias.jpeg",package="fmri"))
 		imgAsLabel <- tklabel(base.aws,image=image1,bg="white")
-		tkgrid(objDesignL,imgAsLabel,objDesignB0,padx=21,pady=10)
+		tkgrid(objDesignL,imgAsLabel,objDesignBSave,objDesignB0,padx=21,pady=10)
 	}
 	else {
-		tkgrid(objDesignL,objDesignB0,pady = 10, padx = 10)
+		tkgrid(objDesignL,objDesignBSave,objDesignB0,pady = 10, padx = 17)
 	}
 	tkgrid(frameDesign1)	
 	tkgrid(objDesignB1,objDesignB2,helpButton1,padx=15,pady=10)
@@ -1214,4 +1310,4 @@ fmri.gui <- function() {
  	tkgrid(helpLabel3)	
 	tkgrid(frameDesign3,sticky="ew")
 
-}
+} # the end

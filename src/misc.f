@@ -47,6 +47,15 @@ C
       sofw3D=sw*sw/sw2
       RETURN
       END
+      subroutine sofw3Df(bw,kern,wght,fw)
+      implicit logical(a-z)
+      integer kern
+      real*8 bw,wght(2),fw,sofw3D
+      external sofw3D
+      fw=sofw3D(bw,kern,wght)
+      RETURN
+      END
+      
       real*8 function sofw3D0(bw,kern,wght)
       implicit logical(a-z)
       integer kern
@@ -120,8 +129,9 @@ C  Algorithmus zur Nullstellenbestimmung einer monotonen Funktion auf(0,\infty)
          y=y*y/x
          fw2=sofw3D(y,kern,wght)
       END DO
-      DO WHILE(min(fw2/value,value/fw1).gt.1.d0+eps)
-         z=x+(value-fw1)/(fw2-fw1)*(y-x)
+      DO WHILE(min(fw2/value,value/fw1).gt.1.d0+eps.and.y-x.gt.1e-6)
+C         z=x+(value-fw1)/(fw2-fw1)*(y-x)
+         z=(x+y)/2.d0
          fw3=sofw3D(z,kern,wght)
          if(fw3.le.value) THEN
             x=z
@@ -351,12 +361,14 @@ C  correlation in x
       end
 
       subroutine ivar(res,resscale,mask,n1,n2,n3,nv,var)
-
+C
+C   compute variance estimates !!! (not the inverse)
+C
       implicit logical(a-z)
       integer n1,n2,n3,nv
       real*8 resscale,var(n1,n2,n3),res(nv,n1,n2,n3)
       logical mask(n1,n2,n3)
-      real*8 z2,zk,resi,ressc2
+      real*8 z2,zk,resi,ressc2,z1
       integer i1,i2,i3,i4
       zk=nv
       ressc2=resscale*resscale
@@ -366,11 +378,15 @@ C  correlation in x
                var(i1,i2,i3)=1.d20
                if (.not.mask(i1,i2,i3)) CYCLE
                z2=0.d0
+               z1=0.d0
                do i4=1,nv
                   resi=res(i4,i1,i2,i3)
+                  z1=z1+resi
                   z2=z2+resi*resi
                enddo
-               var(i1,i2,i3)=z2/(zk-1.d0)*ressc2
+               z1 = z1/zk
+               z2 = z2/zk
+               var(i1,i2,i3)=(z2-z1*z1)*ressc2
             enddo
          enddo
       enddo
@@ -385,8 +401,9 @@ C   result: mask == .TRUE. if voxel is connected to seed
       implicit logical (a-z)
       integer n1,n2,n3,i1,i2,i3,ind1(1),ind2(1),ind3(1)
       logical final,checked(1),mask(n1,n2,n3),segm(n1,n2,n3)
-      integer j1,j2,j3,k,l1,l2,l3,lind,lind0
+      integer j1,j2,j3,k,l1,l2,l3,lind,lind0,n
 C     first find pixel close to (i1,i2) with segm(j1,j2)=0
+      n=n1*n2*n3
       DO j1=1,n1
          DO j2=1,n2
             DO j3=1,n3
@@ -448,6 +465,10 @@ C     first find pixel close to (i1,i2) with segm(j1,j2)=0
                      if(segm(j1,j2,j3).and..not.mask(j1,j2,j3)) THEN
                         mask(j1,j2,j3)=.TRUE.
                         lind=lind+1
+                        if(lind.gt.n) THEN
+               call intpr("lconnect: lind exeeds maximum of",32,n,1)
+                            return
+                        END IF
                         ind1(lind)=j1
                         ind2(lind)=j2
                         ind3(lind)=j3

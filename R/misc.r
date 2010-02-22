@@ -20,6 +20,14 @@ gethani <- function(x,y,lkern,value,wght,eps=1e-2){
          bw=double(1),
          PACKAGE="fmri")$bw
 }
+sofw3D <- function(bw,kern,wght){
+.Fortran("sofw3Df",
+         as.double(bw),
+         as.integer(kern),
+         as.double(wght),
+         fw=double(1),
+         PACKAGE="fmri")$fw
+}
 
 Varcor.gauss<-function(h,interv = 1){
 #
@@ -274,3 +282,47 @@ mask1 <- .Fortran("lconnect",
 dim(mask1) <- dm
 mask1
 }
+
+spatial.corr <- function(residuals){
+  lags <- c(5,5,3)
+  dy <- dim(residuals)
+  mask <- array(TRUE,dy[2:4])
+  corr <- .Fortran("mcorr",as.double(residuals),
+                     as.logical(mask),
+                     as.integer(dy[2]),
+                     as.integer(dy[3]),
+                     as.integer(dy[4]),
+                     as.integer(dy[1]),
+                     scorr=double(prod(lags)),
+                     as.integer(lags[1]),
+                     as.integer(lags[2]),
+                     as.integer(lags[3]),
+                     PACKAGE="fmri",DUP=FALSE)$scorr
+  dim(corr) <- lags                     
+  bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),upper=c(4,4,4),lag=lags,data=corr)$par  
+  bw[bw<=.25] <- 0
+  if( (max(bw) > 2.5 ) || (corr[lags[1],1,1]+corr[1,lags[2],1]+corr[1,1,lags[3]] >0.5) ) warning(paste("Local smoothness characterized by large bandwidth ",bw," check residuals for structure",collapse=","))
+  rxyz <- c(resel(1,bw[1]), resel(1,bw[2]), resel(1,bw[3]))
+  dim(rxyz) <- c(1,3)
+list(scorr=corr,bw=bw)
+}
+
+generate.filename <- function(prefix="", suffix="", picstart=1, numbpic=1, digits=3) {
+  start <- as.integer(picstart)
+  if (is.na(start)|(start<0)) stop("Illegal start number: ",picstart)
+  number <- as.integer(numbpic)
+  if (is.na(number)|(number<1)) stop("Illegal number of images: ",numbpic)
+
+  counter <- as.character(start:(start+number-1))
+  filename <- character(number)
+
+  if (digits == 0) {
+    for (i in 1:number) filename[i] <- paste(prefix,counter[i],suffix,sep="")
+  } else {
+    digits <- max(digits, nchar(counter[number]))
+
+    for (i in 1:number) filename[i] <- paste(prefix,paste(rep("0",digits-nchar(counter[i])),collapse=""),counter[i],suffix,sep="")
+  }
+  invisible(filename)
+}
+

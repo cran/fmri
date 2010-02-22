@@ -1,10 +1,11 @@
       subroutine fd1(z,s2,fv,dv)
       real*8 z,s2,fv,dv
-      real*8 z2,zexp
+      real*8 z2,zexp,z2s2
       z2=z*z
-      zexp=exp(-z2/2.d0/s2)
+      z2s2=z2/s2
+      zexp=exp(-z2s2/2.d0)
       fv=z*z2*zexp
-      dv=z2*(3.d0-z2/s2)*zexp
+      dv=z2*(3.d0-z2s2)*zexp
       RETURN 
       END
       subroutine fd2(z,s,fv,dv)
@@ -31,68 +32,83 @@
       dv=-s*sin(sz)
       RETURN 
       END
-      subroutine fastica(y,omega,d,n,l,ifun,t,beta,v,normv,s)
+      subroutine fastica(y,omega,d,n,l,ifun,t,beta,v,normv,s,omegak,
+     1                   delta)
       implicit logical (a-z)
       integer d,n,l,t,ifun(l)
-      real*8 y(d,n),omega(d,l),v(d,l),beta(d),s(l),normv(l)
-      integer i,j,k,o
-      real*8 nk,z,fw,fwd1,nbeta,srnbeta,zv,zdelta
+      real*8 y(d,n),omega(d,l),v(d,l),beta(d),s(l),normv(l),omegak(d),
+     1       delta
+      real*8 dnrm2,ddot
+      integer i,j,k,o,ifunk,icount
+      real*8 nk,z,fw,fwd1,nbeta,zv,zdelta,sk,ninv,eps
+      external dnrm2,ddot,dscal
+      call dblepr("delta",5,delta,1)
+      eps=1.d-6
       nk=0.d0
-      nbeta=0.d0
+      ninv=1.d0/n
 C this is just to avoid some warnings 
       DO k=1,l
+         sk=s(k)
+         ifunk=ifun(k)
+         call dcopy(d,omega(1,k),1,omegak,1) 
+C         call dblepr("omega0",6,omegak,d)
          DO j=1,t
+C Start Loop t
             nk=0.d0
             DO o=1,d
                beta(o)=0.d0
             END DO
             DO i=1,n
-               z=0.d0
-               DO o=1,d
-                  z=z+omega(o,k)*y(o,i)
-               END DO
-               select case (ifun(k))
+               z=ddot(d,omegak,1,y(1,i),1)
+C    <omega_k,y_i>
+C            call dblepr("z",1,z,1)
+               select case (ifunk)
                case(1) 
-                  call fd1(z,s(k),fw,fwd1)
+                  call fd1(z,sk,fw,fwd1)
                case(2) 
-                  call fd2(z,s(k),fw,fwd1)
+                  call fd2(z,sk,fw,fwd1)
                case(3) 
-                  call fd3(z,s(k),fw,fwd1)
+                  call fd3(z,sk,fw,fwd1)
                case(4) 
-                  call fd4(z,s(k),fw,fwd1)
+                  call fd4(z,sk,fw,fwd1)
                case default
                   fw=0.d0
                   fwd1=1.d0
                end select
                DO o=1,d
-                  z=y(o,i)*fw-omega(o,k)*fwd1
+                  z=y(o,i)*fw-omegak(o)*fwd1
                   beta(o)=beta(o)+z
                   nk=nk+z*z
                END DO
             END DO
-            DO o=1,d
-               beta(o)=beta(o)/n
-            END DO
-            nbeta=0.d0
-            DO o=1,d
-               z=beta(o)
-               nbeta=nbeta+z*z
-            END DO
-            IF(nbeta.gt.1d-6) THEN
-               srnbeta=sqrt(nbeta)
+            call dscal(d,ninv,beta,1)
+C   beta <- beta/n
+            nbeta=dnrm2(d,beta,1)
+C   nbeta <- ||beta||_2
+C            call dblepr("nbeta",5,nbeta,1)
+            IF(nbeta.gt.eps) THEN
                zdelta = 0.d0
                DO o=1,d
-                  z=beta(o)/srnbeta
-                  zdelta =zdelta+abs(omega(o,k)-z)
-                  omega(o,k)=z
+                  z=beta(o)/nbeta
+                  zdelta =zdelta+omegak(o)*z
+                  omegak(o)=z
                END DO
+C            call dblepr("omegak",6,omegak,d)
             ELSE
                EXIT
 C   keep omega
             END IF
-            IF(zdelta.lt.1.d-5)  EXIT
+           zdelta=acos(abs(zdelta))
+C                call dblepr("zdelta",6,zdelta,1)
+           IF(zdelta.lt.delta) THEN
+C               call intpr("stopped at time",15,j,1)
+C               call dblepr("zdelta",6,zdelta,1)
+               EXIT
+            END IF
+C   omega does not change
+C End Loop t
          END DO
-         nk=nk/n-nbeta
+         nk=nk/n-nbeta*nbeta
          nk=sqrt(n/nk)
          zv=0.d0
          DO o=1,d
@@ -106,6 +122,8 @@ C   keep omega
             normv(k)=0.d0
          END IF
          call rchkusr()
+         icount=k/100
+         if(icount*100.eq.k) call intpr("testfunction nr.",15,k,1)
       END DO
       RETURN
       END

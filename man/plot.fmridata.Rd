@@ -8,8 +8,9 @@
 \usage{
 plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
               spm = TRUE, pos = c(-1, -1, -1), type = "slice",
-              device = "X11", file = "plot.png", slice =  1, view = "axial" ,zlim.u =
-              NULL, zlim.o = NULL,col.o = heat.colors(256), col.u = grey(0:255/255),...)
+              slice =  1, view = "axial" ,zlim.u =
+              NULL, zlim.o = NULL,col.o = heat.colors(256), col.u =
+              grey(0:255/255), cutOff = c(0, 1), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,15 +23,13 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
   \item{pos}{ voxel to be marked on output }
   \item{type}{ string. "slice" for slicewise view and "3d" for
     3d view.}
-  \item{device}{ output device if \code{type} is \code{slice}. "png",
-    "jpeg", "ppm", default is "X11"}
-  \item{file}{ name of output file if \code{device} is not "X11" }
   \item{slice}{ number of slice in x, if anatomic is of "fmridata" class}
   \item{view}{ "axial", "coronal", or "sagittal", if anatomic is of "fmridata" class }
   \item{zlim.u}{ full range for anatomical underlay used for color scale, if anatomic is of "fmridata" class }
   \item{zlim.o}{ full range for functional overlay used for color scale, if anatomic is of "fmridata" class }
   \item{col.u}{ color scale for anatomical underlay, if anatomic is of "fmridata" class, default grey(0:255/255) }
   \item{col.o}{ color scale for functional overlay, if anatomic is of "fmridata" class, default heat.colors(256) }
+  \item{cutOff}{ not yet documented }
   \item{...}{ additional arguments for plot}
 }
 \details{

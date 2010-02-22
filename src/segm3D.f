@@ -3,10 +3,10 @@ C
 C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine segm3d(y,res,si2,mask,wlse,n1,n2,n3,nt,hakt,
-     1                  lambda,theta,bi,thn,kern,spmin,spmax,
-     2                  lwght,wght,swres,delta,pvalue,segm,
-     3                  thresh,fov,varest)
+      subroutine segm3d(y,res,si2,mask,wlse,n1,n2,n3,nt,df,hakt,
+     1                  lambda,theta,bi,thn,lwght,wght,swres,pval,
+     3                  segm,delta,thresh,step,fov,vq,vest0i,
+     4                  varest)
 C
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -21,19 +21,25 @@ C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
       implicit logical (a-z)
-      integer n1,n2,n3,nt,kern,segm(n1,n2,n3)
+      integer n1,n2,n3,nt,kern,segm(n1,n2,n3),step
       logical aws,wlse,mask(n1,n2,n3)
       real*8 y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),delta,thresh,
-     1       thn(n1,n2,n3),lambda,spmax,wght(2),si2(n1,n2,n3),
-     1       hakt,lwght(1),spmin,thi,getlwght,swres(nt),fov,
-     1       varest(n1,n2,n3),res(nt,n1,n2,n3),pvalue(n1,n2,n3)
+     1      thn(n1,n2,n3),lambda,wght(2),si2(n1,n2,n3),pval(n1,n2,n3),
+     1      hakt,lwght(1),thi,getlwght,swres(nt),fov,vq(n1,n2,n3),
+     1      varest(n1,n2,n3),res(nt,n1,n2,n3),vest0i(n1,n2,n3),df
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
-      real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,swjv,cofh,
-     1       varesti,fpchisq,ti,thij,sij,z,si
+      real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,s,vqi,
+     1       varesti,fpchisq,ti,thij,sij,z,si,swr,z1,lfov,linc,sm1,
+     2       a,b,dn
       external getlwght,fpchisq
+      kern=1
       hakt2=hakt*hakt
-      spf=spmax/(spmax-spmin)
+      lfov=log(fov)
+      linc=log(1.25d0)
+      s=step
+      sm1=s-1
+      spf=4.d0/3.d0
       ih1=hakt
       aws=lambda.lt.1d40
 C
@@ -54,6 +60,7 @@ C    get location weights
 C
       call locwghts(dlw1,dlw2,dlw3,wght,hakt2,kern,lwght)
       call rchkusr()
+      IF(hakt.gt.1.25) THEN
       DO i3=1,n3
          DO i2=1,n2
             DO i1=1,n1
@@ -61,16 +68,23 @@ C
                   thn(i1,i2,i3)=0.d0
                   CYCLE
                END IF
+               vqi=vq(i1,i2,i3)
                thi=theta(i1,i2,i3)
-               si2i=si2(i1,i2,i3)
+               si2i=vest0i(i1,i2,i3)
                varesti=varest(i1,i2,i3)
-               cofh=sqrt(2.d0*log(2.d0*varesti*si2i*fov))
+               dn=varesti*si2i*fov
+               call getdfnab(df,dn,a,b)
+C   this should be more conservative using actual variance reduction instead of theoretical
                ti=max(0.d0,abs(thi)-delta)
-            pvalue(i1,i2,i3)=min(1.d0,thresh/(abs(thi)/sqrt(varesti)))
+               IF(a*ti/sqrt(varesti/vqi)-b.gt.thresh) THEN
+                   pval(i1,i2,i3)=0.d0
+               ELSE
+                   pval(i1,i2,i3)=1.d0
+               END IF
             END DO
          END DO
       END DO
-               
+      END IF 
 C   scaling of sij outside the loop
       DO i3=1,n3
          DO i2=1,n2
@@ -79,11 +93,11 @@ C   scaling of sij outside the loop
                   thn(i1,i2,i3)=0.d0
                   CYCLE
                END IF
-               si2i=si2(i1,i2,i3)
+               vqi=vq(i1,i2,i3)
+               si2i=vest0i(i1,i2,i3)
                varesti=varest(i1,i2,i3)
                bii=bi(i1,i2,i3)/lambda
                swj=0.d0
-               swjv=0.d0
                swjy=0.d0
                DO k=1,nt
                   swres(k)=0.d0
@@ -105,20 +119,21 @@ C  first stochastic term
                         si2j=si2(j1,j2,j3)
                         IF (aws) THEN
                            thij=thi-theta(j1,j2,j3)
-                           IF(segm(i1,i2,i3)*segm(j1,j2,j3).gt.0) THEN
-                              sij=max(pvalue(i1,i2,i3),
-     1                        pvalue(j1,j2,j3)*thij*thij*bii)
-                           ELSE
-                              sij=thij*thij*bii
+                           sij=thij*thij*bii
+                           if(abs(segm(i1,i2,i3)).eq.1) THEN
+                           if(segm(i1,i2,i3)*segm(j1,j2,j3).gt.0) THEN
+C
+C   allow for nonadaptive smoothing if values are in the same segment
+C
+                                 sij=pval(i1,i2,i3)*sij
+                              ELSE
+                                 CYCLE
+                              END IF
                            END IF
                            IF(sij.gt.1.d0) CYCLE
-                        IF(sij.gt.spmin) wj=wj*(1.d0-spf*(sij-spmin))
+                        IF(sij.gt.0.25d0) wj=wj*(1.d0-spf*(sij-0.25d0))
                         END IF
-                        if(wlse) THEN 
-                           wj=wj*si2j
-                        ELSE
-                           swjv=swjv+wj/si2j
-                        END IF
+                        if(wlse)  wj=wj*si2j
                         swj=swj+wj
                         swjy=swjy+wj*y(j1,j2,j3)
 C  weighted sum of residuals
@@ -127,30 +142,71 @@ C  weighted sum of residuals
                   END DO
                END DO
                z=0.d0
+               z1=0.d0
                DO k=1,nt
-                  z=z+swres(k)*swres(k)/swj/swj
+                  swr=swres(k)/swj
+                  z1=z1+swr
+                  z=z+swr*swr
                END DO
                thi=swjy/swj
                thn(i1,i2,i3)=thi
-               IF(wlse) THEN
-                  bi(i1,i2,i3)=swj
-               ELSE
-                  bi(i1,i2,i3)=swj*swj/swjv
-               END IF
-               si = z/nt
+               z1=z1/nt
+               si = (z/nt - z1*z1)
                varest(i1,i2,i3)=si
-               cofh = sqrt(2.d0*log(2.d0*varesti*si2i*fov))
-               si=sqrt(si/(nt-1))
-               if((thi+delta)/si+cofh.lt.-thresh) THEN
+               bi(i1,i2,i3)=si2i/si*si2(i1,i2,i3)
+               if(segm(i1,i2,i3).ne.0) CYCLE
+C   keep the detected segment
+               dn=si*si2i*fov
+               call getdfnab(df,dn,a,b)
+C 
+C   note that a and b refer to  1/a_n and b_n/a_n
+C
+C   this should be more conservative using actual variance reduction instead of theoretical
+               si=sqrt(si/vqi)
+               if(a*(thi+delta)/si+b.lt.-thresh) THEN
                   segm(i1,i2,i3)=-1
-               ELSE IF ((thi-delta)/si-cofh.gt.thresh) THEN
+               ELSE IF (a*(thi-delta)/si-b.gt.thresh) THEN
                   segm(i1,i2,i3)=1
-               ELSE
-                  segm(i1,i2,i3)=0
                END IF
                call rchkusr()
             END DO
          END DO
       END DO
+      RETURN
+      END
+      subroutine getdfnab(df,n,a,b)
+C
+C   this function computes approximations for constants a=1/a_n and b=b_n/a_n
+C   such that for the maximum T_n of n r.v. from student t_df  
+C   a_n T_n +b_n  ~ \Phi_\df    (asymp. extreme value distribution for t_df)
+C
+C   approximation formulaes obtained from samples of 100000 Extremes 
+C   df \in 10:264   n \in  100 : 20000   
+C   max. approx error < 0.002 for a   and < 0.006   for b
+C
+      implicit logical (a-z)
+      real*8 a,b,df,n
+      real*8 dfinv,ldf,dfq,ninvh,x1,x2,x3,x4,x5,x6,lna,lnb,ln
+      dfinv=1.d0/(df-1.d0)
+      dfq=sqrt(sqrt(df))
+      ldf=log(df+1.d1)
+      ninvh=exp(-.2d0*log(n+8.d0))
+      ln=log(n)
+      lna=exp(0.01*log(ln))
+      lnb=exp(1.85*log(ln))
+      x1=1.d0/(df+lnb)
+      x2=df/(df+lna)
+      x3=df/lna
+      x4=1.d0/(df+lna)
+      x5=df/(df+lnb)
+      x6=df/lnb
+      a=-7.754959d1-1.210474d1*dfinv+2.996616d-2*dfq-3.428621d-2*ldf-
+     -   3.702433d-3*ln+2.354546*lna+1.055396d-4*lnb-4.086823*x1+
+     +   7.527587d1*x2-1.180929d-5*x3+9.221818d+1*x4-2.438421d-2*x5+
+     +   6.206907d-5*x6
+      b= 1.28747d3-2.657702d1*dfinv-1.229952d-1*dfq+1.483752d-1*ldf+
+     +   1.909285d-2*ln-2.286336d+1*lna-3.68511d-4*lnb+2.490921*x1-
+     -   1.265445d3*x2+5.276941d-5*x3-1.255524d3*x4-1.510486d-1*x5-
+     -   7.066693d-4*x6-2.079471d-1*ninvh-5.203836d-3*ninvh*dfq
       RETURN
       END

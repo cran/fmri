@@ -1,17 +1,24 @@
-ngca <- function(data,L=c(1000,1000,1000),T=10,m=3,eps=1.5,npca=min(dim(x)[2],dim(x)[1]),filter.time="None",filter.space=FALSE,method="temporal",h.space=3,h.time=3,keepv=FALSE){
+ngca <- function(data,L=c(1000,1000,1000),T=10,m=3,eps=1.5,npca=min(dim(x)[2],dim(x)[1]),filter.time="None",filter.space=FALSE,method="temporal",dg.trend=2,h.space=3,h.time=3,keepv=TRUE,delta=NULL){
 #
 #  NGCA algorithm  for fMRI
 #  x should be either a fMRI object or a matrix 
 #
 if(all(class(data)=="fmridata")) {
+   data <- fmri.detrend(data,dg.trend)
    x <- extract.data(data)
-   mask <- data$mask
+   mask <- data$mask>0
    fmriobj <- TRUE
+# extracted data in x
+#
+#   we should also remove trends here
+#
    if(filter.time %in% c("High","Both")){
+# high pass filter in time if specified
       d <- dim(x)[4]
       x <- x[,,,-1]-x[,,,-d]
    }
    if(filter.time %in% c("Low","Both")){
+# low pass filter in time if specified
       dx <- dim(x)
       cat("Start smoothing in time (Bandwidth=",h.time,")\n")
       x <- .Fortran("smtime",
@@ -31,6 +38,7 @@ if(all(class(data)=="fmridata")) {
      dim(x) <- dx
    }
    if(filter.space) {
+# spatial smoothing if specified
       dx <- dim(x)
       cat("Start spatial smoothing (Bandwidth=",h.space,")\n")
       wghts <- data$weights
@@ -76,41 +84,44 @@ if(length(mask)==1) mask <- rep(mask,n)
 x <- x[mask,]
 n <- sum(mask)
 if(is.null(npca)||npca >= min(d,n)) npca <- min(d,n)
-x <- switch(method,"spatial"=sweep(x,1,apply(x,1,mean)),
-            "temporal"=sweep(x,2,apply(x,2,mean)))
+# sweep out the mean  
+xmean <- switch(method,"spatial"=apply(x,1,mean),
+                       "temporal"=apply(x,2,mean))
+x <- switch(method,"spatial"=sweep(x,1,xmean),
+            "temporal"=sweep(x,2,xmean))
+if(method=="temporal") x <- sweep(x,1,apply(x,1,mean))
 if(method=="spatial"){
 x <- t(x)
 d <- dim(x)[2]
 n <- dim(x)[1]
+# this means d>n
 }
-#svdx <- svd(x,nu=0,nv=npca)
 svdx <- svd(x,nu=npca,nv=npca)
-#cat("Dimension reduced to:",npca,"\n")
-#svdxd <- svdxdinv <- abs(svdx$d[1:npca])
-#svdxdinv[svdxdinv>1e-10] <- 1/svdxdinv[svdxdinv>1e-10]
-#y <- t(x%*%t(svdx$v)%*%diag(svdxdinv)%*%svdx$v)
-if(d>n) {
 # reduce to space of first npca components
-y <- svdx$v[1:npca,]%*%t(svdx$u)*sqrt(n-1)
-} else {
-y <- svdx$v%*%t(svdx$u)*sqrt(n-1)
-}
+nd <- switch(method,"spatial"=d-1,"temporal"=n-1)
+y <- svdx$v[1:npca,]%*%t(svdx$u)*sqrt(nd)
+sigmainvhalf <- svdx$v[1:npca,]%*%diag(svdx$d[1:npca]^(-1))%*%t(svdx$v[1:npca,])*sqrt(nd)
+sigmahalf <- svdx$v[1:npca,]%*%diag(svdx$d[1:npca])%*%t(svdx$v[1:npca,])/sqrt(nd)
 #
 #
 Lsum <- L[1]+L[2]+2*L[3]
 s <- c(if(L[1]>0) seq(.5,5,length=L[1]), 
-       if(L[2]>0) seq(5/L[2],5,length=L[2]), 
-       if(L[3]>0) seq(1/L[3],4,length=L[3]),
-       if(L[3]>0) seq(0,4,length=L[3]))
+       if(L[2]>0) seq(0.05,5,length=L[2]), 
+       if(L[3]>0) seq(0.05,4,length=L[3]),
+       if(L[3]>0) seq(0.05,4,length=L[3]))
 Lsum <- L[1]+L[2]+2*L[3]
 ifun <- c(rep(1,L[1]),rep(2,L[2]),rep(3,L[3]),rep(4,L[3]))
 #
 #   now fast ICA
 #
+if(is.null(delta)) {
+    delta <- npca*5e-4
+}
+cat("delta set to",delta,"\n")
 omega <- matrix(rnorm(Lsum*npca),npca,Lsum)
 omega <- sweep(omega,2,sqrt(apply(omega^2,2,sum)),"/")
 fz <- .Fortran("fastica",
-              as.double(y),
+              as.double(t(y)),
               as.double(omega),
               as.integer(npca),
               as.integer(n),
@@ -121,47 +132,141 @@ fz <- .Fortran("fastica",
               v=double(npca*Lsum),
               normv=double(Lsum),
               as.double(s),
+              double(npca),
+              as.double(delta),
               DUP=FALSE,
               PACKAGE="fmri")[c("v","normv")]
 v <- fz$v
 normv <- fz$normv
+plot(density(normv))
+if(eps>quantile(normv,.95)) {
+eps <- quantile(normv,.95)
+cat("eps reset to",eps,"\n")
+}
 dim(v) <- c(npca,Lsum)
+v0 <- v
 v <- t(v[,normv>eps])
 jhat <- prcomp(v)
-if(d>n){
-ihat <- svdx$v%*%diag(svdx$d)%*%t(svdx$v[1:npca,])%*%jhat$rotation[,1:m]/sqrt(n-1)
+if(method=="spatial") {
+xhat <- sigmahalf[,1:npca]%*%jhat$rotation[,1:m]
+ihat <- x[,1:npca]%*%xhat 
 } else {
-ihat <- svdx$v%*%diag(svdx$d)%*%t(svdx$v)%*%jhat$rotation[,1:m]/sqrt(n-1)
-}
+ihat <- sigmahalf[,1:npca]%*%jhat$rotation[,1:m]
 xhat <- x%*%ihat
+}
 if(fmriobj){
-if(method=="spatial"){
-z <- matrix(0,nn,m)
-z[mask,]<-ihat
-ihat <- array(z,c(xdim[1:3],m))
-} else {
 z <- matrix(0,nn,m)
 z[mask,]<-xhat
 xhat <- array(z,c(xdim[1:3],m))
-}
 z <- list(ihat=ihat,sdev=jhat$sdev[1:m],xhat=xhat)
 if(keepv) {
-z$v <- v
+z$v <- v0
 z$normv <- normv
+z$svdx <- svdx
+z$xmean <- xmean
+z$npca <- npca
+z$method <- method
+z$sinvhalf <- sigmainvhalf
+z$shalf <- sigmahalf
+z$mask <- mask
+z$xdim <- xdim
+z$method <- z$method
+z$npca <- npca
 }
 class(z) <- "fmringca"
 } else {
 z <- list(ihat=ihat,sdev=jhat$sdev[1:m],xhat=xhat,jhat=jhat,svdx=svdx)
 if(keepv) {
-z$v <- v
+z$v <- v0
 z$normv <- normv
 }
 class(z) <- "ngca"
 }
 z
 }
+ngca.thresh <- function(ngcaobj,eps=1.5,m=3){
+#
+#  NGCA algorithm  for fMRI
+#  x should be either a fMRI object or a matrix 
+#
+if(class(ngcaobj)!="fmringca"||is.null(ngcaobj$normv)) return(ngcaobj)
+method <- ngcaobj$method
+if(is.null(method)) method <- "temporal"
+# just to be able to check with previous calculations
+v <- ngcaobj$v
+normv <- ngcaobj$normv
+v <- t(v[,normv>eps])
+jhat <- prcomp(v)
+svdx <- ngcaobj$svdx
+npca <- ngcaobj$npca
+if(is.null(npca)) npca <- length(svdx$d)
+# just to be able to check with previous calculations
+x <- svdx$u%*%diag(svdx$d)%*%t(svdx$v)
+if(method=="spatial") {
+xhat <- ngcaobj$shalf[,1:npca]%*%jhat$rotation[,1:m]
+ihat <- x%*%ihat
+} else {
+ihat <- sigmahalf[,1:npca]%*%jhat$rotation[,1:m]
+xhat <- x%*%ihat
+}
+mask <- ngcaobj$mask
+nn <- prod(xdim[1:3])
+z <- matrix(0,nn,m)
+z[mask,]<-xhat
+xhat <- array(z,c(xdim[1:3],m))
+z <- list(ihat=ihat,sdev=jhat$sdev[1:m],xhat=xhat,method=method,npca=npca)
+class(z) <- "fmringca"
+z
+}
 
-fmriica <- function(data,m=3,method="spatial",xind=NULL,yind=NULL,zind=NULL,tind=NULL,...){
+ngcafmri.plot <- function(ngcaobj,qeps=.9,m=1,center=FALSE,scale=FALSE){
+#
+#  NGCA algorithm  for fMRI
+#  x should be either a fMRI object or a matrix 
+#
+if(class(ngcaobj)!="fmringca"||is.null(ngcaobj$normv)) return(ngcaobj)
+method <- ngcaobj$method
+if(is.null(method)) method <- "temporal"
+# just to be able to check with previous calculations
+v <- ngcaobj$v
+normv <- ngcaobj$normv
+eps <- quantile(normv,qeps)
+cat("Using threshold of",eps,"\n")
+v <- t(v[,normv>eps])
+jhat <- prcomp(v,center=center,scale=scale)
+
+svdx <- ngcaobj$svdx
+npca <- ngcaobj$npca
+if(is.null(npca)) npca <- length(svdx$d)
+# just to be able to check with previous calculations
+x <- svdx$u%*%diag(svdx$d)%*%t(svdx$v)
+if(method=="spatial") {
+xhat <- ngcaobj$shalf[,1:npca]%*%jhat$rotation[,1:m]
+ihat <- x%*%ihat
+} else {
+ihat <- ngcaobj$shalf[,1:npca]%*%jhat$rotation[,1:m]
+xhat <- x%*%ihat
+}
+mask <- ngcaobj$mask
+xdim <- ngcaobj$xdim
+nn <- prod(xdim[1:3])
+chat <- numeric(nn)
+chat[mask]<-x%*%ihat[,m]
+dim(chat) <- xdim[1:3]
+dd <- xdim[3]
+nd1 <- as.integer(sqrt(dd))+1
+nd2 <- as.integer((dd)/nd1)+1
+par(mfrow=c(nd1,nd2),mar=c(.5,.5,.5,.1))
+#
+#  now compute correlations
+#
+for(i in 1:dd) image(chat[,,i],zlim=range(chat))
+plot(ihat[,m],type="l")
+invisible(NULL)
+}
+
+fmriica <- function(data,m=3,method="temporal",xind=NULL,yind=NULL,zind=NULL,tind=NULL,
+filter.time="None",filter.space=FALSE,h.space=3,h.time=3,keepv=FALSE,...){
 #
 #  ICA algorithm  for fMRI
 #  x should be either a fMRI object or a matrix 
@@ -169,7 +274,7 @@ fmriica <- function(data,m=3,method="spatial",xind=NULL,yind=NULL,zind=NULL,tind
 if(!require(fastICA)) stop("Please install package fastICA from CRAN")
 if(all(class(data)=="fmridata")) {
    x <- extract.data(data)
-   mask <- data$mask
+   mask <- data$mask>0
 }  else {
    warning("data has incompatible class argument")
    return(data)
@@ -177,6 +282,48 @@ if(all(class(data)=="fmridata")) {
 if(!is.null(xind)) mask[-xind,,] <- FALSE
 if(!is.null(yind)) mask[,-yind,] <- FALSE
 if(!is.null(zind)) mask[,,-zind] <- FALSE
+   if(filter.time %in% c("Low","Both")){
+      dx <- dim(x)
+      cat("Start smoothing in time (Bandwidth=",h.time,")\n")
+      x <- .Fortran("smtime",
+                    as.double(x),
+                    as.integer(dx[1]),
+                    as.integer(dx[2]),
+                    as.integer(dx[3]),
+                    as.integer(dx[4]),
+                    as.logical(mask),
+                    as.double(h.time),
+                    xnew=double(prod(dx)),
+                    double(as.integer(2*h.time+1)),
+                    as.integer(2*h.time+1),
+                    DUP=FALSE,
+                    PACKAGE="fmri")$xnew
+     cat("Smoothing in time finished)\n")
+     dim(x) <- dx
+   }
+   if(filter.space) {
+      dx <- dim(x)
+      cat("Start spatial smoothing (Bandwidth=",h.space,")\n")
+      wghts <- data$weights
+      x <- .Fortran("smspace",
+                    as.double(x),
+                    as.integer(dx[1]),
+                    as.integer(dx[2]),
+                    as.integer(dx[3]),
+                    as.integer(dx[4]),
+                    as.logical(mask),
+                    as.double(h.space),
+                    xnew=double(prod(dx)),
+                    as.double(wghts),
+                    double(prod(as.integer(2*h.space/wghts+1))),
+                    as.integer(as.integer(2*h.space/wghts[1]+1)),
+                    as.integer(as.integer(2*h.space/wghts[2]+1)),
+                    as.integer(as.integer(2*h.space/wghts[3]+1)),
+                    DUP=FALSE,
+                    PACKAGE="fmri")$xnew
+     cat("Spatial moothing finished)\n")
+     dim(x) <- dx
+   }
 #
 #  x - data matrix  (Nxd)
 #

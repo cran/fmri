@@ -6,7 +6,10 @@
   The function performs Independent Component Analysis.
 }
 \usage{
-fmriica(data, m = 3, method = "spatial", xind = NULL, yind = NULL, zind = NULL, tind = NULL, ...)
+fmriica(data, m = 3, method = "temporal", xind = NULL, yind =
+        NULL, zind = NULL, tind = NULL, filter.time = "None",
+        filter.space = FALSE, h.space = 3, h.time = 3, keepv =
+        FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +20,11 @@ fmriica(data, m = 3, method = "spatial", xind = NULL, yind = NULL, zind = NULL, 
   \item{yind}{ index of y-coordinates to use }
   \item{zind}{ index of z-coordinates to use }
   \item{tind}{ index of time points to use }
+  \item{filter.time}{ not yet documented }
+  \item{filter.space}{ not yet documented }
+  \item{h.space}{ not yet documented }
+  \item{h.time}{ not yet documented }
+  \item{keepv}{ not yet documented }
   \item{\dots}{ further arguments to fastICA }
 }
 \details{

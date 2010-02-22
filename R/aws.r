@@ -163,8 +163,8 @@ vaws3D <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=TRUE
   propagation <- NULL
   # run single steps to display intermediate results
   while (k<=kstar) {
-      hakt0 <- gethani(1,10,lkern,1.25^(k-1),wghts,1e-4)
-      hakt <- gethani(1,10,lkern,1.25^k,wghts,1e-4)
+      hakt0 <- gethani(1,3,lkern,1.25^(k-1),wghts,1e-4)
+      hakt <- gethani(1,3,lkern,1.25^k,wghts,1e-4)
       hakt.oscale <- if(lkern==3) bw2fwhm(hakt/4) else hakt
       cat("step",k,"bandwidth",signif(hakt.oscale,3)," ")
     dlw <- (2*trunc(hakt/c(1,wghts))+1)[1:d]
@@ -333,7 +333,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=TRUE
   vartheta <- vred/sigma2  #  sigma2 contains inverse variances
   z <- list(theta=theta,ni=tobj$bi,var=vartheta,vred=vred,vred0=median(vred[mask]),y=y,
             hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),mae=mae,
-            call=args,alpha=propagation,scorr=scorr,res=residuals)
+            call=args,alpha=propagation,scorr=scorr,res=residuals,mask=mask)
   #   vred accounts for variance reduction with respect to uncorrelated (\check{sigma}^2) data
   class(z) <- "aws.gaussian"
   invisible(z)
@@ -464,8 +464,8 @@ vaws3Dfull <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=
   dim(residuals) <- c(ddim[4],ddim[1:3])
   vadjust <- apply(residuals,2:4,var)*sigma2
   while (k<=kstar) {
-      hakt0 <- gethani(1,10,lkern,1.25^(k-1),wghts,1e-4)
-      hakt <- gethani(1,10,lkern,1.25^k,wghts,1e-4)
+      hakt0 <- gethani(1,3,lkern,1.25^(k-1),wghts,1e-4)
+      hakt <- gethani(1,3,lkern,1.25^k,wghts,1e-4)
       hakt.oscale <- if(lkern==3) bw2fwhm(hakt/4) else hakt
       cat("step",k,"bandwidth",signif(hakt.oscale,3)," ")
     dlw <- (2*trunc(hakt/c(1,wghts))+1)[1:d]
@@ -507,7 +507,7 @@ vaws3Dfull <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=
     theta <- array(tobj$thnew,dy) 
     dim(tobj$bi) <- ddim[1:3]
     tobj$bi <- tobj$bi*vadjust
-#  correcting for missing term in variance estimate from residuals
+#  correcting for missing term in variance estimate from residuals, e.g. effects of design matrix
 #  now contains 1/var(thetahat)
     if(testprop) {
       pobj <- .Fortran("chawsv",as.double(y),
@@ -592,7 +592,7 @@ vaws3Dfull <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=
   vred <- vartheta*sigma2
   z <- list(theta=theta,ni=tobj$bi,var=vartheta,vred=vred,vred0=median(vred[mask]),y=y,
             hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),mae=mae,
-            call=args,alpha=propagation,scorr=scorr,res=tobj$resnew)
+            call=args,alpha=propagation,scorr=scorr,res=tobj$resnew,mask=mask)
   #   vred accounts for variance reduction with respect to uncorrelated (\check{sigma}^2) data
   class(z) <- "aws.gaussian"
   invisible(z)

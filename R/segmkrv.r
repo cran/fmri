@@ -27,56 +27,32 @@
 #  USA.
 #
 
-segm3D <- function(y,weighted=TRUE,
-                   sigma2=NULL,mask=NULL,hinit=NULL,hmax=NULL,
-                   ladjust=1,graph=FALSE,wghts=NULL,
-                   df=100,h0=c(0,0,0),res=NULL, resscale=NULL, 
-                   ddim=NULL,delta=0,fov=NULL,alpha=.05) {
+segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
 #
 #
 #  Auxilary functions
    IQRdiff <- function(y) IQR(diff(y))/1.908
-   getkrval <- function(df,ladj,n,kstar,alpha){
-#
-#    this delivers an upper bound for kritical values over a wide range of parameters
-#    covering the typical situations in fMRI
-#    n in (32^3 : 64^2*32)
-#    df in (40 : 250)
-#    ladj in (1 : 1.4) 
-#    kstar in (10:27)  corrsponding to maximal bandwidths  2.5 - 5
-#    see file sim_fmri_kritval.r in R/segmentation/fmrikrv/
-      dfinv <- log(df)-30000/df^1.44
-      explvar <- c(1, dfinv, log(n), kstar, dfinv*log(n), dfinv*(ladj-1))
-      a <- c(1, alpha, alpha^2, sqrt(alpha))
-      acoef <- matrix(c(1           ,  0           ,  0          ,  0           ,
-                        0.0002129201, -0.000820306 ,  0          ,  0           ,
-                        0.0016314442,  0.0061321878,  0          , -0.0043558989,
-                        0.0001558305,  0.0007918858,  0          , -0.0006520962,
-                       -0.0001535607,  0.0009159794, -0.004950741,  0           ,
-                        0.0003009761, -0.0017770459,  0.013396270,  0   ),4,6)
-      dimnames(acoef) <- list(c("(Intercept)","a","a2","ah"),NULL)
-      ecoefs <- t(acoef)%*%a
-      t(explvar)%*%ecoefs
-   }
-fovcorr <- function(h,fwhm=TRUE){
-# correction factor for FOV in case of spatial correlation
-fwhm2bw <- function(hfwhm) hfwhm/sqrt(8*log(2))
-if(fwhm) h <- fwhm2bw(h)
- 1-0.3181*log(h[1]+1)-0.3189*log(h[2]+1)+
-                       0.1025*log(h[1]+1)*log(h[2]+1)
-}
 #
 # first check arguments and initialize
 #
    args <- match.call()
 # test dimension of data (vector of 3D) and define dimension related stuff
+   ddim <- dim(res)
+   y <- .Fortran("mean3D",
+                 as.double(res),
+                 as.integer(ddim[2]),
+                 as.integer(ddim[3]),
+                 as.integer(ddim[4]),
+                 as.integer(ddim[1]),
+                 y=double(prod(ddim[2:4])),
+                 PACKAGE="fmri",DUP=FALSE)$y
    d <- 3
-   dy <- dim(y)
+   dy <- dim(y) <- ddim[2:4]
    n1 <- dy[1]
    n2 <- dy[2]
    n3 <- dy[3]
    n <- n1*n2*n3
-   nt <- ddim[4]
+   nt <- ddim[1]
    if (length(dy)==d+1) {
       dim(y) <- dy[1:3]
    } else if (length(dy)!=d) {
@@ -90,119 +66,123 @@ if(fwhm) h <- fwhm2bw(h)
 # to have similar preformance compared to skern="Exp"
    spmin <- .25 
    spmax <- 1
-   if (is.null(hinit)||hinit<1) hinit <- 1
+   hinit <- 1
   
 # define hmax
    if (is.null(hmax)) hmax <- 5    # uses a maximum of about 520 points
 
+# re-define bandwidth for Gaussian lkern!!!!
+   if (lkern==3) {
+# assume  hmax was given in  FWHM  units (Gaussian kernel will be truncated at 4)
+      hmax <- fwhm2bw(hmax)*4
+      hinit <- min(hinit,hmax)
+   }
 
 # define hincr
+# determine corresponding bandwidth for specified correlation
+   if(is.null(h0)) h0 <- rep(0,3)
 
 # estimate variance in the gaussian case if necessary  
 # deal with homoskedastic Gaussian case by extending sigma2
-   if (length(sigma2)==1) sigma2<-array(sigma2,dy[1:3]) 
-   if (length(sigma2)!=n) stop("sigma2 does not have length 1 or same length as y")
-   dim(sigma2) <- dy[1:3]
-   if(is.null(mask)) mask <- array(TRUE,dy[1:3])
-   mask[sigma2>=1e16] <- FALSE
-#  in these points sigma2 probably contains NA's
-   sigma2 <- 1/sigma2 #  taking the invers yields simpler formulaes 
-# deal with homoskedastic Gaussian case by extending sigma2
-   residuals <- readBin(res,"integer",prod(ddim),2)
+  mask <- array(TRUE,dy[1:3])
   cat("\nfmri.smooth: first variance estimate","\n")
-  vartheta0 <- .Fortran("ivar",as.double(residuals),
-                           as.double(resscale),
-                           as.logical(mask),
-                           as.integer(ddim[1]),
-                           as.integer(ddim[2]),
-                           as.integer(ddim[3]),
-                           as.integer(ddim[4]),
+  vartheta0 <- .Fortran("ivar",as.double(res),
+                           as.double(1),
+                           as.logical(rep(TRUE,prod(ddim[2:4]))),
+                           as.integer(n1),
+                           as.integer(n2),
+                           as.integer(n3),
+                           as.integer(nt),
                            var = double(n1*n2*n3),
                            PACKAGE="fmri",DUP=FALSE)$var
-   varest0 <- vartheta0
-   vq <- varest0*sigma2
+   sigma2 <- vartheta0/nt #  thats the variance of  y  ... !!!! assuming zero mean
+   sigma2 <- 1/sigma2 # need the inverse for easier computations
+   dim(sigma2) <- dy[1:3]
 # Initialize  list for bi and theta
-   if (is.null(wghts)) wghts <- c(1,1,1)
+   wghts <- c(1,1,1)
    hinit <- hinit/wghts[1]
    hmax <- hmax/wghts[1]
-   wghts <- wghts[2:3]/wghts[1]
-#   tobj <- list(bi= rep(1,n))
-   tobj <- list(bi= sigma2)
+   wghts <- (wghts[2:3]/wghts[1])
+   tobj <- list(bi= rep(1,n))
    theta <- y
    segm <- array(0,dy[1:3])
-   varest <- varest0
+   varest <- 1/sigma2
    maxvol <- getvofh(hmax,lkern,wghts)
-   if(is.null(fov)) fov <- sum(mask)
-   fov <- fovcorr(h0)*fov
+   fov <- prod(ddim[1:3])
    kstar <- as.integer(log(maxvol)/log(1.25))
    steps <- kstar+1
+   cat("FOV",fov,"ladjust",ladjust,"lambda",lambda,"\n")
    k <- 1 
    hakt <- hinit
    hakt0 <- hinit
    lambda0 <- lambda
+   maxvalue <- matrix(0,2,kstar)
+   mse <- numeric(kstar)
+   mae <- numeric(kstar)
    if (hinit>1) lambda0 <- 1e50 # that removes the stochstic term for the first step
    scorr <- numeric(3)
+   if(h0[1]>0) scorr[1] <-  get.corr.gauss(h0[1],2)
+   if(h0[2]>0) scorr[2] <-  get.corr.gauss(h0[2],2)
+   if(h0[3]>0) scorr[3] <-  get.corr.gauss(h0[3],2)
    total <- cumsum(1.25^(1:kstar))/sum(1.25^(1:kstar))
-   thresh <- 1
-   for(i in 10:kstar) thresh <- max(thresh,getkrval(df,ladjust,fov,i,alpha))
-#  just to ensure monotonicity of thresh with kmax, there exist a few parameter configurations
-#  where the approximation formula does not ensure monotonicity
-   cat("FOV",fov,"delta",delta,"thresh",thresh,"ladjust",ladjust,"lambda",lambda,"df",df,"\n")
 # run single steps to display intermediate results
-   residuals <- residuals*resscale
-#
-#   need these values to compute variances 
-#
    while (k<=kstar) {
       hakt0 <- gethani(1,10,lkern,1.25^(k-1),wghts,1e-4)
       hakt <- gethani(1,10,lkern,1.25^k,wghts,1e-4)
-      cat("step",k,"bandwidth",signif(hakt,3)," ")
+      hakt.oscale <- if(lkern==3) bw2fwhm(hakt/4) else hakt
+      cat("step",k,"bandwidth",signif(hakt.oscale,3)," ")
       dlw <- (2*trunc(hakt/c(1,wghts))+1)[1:d]
+#  need bandwidth in voxel for Spaialvar.gauss, h0 is in voxel
+      if (any(h0>0)) lambda0 <- lambda0 * Spatialvar.gauss(bw2fwhm(hakt0)/4/c(1,wghts),h0,d)/
+      Spatialvar.gauss(h0,1e-5,d)/Spatialvar.gauss(bw2fwhm(hakt0)/4/c(1,wghts),1e-5,d)
+# Correction C(h0,hakt) for spatial correlation depends on h^{(k-1)}  all bandwidth-arguments in FWHM 
       hakt0 <- hakt
       theta0 <- theta
       bi0 <- tobj$bi
-      tobj <- .Fortran("segm3d",
+#
+#   need these values to compute variances after the last iteration
+#
+      tobj <- .Fortran("segm3dkv",
                        as.double(y),
-                       as.double(residuals),
+                       as.double(res),
                        as.double(sigma2),
-                       as.logical(!mask),
-                       as.logical(weighted),
                        as.integer(n1),
                        as.integer(n2),
                        as.integer(n3),
                        as.integer(nt),
-                       as.double(df),
                        hakt=as.double(hakt),
                        as.double(lambda0),
                        as.double(theta0),
                        bi=as.double(bi0),
                        thnew=double(n1*n2*n3),
+                       as.integer(lkern),
+                       as.double(spmin),
+                       as.double(spmax),
                        double(prod(dlw)),
                        as.double(wghts),
                        double(nt),#swres
-                       double(n1*n2*n3),#pvalues
-                       segm=as.integer(segm),
-                       as.double(delta),
-                       as.double(thresh),
-                       as.integer(k),
+                       as.double(beta),
                        as.double(fov),
-                       as.double(vq),
-                       as.double(varest0),
                        varest=as.double(varest),
-                       PACKAGE="fmri",DUP=FALSE)[c("bi","thnew","hakt","segm","varest")]
+                       maxvalue=double(1),
+                       minvalue=double(1),
+                       PACKAGE="fmri",DUP=FALSE)[c("bi","thnew","hakt","varest","maxvalue","minvalue")]
       gc()
       theta <- array(tobj$thnew,dy[1:3]) 
-      segm <- array(tobj$segm,dy[1:3])
       varest <- array(tobj$varest,dy[1:3])
       dim(tobj$bi) <- dy[1:3]
+      maxvalue[1,k] <- tobj$maxvalue
+      maxvalue[2,k] <- -tobj$minvalue
+      mae[k] <- mean(abs(theta))
+      mse[k] <- mean(theta^2)
       if (graph) {
          par(mfrow=c(2,2),mar=c(1,1,3,.25),mgp=c(2,1,0))
          image(y[,,n3%/%2+1],col=gray((0:255)/255),xaxt="n",yaxt="n")
          title(paste("Observed Image  min=",signif(min(y),3)," max=",signif(max(y),3)))
          image(theta[,,n3%/%2+1],col=gray((0:255)/255),xaxt="n",yaxt="n")
-         title(paste("Reconstruction  h=",signif(hakt,3)," min=",signif(min(theta),3),"   max=",signif(max(theta),3)))
+         title(paste("Reconstruction  h=",signif(hakt.oscale,3)," min=",signif(min(theta),3),"   max=",signif(max(theta),3)))
          image(segm[,,n3%/%2+1]>0,col=gray((0:255)/255),xaxt="n",yaxt="n")
-         title(paste("Segmentation  h=",signif(hakt,3)," detected=",sum(segm>0)))
+         title(paste("Segmentation  h=",signif(hakt.oscale,3)," detected=",sum(segm>0)))
          image(tobj$bi[,,n3%/%2+1],col=gray((0:255)/255),xaxt="n",yaxt="n")
          title(paste("Sum of weights: min=",signif(min(tobj$bi),3)," mean=",signif(mean(tobj$bi),3)," max=",signif(max(tobj$bi),3)))
       }
@@ -211,14 +191,14 @@ if(fwhm) h <- fwhm2bw(h)
       }
       k <- k+1
 #  adjust lambda for the high intrinsic correlation between  neighboring estimates 
-      lambda0 <- lambda
+      c1 <- (prod(h0+1))^(1/3)
+      c1 <- 2.7214286 - 3.9476190*c1 + 1.6928571*c1*c1 - 0.1666667*c1*c1*c1
+      x <- (prod(1.25^(k-1)/c(1,wghts)))^(1/3)
+      scorrfactor <- (c1+x)/(c1*prod(h0+1)+x)
+      lambda0 <- lambda*scorrfactor
       gc()
    }
 
-  z <- list(theta=theta,ni=tobj$bi,var=varest,y=y,segm=segm,
-            hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),
-            call=args,scorr=scorr,mask=mask)
-  class(z) <- "aws.gaussian"
+  z <- list(mae=mae,mse=mse,maxvalue=maxvalue)
   invisible(z)
 }
-
