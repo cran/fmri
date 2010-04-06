@@ -11,10 +11,10 @@ cutroi(data, xind = 1:data$dim[1], yind = 1:data$dim[2], zind = 1:data$dim[3], t
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{ Object of class fmridata. }
-  \item{xind}{ list of roi-indices for first data index }
-  \item{yind}{ list of roi-indices for second data index }
-  \item{zind}{ list of roi-indices for third data index }
-  \item{tind}{ list of roi-indices for 4th data index }
+  \item{xind}{ vector of roi-indices for first data index }
+  \item{yind}{ vector of roi-indices for second data index }
+  \item{zind}{ vector of roi-indices for third data index }
+  \item{tind}{ vector of roi-indices for 4th data index }
 }
 \details{
   Cut a region of interest from frmidata.

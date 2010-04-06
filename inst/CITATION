@@ -1,0 +1,41 @@
+citHeader("To cite fmri in publications use:")
+
+citEntry(entry = "Article",
+  title        = "{fmri}: A package for analyzing fmri data",
+  author       = personList(as.person("J\\\"org Polzehl"),
+                   as.person("Karsten Tabelow")),
+  journal      = "RNews",
+  year         = "2007",
+  volume       = "7",
+  number       = "2",
+  pages        = "13--17",
+  url          = "http://www.r-project.org/doc/Rnews/Rnews_2007-2.pdf",
+
+  textVersion  =
+  paste("Joerg Polzehl, Karsten Tabelow (2007).",
+        "fmri: A package for analyzing fmri data.",
+        "RNews, 7(2), 13-17.",
+        "URL http://www.r-project.org/doc/Rnews/Rnews_2007-2.pdf.")
+)
+
+citEntry(entry = "Article",
+         title = "Analyzing fMRI experiments with structural adaptive smoothing procedures",
+         author = personList(as.person("Karsten Tabelow"), 
+	                     as.person("J\\\"org Polzehl"),
+	                     as.person("Henning U. Voss"),
+                             as.person("Vladimir Spokoiny")),
+         journal      = "NeuroImage",
+         year         = "2006",
+	 volume       = "33",
+	 number       = "1",
+	 pages        = "55--62",
+	 doi          = "10.1016/j.neuroimage.2006.06.029",
+         
+         textVersion = 
+         paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
+               "Analyzing fMRI experiments with structural adaptive smoothing procedures.",
+	       "NeuroImage, 33(1), 55-62.",
+	       "doi:10.1016/j.neuroimage.2006.06.029"),
+	 header = "For the underlying structural adaptive smoothing method please cite:"
+)
+

@@ -69,7 +69,7 @@ C  compute distance in sij
       IF (sij.gt.spmax) THEN
          wj=0.d0
       ELSE IF (skern.eq.1) THEN
-C  skern == "Triangle"
+C  skern == "Plateau"
          wj=wj*min(1.d0,1.d0-spf*(sij-spmin))
       ELSE IF (skern.eq.2) THEN
 C  skern == "Triangle"

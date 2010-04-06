@@ -28,7 +28,7 @@ C
      1      hakt,lwght(1),thi,getlwght,swres(nt),fov,vq(n1,n2,n3),
      1      varest(n1,n2,n3),res(nt,n1,n2,n3),vest0i(n1,n2,n3),df
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
-     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
+     1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k
       real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,s,vqi,
      1       varesti,fpchisq,ti,thij,sij,z,si,swr,z1,lfov,linc,sm1,
      2       a,b,dn
@@ -48,7 +48,6 @@ C
       ih3=hakt/wght(2)
       ih2=hakt/wght(1)
       ih1=hakt
-      n=n1*n2*n3
       dlw1=min(2*n1-1,2*ih1+1)
       dlw2=min(2*n2-1,2*ih2+1)
       dlw3=min(2*n3-1,2*ih3+1)

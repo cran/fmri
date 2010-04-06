@@ -794,38 +794,38 @@ fmri.gui <- function() {
 	# viewMask is a function which helps the user to choose a threshold for his data and there on a mask
 	viewMask <- function(width=14,height=7){
 		ttt <- extract.data(data)
-		dim <- data$dim		
+		ddim <- data$dim		
 		X11(width=12,height=7)
-		if (round(sqrt(dim[3]))==sqrt(dim[3])){
-			nrrow <<- sqrt(dim[3])
-			nrcol <<- sqrt(dim[3])	
+		if (round(sqrt(ddim[3]))==sqrt(ddim[3])){
+			nrrow <<- sqrt(ddim[3])
+			nrcol <<- sqrt(ddim[3])	
 		}
 		else {
-			if ((ceiling(sqrt(dim[3]))-1)*ceiling(sqrt(dim[3])) >= dim[3]) {
-				nrrow <<- ceiling(sqrt(dim[3]))-1
-				nrcol <<- ceiling(sqrt(dim[3]))
+			if ((ceiling(sqrt(ddim[3]))-1)*ceiling(sqrt(ddim[3])) >= ddim[3]) {
+				nrrow <<- ceiling(sqrt(ddim[3]))-1
+				nrcol <<- ceiling(sqrt(ddim[3]))
 			}
 			else {
-				nrrow <<- ceiling(sqrt(dim[3]))
-				nrcol <<- ceiling(sqrt(dim[3]))
+				nrrow <<- ceiling(sqrt(ddim[3]))
+				nrcol <<- ceiling(sqrt(ddim[3]))
 				
 			}
 		}
 		mat = matrix(0,nrrow,nrcol+1)
-		for (i in 1:nrrow){ for (j in 1:(nrcol+1)){ if ((i-1)*(nrcol+1)+j-(i-1) <= dim[3]) { mat[i,j]=(i-1)*(nrcol+1)+j-(i-1) } } }
-		for (i in 1:nrrow){ mat[i,nrcol+1] = dim[3]+1 }
+		for (i in 1:nrrow){ for (j in 1:(nrcol+1)){ if ((i-1)*(nrcol+1)+j-(i-1) <= ddim[3]) { mat[i,j]=(i-1)*(nrcol+1)+j-(i-1) } } }
+		for (i in 1:nrrow){ mat[i,nrcol+1] = ddim[3]+1 }
 		widthsvec = c(1:nrcol+1)
 		for (i in 1:nrcol){ widthsvec[i]=0.5/nrcol }
 		widthsvec[nrcol+1] = 0.5
 		layout(mat,widthsvec)
 		par(mar=c(0.5,0.5,0.5,0.5))
-		for (i in 1:dim[3]) image(ttt[,,i,1]>as.numeric(tclvalue(quantileTc)),yaxt="n",xaxt="n")
+		for (i in 1:ddim[3]) image(ttt[,,i,1]>as.numeric(tclvalue(quantileTc)),yaxt="n",xaxt="n")
 		par(mar=c(5,5,3,1))
 		bwV = diff(range(ttt))/(length(ttt[,,,1])/1200)
 		d0 <- density(ttt[,,,1],bw=bwV)	
-		d1 <- density(ttt[round((1/8)*dim[1]):round((7/8)*dim[1]),round((1/8)*dim[2]):round((7/8)*dim[2]),round((1/8)*dim[3]):round((7/8)*dim[3]),1],bw=bwV)
-		d2 <- density(ttt[round((2/8)*dim[1]):round((6/8)*dim[1]),round((2/8)*dim[2]):round((6/8)*dim[2]),round((2/8)*dim[3]):round((6/8)*dim[3]),1],bw=bwV)	
-		d3 <- density(ttt[round((3/8)*dim[1]):round((5/8)*dim[1]),round((3/8)*dim[2]):round((5/8)*dim[2]),round((3/8)*dim[3]):round((5/8)*dim[3]),1],bw=bwV)	
+		d1 <- density(ttt[round((1/8)*ddim[1]):round((7/8)*ddim[1]),round((1/8)*ddim[2]):round((7/8)*ddim[2]),round((1/8)*ddim[3]):round((7/8)*ddim[3]),1],bw=bwV)
+		d2 <- density(ttt[round((2/8)*ddim[1]):round((6/8)*ddim[1]),round((2/8)*ddim[2]):round((6/8)*ddim[2]),round((2/8)*ddim[3]):round((6/8)*ddim[3]),1],bw=bwV)	
+		d3 <- density(ttt[round((3/8)*ddim[1]):round((5/8)*ddim[1]),round((3/8)*ddim[2]):round((5/8)*ddim[2]),round((3/8)*ddim[3]):round((5/8)*ddim[3]),1],bw=bwV)	
 		plot(d0,main="")
 		title(main="Density plots",cex.main=1.5)
 		lines(d1,col=2)

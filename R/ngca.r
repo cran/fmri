@@ -206,14 +206,14 @@ if(method=="spatial") {
 xhat <- ngcaobj$shalf[,1:npca]%*%jhat$rotation[,1:m]
 ihat <- x%*%ihat
 } else {
-ihat <- sigmahalf[,1:npca]%*%jhat$rotation[,1:m]
+ihat <- ngcaobj$shalf[,1:npca]%*%jhat$rotation[,1:m]
 xhat <- x%*%ihat
 }
 mask <- ngcaobj$mask
-nn <- prod(xdim[1:3])
+nn <- prod(ngcaobj$xdim[1:3])
 z <- matrix(0,nn,m)
 z[mask,]<-xhat
-xhat <- array(z,c(xdim[1:3],m))
+xhat <- array(z,c(ngcaobj$xdim[1:3],m))
 z <- list(ihat=ihat,sdev=jhat$sdev[1:m],xhat=xhat,method=method,npca=npca)
 class(z) <- "fmringca"
 z

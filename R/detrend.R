@@ -2,7 +2,6 @@ fmri.detrend <- function(data,degree=1,accoef=0) {
   if (!class(data) == "fmridata") {
     warning("fmri.lm: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
-  if(degree>0){
   cat("Start trend removal \n")
   ttt <- extract.data(data)
   dimttt <- dim(ttt)
@@ -11,13 +10,13 @@ fmri.detrend <- function(data,degree=1,accoef=0) {
     stop("Hmmmm, this does not seem to be a fMRI time series. I better stop executing! Sorry!\n")
   }
   n <- dimttt[4]
-  z <- cbind(rep(1,n),poly(1:n,degree))
+  z <- rep(1,n)
+  if(degree>0) z <- cbind(rep(1,n),poly(1:n,degree))
   u <- svd(z,nv=0)$u
   dim(ttt) <- c(prod(dimttt[1:3]),dimttt[4])
   ttt[mask,] <- ttt[mask,] - ttt[mask,]%*%u%*%t(u)
   dim(ttt) <- dimttt
   cat("Finished trend removal \n")
-  }
   if(accoef>0){
   cat("Start prewhitening \n")
      rho0 <- 1/sqrt(1-accoef^2)
