@@ -11,12 +11,12 @@ read.ANALYZE.header <- function(filename) {
   header$sizeofhdr <- 348
   header$endian <- endian
   
-  header$datatype1 <- readChar(con,10)
-  header$dbname <- readChar(con,18)
+  header$datatype1 <- readChar(con,10, TRUE)
+  header$dbname <- readChar(con,18, TRUE)
   header$extents <- readBin(con,"int",1,4,endian=endian)
   header$sessionerror <- readBin(con,"int",1,2,endian=endian)
-  header$regular <- readChar(con,1)
-  header$hkey <- readChar(con,1)
+  header$regular <- readChar(con,1, TRUE)
+  header$hkey <- readChar(con,1, TRUE)
   header$dimension <- readBin(con,"int",8,2,endian=endian)
   header$unused <- readBin(con,"int",7,2,endian=endian)
   header$datatype <- readBin(con,"int",1,2,endian=endian)
@@ -31,16 +31,16 @@ read.ANALYZE.header <- function(filename) {
   header$verified <- readBin(con,"double",1,4,endian=endian)
   header$glmax <- readBin(con,"int",1,4,endian=endian)
   header$glmin <- readBin(con,"int",1,4,endian=endian)
-  header$describ <- readChar(con,80)
-  header$auxfile<- readChar(con,24)
-  header$orient <- readChar(con,1) # is this really a character?
+  header$describ <- readChar(con,80, TRUE)
+  header$auxfile<- readChar(con,24, TRUE)
+  header$orient <- readChar(con,1, TRUE) # is this really a character?
   header$originator <- readBin(con,"int",5,2,endian=endian) # documented as 10 byte character!!
-  header$generated <- readChar(con,10)
-  header$scannum <- readChar(con,10)
-  header$patientid <- readChar(con,10)
-  header$expdate <- readChar(con,10)
-  header$exptime <- readChar(con,10)
-  header$histun0 <- readChar(con,3)
+  header$generated <- readChar(con,10, TRUE)
+  header$scannum <- readChar(con,10, TRUE)
+  header$patientid <- readChar(con,10, TRUE)
+  header$expdate <- readChar(con,10, TRUE)
+  header$exptime <- readChar(con,10, TRUE)
+  header$histun0 <- readChar(con,3, TRUE)
   header$views <- readBin(con,"int",1,4,endian=endian)
   header$voladded<- readBin(con,"int",1,4,endian=endian)
   header$startfield <- readBin(con,"int",1,4,endian=endian)
@@ -750,21 +750,26 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
   if (is.null(header$DATASET_DIMENSIONS)) header$DATASET_DIMENSIONS <- c(dim(ttt)[1:3])
   AFNIheaderpart("DATASET_DIMENSIONS",header$DATASET_DIMENSIONS, conhead,c(dim(ttt)[1:3]))
   header$DATASET_DIMENSIONS <- NULL
-  if (is.null(header$TYPESTRING)) {header$TYPESTRING <- "3DIM_HEAD_FUNC"; warning("TYPESTRING not given, setting to 3DIM_HEAD_FUNC for backward compatibility", call.=FALSE) }
+  if (is.null(header$TYPESTRING)) {header$TYPESTRING <- "3DIM_HEAD_FUNC"; 
+          warning("TYPESTRING not given, setting to 3DIM_HEAD_FUNC for backward compatibility", call.=FALSE) }
   AFNIheaderpart("TYPESTRING",header$TYPESTRING, conhead,c("3DIM_HEAD_ANAT","3DIM_HEAD_FUNC","3DIM_GEN_ANAT","3DIM_GEN_ANAT"))
   header$TYPESTRING <- NULL
-  if (is.null(header$SCENE_DATA)) {header$SCENE_DATA <- c(0,11,1,-999,-999,-999,-999,-999); warning("SCENE_DATA not given, setting to c(0,11,1,-999,-999,-999,-999,-999) for backward compatibility", call.=FALSE) }
+  if (is.null(header$SCENE_DATA)) {header$SCENE_DATA <- c(0,11,1,-999,-999,-999,-999,-999); 
+           warning("SCENE_DATA not given, setting to c(0,11,1,-999,-999,-999,-999,-999) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("SCENE_DATA",header$SCENE_DATA, conhead)
   header$SCENE_DATA <- NULL
-  if (is.null(header$ORIENT_SPECIFIC)) {header$ORIENT_SPECIFIC <- c(0,3,4); warning("ORIENT_SPECIFIC not given, setting to c(0,3,4) for backward compatibility", call.=FALSE) }
+  if (is.null(header$ORIENT_SPECIFIC)) {header$ORIENT_SPECIFIC <- c(0,3,4); 
+             warning("ORIENT_SPECIFIC not given, setting to c(0,3,4) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("ORIENT_SPECIFIC",header$ORIENT_SPECIFIC, conhead)
   header$ORIENT_SPECIFIC <- NULL
   if (!is.null(origin)) header$ORIGIN <- origin
-  if (is.null(header$ORIGIN)) { header$ORIGIN <- c(0,0,0); warning("ORIGIN not given, setting to c(0,0,0) for backward compatibility", call.=FALSE) }
+  if (is.null(header$ORIGIN)) { header$ORIGIN <- c(0,0,0); 
+             warning("ORIGIN not given, setting to c(0,0,0) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("ORIGIN",header$ORIGIN, conhead)
   header$ORIGIN <- NULL
   if (!is.null(delta)) header$DELTA <- delta
-  if (is.null(header$DELTA)) { header$DELTA <- c(4,4,4); warning("DELTA not given, setting to c(4,4,4) for backward compatibility", call.=FALSE) }
+  if (is.null(header$DELTA)) { header$DELTA <- c(4,4,4); 
+          warning("DELTA not given, setting to c(4,4,4) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("DELTA",header$DELTA, conhead)
   header$DELTA <- NULL
 
@@ -897,9 +902,11 @@ read.DICOM <- function(filename,includedata=TRUE) {
             bytes <- bytes + 4
             while (TRUE) {
               if (endian == "little") {
-                testelement <- paste(paste(rev(sqv[(length(sqv)-3):(length(sqv)-2)]),collapse=""),paste(rev(sqv[(length(sqv)-1):length(sqv)]),collapse=""),sep=",")
+                testelement <- paste(paste(rev(sqv[(length(sqv)-3):(length(sqv)-2)]),collapse=""),
+                                     paste(rev(sqv[(length(sqv)-1):length(sqv)]),collapse=""),sep=",")
               } else {
-                testelement <- paste(paste(sqv[(length(sqv)-3):(length(sqv)-2)],collapse=""),paste(sqv[(length(sqv)-1):length(sqv)],collapse=""),sep=",")
+                testelement <- paste(paste(sqv[(length(sqv)-3):(length(sqv)-2)],collapse=""),
+                                     paste(sqv[(length(sqv)-1):length(sqv)],collapse=""),sep=",")
               }    
               if (testelement == "fffe,e00d") {
                 length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
@@ -1050,12 +1057,12 @@ read.NIFTI.header <- function(con) {
   header$sizeofhdr <- 348
   header$endian <- endian
   
-  header$datatype1 <- readChar(con,10)
-  header$dbname <- readChar(con,18)
+  header$datatype1 <- readChar(con,10, TRUE)
+  header$dbname <- readChar(con,18, TRUE)
   header$extents <- readBin(con,"int",1,4,endian=endian)
   header$sessionerror <- readBin(con,"int",1,2,endian=endian)
-  header$regular <- readChar(con,1)
-  header$diminfo <- readChar(con,1)
+  header$regular <- readChar(con,1, TRUE)
+  header$diminfo <- readChar(con,1, TRUE)
   header$dimension <- readBin(con,"int",8,2,endian=endian)
   header$intentp1 <- readBin(con,"double",1,4,endian=endian)
   header$intentp2 <- readBin(con,"double",1,4,endian=endian)
@@ -1069,16 +1076,16 @@ read.NIFTI.header <- function(con) {
   header$sclslope <- readBin(con,"double",1,4,endian=endian)
   header$sclinter <- readBin(con,"double",1,4,endian=endian)
   header$sliceend <- readBin(con,"int",1,2,endian=endian)
-  header$slicecode <- readChar(con,1)
-  header$xyztunits <- readChar(con,1)
+  header$slicecode <- readChar(con,1, TRUE)
+  header$xyztunits <- readChar(con,1, TRUE)
   header$calmax <- readBin(con,"double",1,4,endian=endian)
   header$calmin <- readBin(con,"double",1,4,endian=endian)
   header$sliceduration <- readBin(con,"double",1,4,endian=endian)
   header$toffset <- readBin(con,"double",1,4,endian=endian)
   header$glmax <- readBin(con,"int",1,4,endian=endian)
   header$glmin <- readBin(con,"int",1,4,endian=endian)
-  header$describ <- readChar(con,80)
-  header$auxfile <- readChar(con,24)
+  header$describ <- readChar(con,80, TRUE)
+  header$auxfile <- readChar(con,24, TRUE)
   header$qform <- readBin(con,"int",1,2,endian=endian)
   header$sform <- readBin(con,"int",1,2,endian=endian)
   header$quaternb <- readBin(con,"double",1,4,endian=endian)
@@ -1090,8 +1097,8 @@ read.NIFTI.header <- function(con) {
   header$srowx <- readBin(con,"double",4,4,endian=endian)
   header$srowy <- readBin(con,"double",4,4,endian=endian)
   header$srowz <- readBin(con,"double",4,4,endian=endian)
-  header$intentname <- readChar(con,16)
-  header$magic <- readChar(con,4)
+  header$intentname <- readChar(con,16, TRUE)
+  header$magic <- readChar(con,4, TRUE)
   
   header
 }
@@ -1235,6 +1242,7 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
               header=header)
   }
 
+  attr(z,"file") <- paste(filename, sep="")
 
   invisible(z)
 }

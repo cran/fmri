@@ -14,7 +14,7 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{ object of class "fmripvalue", "fmrispm" or "fmridata" }
+  \item{x}{ object of class "fmrisegment", "fmripvalue", "fmrispm" or "fmridata" }
   \item{anatomic}{ overlay of same dimension as the functional data, or fmridata object (if of x is fmripvalue object) }
   \item{maxpvalue}{ maximum p-value for thresholding }
   \item{spm}{ logical. if class is "fmrispm" decide whether to plot
@@ -40,6 +40,9 @@ plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
   "fmridata" only a plot of the data slices itself is produced. If \code{device} is
   specified as  "png", "jpeg", "ppm" output is done to a file. A grey/color scale 
   is provided in the remaining space.
+
+  For objects of class "fmrisegment" the smoothed signal size is shown in the 
+  activation segment.
 
   If \code{type} is "3d" a 3 dimensional interactive view opens. Sliders
   to move in the data cube are given ("x", "y", "z", and "t" if class is

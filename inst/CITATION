@@ -39,3 +39,23 @@ citEntry(entry = "Article",
 	 header = "For the underlying structural adaptive smoothing method please cite:"
 )
 
+citEntry(entry = "Article",
+         title = "Structural adaptive segmentation for statistical parametric mapping",
+         author = personList(as.person("J\\\"org Polzehl"),
+	                     as.person("Henning U. Voss"),
+                             as.person("Karsten Tabelow")),
+         journal      = "NeuroImage",
+         year         = "2010",
+	 volume       = "52",
+	 number       = "2",
+	 pages        = "515--523",
+	 doi          = "10.1016/j.neuroimage.2010.04.241",
+         
+         textVersion = 
+         paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
+               "Structural adaptive segmentation for statistical parametric mapping.",
+	       "NeuroImage, 52(2), 515-523.",
+	       "doi:10.1016/j.neuroimage.2010.04.241"),
+	 header = "For the underlying structural adaptive segmentation method please cite:"
+)
+

@@ -3,10 +3,10 @@ C
 C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine segm3dkv(y,res,si2,n1,n2,n3,nt,hakt,
+      subroutine segm3dkb(y,res,si2,n1,n2,n3,nt,df,hakt,
      1                  lambda,theta,bi,thn,kern,spmin,spmax,
      2                  lwght,wght,swres,
-     3                  beta,fov,varest,maxvalue,minvalue)
+     3                  fov,varest,maxvalue,minvalue)
 C
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -23,14 +23,14 @@ C
       implicit logical (a-z)
       integer n1,n2,n3,nt,kern
       logical aws
-      real*8 y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),
+      real*8 y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),df,
      1       thn(n1,n2,n3),lambda,spmax,wght(2),si2(n1,n2,n3),
-     1       hakt,lwght(1),spmin,thi,getlwght,swres(nt),fov,beta,
+     1       hakt,lwght(1),spmin,thi,getlwght,swres(nt),fov,
      1       varest(n1,n2,n3),res(nt,n1,n2,n3),maxvalue,minvalue
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
-      real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,cofh,
-     1       varesti,thij,sij,z,si,swr,z1
+      real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,
+     1       varesti,thij,sij,z,si,swr,z1,dn,a,b
       external getlwght
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
@@ -112,10 +112,11 @@ C    thtas the variance of residuals
                si=si/nt
                varest(i1,i2,i3)=si
 C    thats the variance of thi
-               cofh = sqrt(beta*log(si*si2i*fov))
+               dn=si*si2i*fov
+               call getdfnab(df,dn,a,b)
                si=sqrt(si)
-               maxvalue=max(maxvalue,thi/si-cofh)
-               minvalue=min(minvalue,thi/si+cofh)
+               maxvalue=max(maxvalue,a*thi/si-b)
+               minvalue=min(minvalue,a*thi/si+b)
                call rchkusr()
             END DO
          END DO
@@ -125,23 +126,4 @@ C    thats the variance of thi
 C
 C
 C
-      subroutine mean3D(res,n1,n2,n3,nt,mres)
-      implicit logical (a-z)
-      integer n1,n2,n3,nt
-      real*8 res(nt,n1,n2,n3),mres(n1,n2,n3)
-      integer i1,i2,i3,it
-      real*8 sres
-      DO i1=1,n1
-         DO i2=1,n2
-            DO i3=1,n3
-               sres=0.d0
-               DO it=1,nt
-                  sres=sres+res(it,i1,i2,i3)
-               END DO
-               mres(i1,i2,i3)=sres/nt
-            END DO
-         END DO
-      END DO
-      RETURN
-      END
         

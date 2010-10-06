@@ -6,15 +6,16 @@
   Perform the adaptive weights smoothing procedure 
 }
 \usage{
-fmri.smooth(spm, hmax = 4, adaptive=TRUE,adaptation="aws",
+fmri.smooth(spm, hmax = 4, adaptation="aws",
             lkern="Gaussian", skern="Plateau", weighted=TRUE,...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{spm}{ object of class \code{fmrispm} }
   \item{hmax}{ maximum bandwidth to smooth }
-  \item{adaptive}{ logical. TRUE (default) for adaptive smoothing }
-  \item{adaptation}{ character, type of adaptation. Set to \code{"none"} if \code{adaptive==FALSE}. Other values are \code{"aws"} for adaptive smoothing using an approximative correction term for spatial smoothness in the penalty (fast), \code{"fullaws"} for adaptive smoothing using variance
+  \item{adaptation}{ character, type of adaptation. If \code{"none"} adaptation is off and non-adaptive 
+  kernel smoothing with \code{lkern} and bandwidth \code{hmax} is used. 
+  Other values are \code{"aws"} for adaptive smoothing using an approximative correction term for spatial smoothness in the penalty (fast), \code{"fullaws"} for adaptive smoothing using variance
   estimates from smoothed residuals in the penalty (CPU-time about twice 
   the time compared to \code{adaptation="aws"} and \code{"segment"} for a
   new approach based on segmentation using multi-scale tests.}
@@ -41,7 +42,7 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,adaptation="aws",
   spm.
 
   \code{hmax} is the (maximal) bandwidth used in the last iteration. Choose
-  \code{adaptive} as \code{FALSE} for non adaptive
+  \code{adaptation} as \code{"none"} for non adaptive
   smoothing. \code{lkern} can be used for specifying the
   localization kernel. For comparison with non adaptive methods use
   "Gaussian" (hmax given in FWHM), for better adaptation use "Plateau" or "Triangle"
@@ -57,7 +58,7 @@ fmri.smooth(spm, hmax = 4, adaptive=TRUE,adaptation="aws",
   to these variances. Smoothing is restricted to voxel with \code{spm$mask}.
 }
 \value{
-  object with class attributes "fmrispm" and "fmridata"
+  object with class attributes "fmrispm" and "fmridata", or "fmrisegment" and "fmridata" for segmentation choice
   \item{cbeta}{ smoothed parameter estimate}
   \item{var}{ variance of the parameter}
   \item{hmax}{ maximum bandwidth used}

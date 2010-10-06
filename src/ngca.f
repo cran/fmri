@@ -46,6 +46,7 @@
       eps=1.d-6
       nk=0.d0
       ninv=1.d0/n
+      nbeta=0.d0
 C this is just to avoid some warnings 
       DO k=1,l
          sk=s(k)

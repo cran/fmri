@@ -1,3 +1,24 @@
+2010-10-27 version 1.4.2
+  - enable color plots from plot() GUI
+  - remove \code{adaptive} argument from \code{fmri.smooth()},
+    use \code{adaptation="none") instead
+
+2010-10-06 version 1.4.2
+  - fmri.gui() includes possibility of evoking
+    structural adaptive segmentation
+  - corrected R CMD check error for invisible binding 
+    of global variables
+  - initialized nbeta in fastica in ngca.f, otherwise
+    compiler warning
+
+2010-09-20 version 1.4.2
+  - results of segmentation results can be 
+    plotted by plot.fmridata() now.
+
+2010-04-06 version 1.4.1
+  - new line in Makevars
+  - removed unused Fortran code
+
 2010-03-01 version 1.4.1
   - new line in Makevars
   - removed unused Fortran code
