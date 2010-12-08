@@ -871,7 +871,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
   if (empty != "") {
     warning("This does not seem to be a DICOM file\n")
   }
-  dicom <- readChar(con,4)
+  dicom <- readChar(con, 4, TRUE)
   bytes <- bytes + 4
   if (dicom != "DICM") {
     warning("This does not seem to be a DICOM file\n")
@@ -882,7 +882,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
     groupelement <- read.DICOM.groupelement(con)
     bytes <- bytes + 4
     if (groupelement == "7fe0,0010") break
-    vr <- readChar(con,2)
+    vr <- readChar(con, 2, TRUE)
     bytes <- bytes + 2
 
     if (vr %in% c("OB","OW","OF","SQ","UT","UN")) {
@@ -933,7 +933,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
 
     if (length != 0) {
       if (vr %in% c("UI","DS","SH","IS")) {
-        value <- readChar(con,length)      
+        value <- readChar(con, length, TRUE)      
         bytes <- bytes + length
       } else if (vr %in% c("US")) {
         total <- 0
@@ -971,7 +971,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
   }
 
   # belongs to last groupelement "7fe0,0010"
-  vr <- readChar(con,2)
+  vr <- readChar(con, 2, TRUE)
   bytes <- bytes + 2
   if (vr %in% c("OB","OW","OF","SQ","UT","UN")) {
     reserved <- readBin(con,"raw",2)

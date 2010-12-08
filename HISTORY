@@ -1,3 +1,10 @@
+2010-01-26 version 1.4.3
+  - fix for bug for usage of mri.colors() in plot.fmridata() which 
+    threw an error due to negative arguments in hsv() call. 
+
+2010-12-08 version 1.4.3
+  - bugfix for read.DICOM() use readChar(con, n, TRUE) now to prevent from utf8 error
+
 2010-10-27 version 1.4.2
   - enable color plots from plot() GUI
   - remove \code{adaptive} argument from \code{fmri.smooth()},

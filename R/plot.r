@@ -230,14 +230,14 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
     
     if (type == "3d" || type == "3D") {
       if (spm) {
-        tt <- fmri.view3d(signal,col=mri.colors(255,0)$gray,
+        tt <- fmri.view3d(signal,col=mri.colors(255,255)$gray,
                           weights=x$weights,
-                          scale=scale,scalecol=mri.colors(255,0)$gray,
+                          scale=scale,scalecol=mri.colors(255,255)$gray,
                           type="spm",pos=pos)
       } else {
-        tt <- fmri.view3d(signal,sigma=sqrt(x$var),col=mri.colors(255,0)$gray,
+        tt <- fmri.view3d(signal,sigma=sqrt(x$var),col=mri.colors(255,255)$gray,
                           weights=x$weights,
-                          scale=scale,scalecol=mri.colors(255,0)$gray, type="spm",hrf=x$hrf, quant = quant,pos=pos)
+                          scale=scale,scalecol=mri.colors(255,255)$gray, type="spm",hrf=x$hrf, quant = quant,pos=pos)
       } 
     } else {
         dt <- dim(localx)
@@ -246,8 +246,8 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
  	for (counter in 1:dt[1]) posNew[counter] = counter
         for (counter in 1:dt[2]) posNew[counter+dt[1]] = counter
    	for (counter in 1:dt[3]) posNew[counter+dt[1]+dt[2]] = counter  
-       fmri.view2d(signal,col=mri.colors(255,0)$gray,
-                          weights=x$weights, scale=scale,scalecol=mri.colors(255,0)$gray,
+       fmri.view2d(signal,col=mri.colors(255,255)$gray,
+                          weights=x$weights, scale=scale,scalecol=mri.colors(255,255)$gray,
                           type= "spm",maxpvalue=maxpvalue,posNew=posNew,localx=x,inputStuff=inputStuff)
     }
   } else if ("fmridata" %in% class(x)) {
@@ -271,8 +271,8 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
     scale <- scale*(cutOff[2]-cutOff[1]) 	
     
     if (type == "3d" || type == "3D") {
-      tt <- fmri.view3d(signal,col=mri.colors(255,0)$gray,
-                        weights=x$weights, scale=scale,scalecol=mri.colors(255,0)$gray, type="data",pos=pos)
+      tt <- fmri.view3d(signal,col=mri.colors(255,255)$gray,
+                        weights=x$weights, scale=scale,scalecol=mri.colors(255,255)$gray, type="data",pos=pos)
     } else {
       dt <- dim(localx)
       if (is.null(dt)) dt <- localx$dim
@@ -280,8 +280,8 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
       for (counter in 1:dt[1]) posNew[counter] = counter
       for (counter in 1:dt[2]) posNew[counter+dt[1]] = counter
       for (counter in 1:dt[3]) posNew[counter+dt[1]+dt[2]] = counter  	
-      fmri.view2d(signal,col=mri.colors(255,0)$gray,
-                          weights=x$weights, scale=scale,scalecol=mri.colors(255,0)$gray,
+      fmri.view2d(signal,col=mri.colors(255,255)$gray,
+                          weights=x$weights, scale=scale,scalecol=mri.colors(255,255)$gray,
                           type= "data",maxpvalue=maxpvalue,posNew=posNew,localx=x,inputStuff=inputStuff)
     }
 
