@@ -1,4 +1,13 @@
-2010-01-26 version 1.4.3
+2011-02-28 version 1.4.4
+  - referenced Segmentation paper Polzehl et al. NI 52, 515-523 (2010)
+    in help pages.
+
+2011-02-23 version 1.4.4
+  - documented alpha and delta argument for fmri.smooth()
+  - removed fov argument from the list of possible additional arguments to fmri.smooth()
+    as the user should not set them
+
+2011-01-26 version 1.4.3
   - fix for bug for usage of mri.colors() in plot.fmridata() which 
     threw an error due to negative arguments in hsv() call. 
 

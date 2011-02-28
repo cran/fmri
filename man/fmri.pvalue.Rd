@@ -6,12 +6,12 @@
   Determine p-values.
 }
 \usage{
-fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0)
+fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{spm}{ \code{fmrispm} object }
-  \item{mode}{ type of pvalue definition }
+  \item{mode}{ type of pvalue definition}
   \item{delta}{ physically meaningful range of latency for HRF }
   \item{na.rm}{\code{na.rm} specifies how NA's in the SPM are handled. NA's may occur
    in voxel where the time series information did not allow for estimating parameters and their variances
@@ -20,6 +20,7 @@ fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0)
    is set to 1. Otehrwise pvalues are assigned according to the information found in the SPM at the voxel.}
   \item{minimum.signal}{allows to specify a (positive) minimum value for detected signals. If minimum.signal >0
    the thresholds are to conservative, this case needs further improvements.}
+  \item{alpha}{Significance level in case of \code{mode="FDA"}}
 }
 \details{
   If only a contrast is given in \code{spm}, we simply use a t-statistic
@@ -44,7 +45,8 @@ fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0)
   adaptive smoothing. In contrast to "basic", "global" takes a global
   median to adjust for the randomness of the weighting scheme generated
   by adaptive smoothing. "global" and "local" are more conservative than
-  "basic", that is, they generate sligthly larger p-values. }
+  "basic", that is, they generate sligthly larger p-values. 
+  The alternative is \code{mode="FDA"} specifying signal detection by False Discovery Rate (FDR) with significance level specified by \code{alpha}.}
 \value{
   Object with class attributes "fmripvalue" and "fmridata"
   \item{pvalue}{ p-value. use with \code{\link{plot}} for thresholding.}

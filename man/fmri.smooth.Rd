@@ -35,7 +35,15 @@ fmri.smooth(spm, hmax = 4, adaptation="aws",
    variances as a factor (Weighted Least Squares). \code{weighted=FALSE} does not employ the
    heteroscedasticity of variances for the weighting scheme and is preferable if variance estimates
    are highly variable, e.g. for short time series.}
-  \item{...}{further internal arguments for the smoothing algorithm not to be set by the user. Allows e.g. for parameter adjustments by simulation using our propagation condition.}
+  \item{...}{Further internal arguments for the smoothing algorithm usually not
+    to be set by the user. Allows e.g. for parameter adjustments by
+    simulation using our propagation condition. Usefull exceptions
+    can be used for \code{adaptation="segment"}: Specifically
+    \code{alpha} (default 0.05) defines the significance level for the
+    signal detection. It can be choosen between 0.01 and 0.2 as for
+    other values we did not determine the critical values for the
+    statistical tests. \code{delta} (default 0) defines the minimum
+    signal which should be detected. }
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map
@@ -74,6 +82,10 @@ fmri.smooth(spm, hmax = 4, adaptation="aws",
   \item{hrf}{ Expected BOLD response for the specified effect }
 }
 \references{
+  Polzehl, J., Voss, H.U., and Tabelow, K. (2010).
+   \emph{Structural Adaptive Segmentation for Statistical Parametric Mapping},
+   NeuroImage, 52:515-523.
+
   Tabelow, K., Polzehl, J., Voss, H.U., and Spokoiny, V. (2006). 
 \emph{Analysing {fMRI}
     experiments with structure adaptive smoothing procedures},

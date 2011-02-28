@@ -31,7 +31,7 @@ segm3D <- function(y,weighted=TRUE,
                    sigma2=NULL,mask=NULL,hinit=NULL,hmax=NULL,
                    ladjust=1,graph=FALSE,wghts=NULL,
                    df=100,h0=c(0,0,0),res=NULL, resscale=NULL, 
-                   ddim=NULL,delta=0,fov=NULL,alpha=.05) {
+                   ddim=NULL,delta=0,alpha=.05) {
 #
 #
 #  Auxilary functions
@@ -132,7 +132,7 @@ if(fwhm) h <- fwhm2bw(h)
    segm <- array(0,dy[1:3])
    varest <- varest0
    maxvol <- getvofh(hmax,lkern,wghts)
-   if(is.null(fov)) fov <- sum(mask)
+   fov <- sum(mask)
    fov <- fovcorr(h0)*fov
    kstar <- as.integer(log(maxvol)/log(1.25))
    steps <- kstar+1

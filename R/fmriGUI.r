@@ -717,8 +717,8 @@ fmri.gui <- function() {
 		layoutFunction(4)
                 smoothed = FALSE
 		# calculation of the p-values and reporting about its success
-		pvalue <<- fmri.pvalue(spm)
-		print("p values calculated")
+		pvalue <<- fmri.pvalue(spm, mode="FDR")
+		print("p values calculated, using FDR with significance level 0.05 for signal detection ")
 	
 		# choice to view the p-values in 3d or as slice
 #		tclvalue(slevel) = 0.05

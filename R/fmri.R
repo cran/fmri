@@ -9,9 +9,6 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     ladjust <- if ("ladjust" %in% names(list(...)))
         list(...)[["ladjust"]]
     else 1
-    fov <- if ("fov" %in% names(list(...)))
-        list(...)[["fov"]]
-    else NULL
     delta <- if ("delta" %in% names(list(...)))
         list(...)[["delta"]]
     else 0
@@ -56,6 +53,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                   res = spm$res, 
                                   resscale = spm$resscale,
                                   ddim = spm$dim, 
+#                                  df = spm$df,
                                   ladjust = ladjust, 
                                   testprop = propagation),
                      fullaws = vaws3Dfull(y = spm$cbeta, 
@@ -70,6 +68,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                           res = spm$res, 
                                           resscale = spm$resscale, 
                                           ddim = spm$dim,
+#                                          df = spm$df,
                                           ladjust = ladjust, 
                                           testprop = propagation),
                      none = vaws3D(y = spm$cbeta,
@@ -85,6 +84,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                    weighted = weighted,
                                    res = spm$res, 
                                    resscale = spm$resscale, 
+#                                   df = spm$df,
                                    ddim = spm$dim,
                                    ladjust = ladjust),
                      segment = segm3D(y = spm$cbeta,
@@ -100,7 +100,6 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                       ddim = spm$dim,
                                       ladjust = ladjust, 
                                       delta = delta, 
-                                      fov = fov, 
                                       alpha = alpha))
     cat("\n")
     cat("fmri.smooth: determine local smoothness\n")
@@ -174,7 +173,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     invisible(z)
 }
 
-fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal=0 ) {
+fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal=0, alpha=0.05 ) {
   cat("fmri.pvalue: entering function\n")
 
   if (!("fmrispm" %in% class(spm)) ) {
@@ -184,16 +183,16 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
   if (!is.null(attr(spm, "smooth"))) {
     if (!is.null(attr(spm, "residuals"))) {
       type <- "t"
-      df <- abs(diff(dim(attr(spm, "design"))))
+      df <- spm$df 
+      if(is.null(df)) df <- abs(diff(dim(attr(spm, "design"))))
     } else {
       type <- "norm"
-      df <- abs(diff(dim(attr(spm, "design")))) # this is actually not needed, placeholder
+      df <- 1000 # this is actually not needed, placeholder
     }
   } else {
     type <- "t"
     df <- spm$df
   }
-  if (df>171) type <- "norm"
 
   if (length(dim(spm$cbeta)) < 4) {
 
@@ -207,7 +206,12 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
       rxyz <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
       thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type=type,df=df)
       pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type=type,df=df)
-    } else {
+     } else if (mode == "FDR") {
+      pv <- 1-switch(type,"norm"=pnorm(stat),"t"=pt(stat,df))
+      dim(pv) <- spm$dim[1:3]
+      ind <- fdr(pv,alpha)
+      thresh <- min(stat[ind])
+   } else {
       if ("rxyz0" %in% names(spm)) {
         rxyz0 <- c(median(spm$rxyz0[,1]),median(spm$rxyz0[,2]),median(spm$rxyz0[,3]))
       } else {
