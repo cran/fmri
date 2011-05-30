@@ -169,7 +169,6 @@ mri.colors <- function (n1, n2, factor=n1/(n1+n2), from=0, to=.2) {
     colors2 <- if(n2>0) hsv(h = seq(from,to,length=n2+1),
                    s = seq(from = n2/(n2+factor*n1) - 1/(2 * (n2+factor*n1)), to =
                      1/(2 * (n2+factor*n1)), length = n2+1),
-                   v = 1,
-                   gamma=1) else NULL
+                   v = 1) else NULL
     list(all=c(colors1,colors2),gray=colors1,col=colors2)
 }

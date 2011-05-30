@@ -1,3 +1,8 @@
+2011-05-30 version 1.4.5
+  - changed arg gamma to arg gammatype for make.image at those places
+    where it has been forgotten (known from R CMD check NOTE on CRAN)
+  - arg names for layout() are 'widths' and 'heights'
+
 2011-02-28 version 1.4.4
   - referenced Segmentation paper Polzehl et al. NI 52, 515-523 (2010)
     in help pages.
