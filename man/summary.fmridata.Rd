@@ -6,7 +6,7 @@
   'summary' method for class '"fmridata"'.
 }
 \usage{
-summary.fmridata(object, ...)
+\method{summary}{fmridata}(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.4-5
-Date: 2011-05-30
+Version: 1.4-6
+Date: 2011-10-18
 Title: Analysis of fMRI experiments
 Author: Karsten Tabelow <tabelow@wias-berlin.de>, Joerg Polzehl
         <polzehl@wias-berlin.de>
@@ -15,11 +15,11 @@ Description: The package contains R-functions to perform an fmri
         segmentation for statistical parametric mapping, NeuroImage,
         52:515-523 (2010).
 License: GPL (>= 2)
-Copyright: This package is Copyright (C) 2006-2010 Weierstrass
+Copyright: This package is Copyright (C) 2006-2011 Weierstrass
         Institute for Applied Analysis and Stochastics.
 URL: http://www.wias-berlin.de/projects/matheon_a3/
 Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
-Packaged: 2011-06-15 09:10:57 UTC; tabelow
+Packaged: 2011-10-24 11:29:28 UTC; tabelow
 Repository: CRAN
-Date/Publication: 2011-06-15 18:01:56
+Date/Publication: 2011-10-24 13:41:01

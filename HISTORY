@@ -1,3 +1,10 @@
+2011-10-24 version 1.4.6
+  - documenting S3 methods using \method markup
+  - new CITATION entry with JSS article
+
+2011-10-18 version 1.4.6
+  - removed obsolete file src/fastica.f
+
 2011-05-30 version 1.4.5
   - changed arg gamma to arg gammatype for make.image at those places
     where it has been forgotten (known from R CMD check NOTE on CRAN)

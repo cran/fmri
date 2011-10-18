@@ -6,7 +6,7 @@
   Visualize fMRI data and (intermediate) results.
 }
 \usage{
-plot.fmridata(x, anatomic = NULL, maxpvalue = 0.05,
+\method{plot}{fmridata}(x, anatomic = NULL, maxpvalue = 0.05,
               spm = TRUE, pos = c(-1, -1, -1), type = "slice",
               slice =  1, view = "axial" ,zlim.u =
               NULL, zlim.o = NULL,col.o = heat.colors(256), col.u =
