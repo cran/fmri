@@ -2,7 +2,8 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     lkern = "Gaussian", skern = "Plateau", weighted = TRUE, ...)
 {
     cat("fmri.smooth: entering function\n")
-    args <- match.call()
+    args <- sys.call()
+    args <- c(spm$call,args)
     if (!(tolower(adaptation) %in% c("none", "aws", "segment"))) {
         adaptation <- "aws"
     }
@@ -139,6 +140,8 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     }
     if (adaptation == "segment") {
       class(z) <- c("fmridata", "fmrisegment")
+      z$alpha <- alpha
+      z$delta <- delta
     } else {
       class(z) <- c("fmridata", "fmrispm")
     }
@@ -153,6 +156,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     z$format <- spm$format
     z$dim0 <- spm$dim0
     z$scorr <- ttthat$scorr
+    z$call <- args
     attr(z, "file") <- attr(spm, "file")
     attr(z, "white") <- attr(spm, "white")
     attr(z, "design") <- attr(spm, "design")
@@ -174,6 +178,8 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
 }
 
 fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal=0, alpha=0.05 ) {
+    args <- sys.call()
+    args <- c(spm$call,args)
   cat("fmri.pvalue: entering function\n")
 
   if (!("fmrispm" %in% class(spm)) ) {
@@ -316,6 +322,7 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
   z$header <- spm$header
   z$format <- spm$format
   z$dim0 <- spm$dim0
+  z$args <- z$args
 
   attr(z, "file") <- attr(spm, "file")
   attr(z, "white") <- attr(spm, "white")

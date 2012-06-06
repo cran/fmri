@@ -136,6 +136,7 @@ get3Dh.gauss <- function(vred,vwghts,step=1.002,interv=1){
 #  interv>>1 should be used to handle intrinsic correlation (smoothing preceeding 
 #  discretisation into voxel) 
 #
+  ## NOTE this function requires hvred in fmri/R/sysdata.rda
   n <- length(vred)
   hv <- matrix(0,3,n)
   fixed <- rep(FALSE,n)

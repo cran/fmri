@@ -891,7 +891,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
       length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
       bytes <- bytes + 4
       if (length == -1) {
-        while (TRUE) {
+	while (TRUE) {
           groupelement <- read.DICOM.groupelement(con)
           bytes <- bytes + 4
           if (groupelement == "fffe,e0dd") break
@@ -1393,7 +1393,7 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
   close(con)
 }
 
-extract.data <- function(z,what="data") {
+extract.data <- function(z,what="data"){
   if (what=="residuals") {  
       if(!is.null(z$resscale)){
           ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale 
@@ -1403,9 +1403,13 @@ extract.data <- function(z,what="data") {
           ttt <- NULL
       }
       } else { 
+      if(!is.null(z$ttt)){
       ttt <- readBin(z$ttt,"numeric",prod(z$dim),4)
       dim(ttt) <- z$dim
+          } else {
+          warning("extract.data: No residuals available, returning NULL")
+          ttt <- NULL
       }
- 
+      }
   invisible(ttt)
 }

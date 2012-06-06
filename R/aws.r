@@ -43,7 +43,6 @@ vaws3D <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=TRUE
   #
   # first check arguments and initialize
   #
-  args <- match.call()
   # test dimension of data (vector of 3D) and define dimension related stuff
   if(is.null(res)) {
       return(warning("Please specify keep=''all'' when calling fmri.lm"))
@@ -333,7 +332,7 @@ vaws3D <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=TRUE
   vartheta <- vred/sigma2  #  sigma2 contains inverse variances
   z <- list(theta=theta,ni=tobj$bi,var=vartheta,vred=vred,vred0=median(vred[mask]),y=y,
             hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),mae=mae,
-            call=args,alpha=propagation,scorr=scorr,res=residuals,mask=mask)
+            alpha=propagation,scorr=scorr,res=residuals,mask=mask)
   #   vred accounts for variance reduction with respect to uncorrelated (\check{sigma}^2) data
   class(z) <- "aws.gaussian"
   invisible(z)
@@ -355,7 +354,6 @@ vaws3Dfull <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=
   #
   # first check arguments and initialize
   #
-  args <- match.call()
   # test dimension of data (vector of 3D) and define dimension related stuff
   if(is.null(res)) {
       return(warning("Please specify keep=''all'' when calling fmri.lm"))
@@ -592,7 +590,7 @@ vaws3Dfull <- function(y,qlambda=NULL,lkern="Gaussian",skern="Plateau",weighted=
   vred <- vartheta*sigma2
   z <- list(theta=theta,ni=tobj$bi,var=vartheta,vred=vred,vred0=median(vred[mask]),y=y,
             hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),mae=mae,
-            call=args,alpha=propagation,scorr=scorr,res=tobj$resnew,mask=mask)
+            alpha=propagation,scorr=scorr,res=tobj$resnew,mask=mask)
   #   vred accounts for variance reduction with respect to uncorrelated (\check{sigma}^2) data
   class(z) <- "aws.gaussian"
   invisible(z)
@@ -604,8 +602,6 @@ smooth3D <- function(y,lkern="Gaussian",weighted=FALSE,sigma2=NULL,mask=NULL,hma
   #
   # first check arguments and initialize
   #
-  args <- match.call()
-
   # test dimension of data (vector of 3D) and define dimension related stuff
   d <- 3
   dy <- dim(y)

@@ -68,7 +68,6 @@ if(fwhm) h <- fwhm2bw(h)
 #
 # first check arguments and initialize
 #
-   args <- match.call()
 # test dimension of data (vector of 3D) and define dimension related stuff
    d <- 3
    dy <- dim(y)
@@ -217,7 +216,7 @@ if(fwhm) h <- fwhm2bw(h)
 
   z <- list(theta=theta,ni=tobj$bi,var=varest,y=y,segm=segm,
             hmax=tobj$hakt*switch(lkern,1,1,bw2fwhm(1/4)),
-            call=args,scorr=scorr,mask=mask)
+            scorr=scorr,mask=mask)
   class(z) <- "aws.gaussian"
   invisible(z)
 }

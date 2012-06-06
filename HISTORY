@@ -1,4 +1,7 @@
-2011-10-24 version 1.4.6
+2012-06-06 version 1.4.8
+  - correcting problem in extract.data
+
+2011-10-24 version 1.4.7
   - documenting S3 methods using \method markup
   - new CITATION entry with JSS article
 

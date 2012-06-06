@@ -123,7 +123,7 @@ detectaws <- fmri.pvalue(resultaws)
 pmask <- apply(detectaws$pvalue<0.05,c(1,2),sum)
 
 # smooth non adaptively
-resultnonaws <- fmri.smooth(spm,hmax=hmax,adaptive=FALSE,lkern="Gaussian")
+resultnonaws <- fmri.smooth(spm,hmax=hmax,adaptation="none",lkern="Gaussian")
 detectnonaws <- fmri.pvalue(resultnonaws)
 npmask <- apply(detectnonaws$pvalue<0.05,c(1,2),sum)
 

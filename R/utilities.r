@@ -32,12 +32,14 @@ cutroi <- function(data,
 
 summary.fmridata <- function(object,...) {
   if ("fmripvalue" %in% class(object)) {
+    cat("Object of class fmripvalue created by\n")
+    print(object$call)
     dt <- dim(object$pvalue)
-    cat("Data Dimension  :", dt,"\n")
+    cat("Data Dimension             :", dt,"\n")
     values <- range(object$pvalue)
-    cat("Data Range      :", values[1], "...", values[2], "\n")
+    cat("Range of estimated p-values:", values[1], "...", values[2], "\n")
     cat("File(s)", attr(object, "file"),"\n\n")
-    cat("Design Dimension:", dim(attr(object, "design")), "\n")
+    cat("Design Dimension           :", dim(attr(object, "design")), "\n")
     switch(attr(object, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
                                  cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
                                  cat("No prewhitening performed!\n"))
@@ -46,12 +48,32 @@ summary.fmridata <- function(object,...) {
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
                    z=attr(object, "design")))
   } else if ("fmrispm" %in% class(object)) {
+    cat("Object of class fmrispm created by\n")
+    print(object$call)
     dt <- object$dim
-    cat("Data Dimension  :", dt,"\n")
+    cat("Data Dimension               :", dt,"\n")
     values <- range(object$cbeta)
-    cat("Data Range      :", values[1], "...", values[2], "\n")
-    cat("File(s)         :", attr(object, "file"),"\n\n")
-    cat("Design Dimension:", dim(attr(object, "design")), "\n")
+    cat("Range of estimated parameters:", values[1], "...", values[2], "\n")
+    cat("File(s)                      :", attr(object, "file"),"\n\n")
+    cat("Design Dimension             :", dim(attr(object, "design")), "\n")
+    switch(attr(object, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
+    if (!is.null(attr(object, "smooth"))) cat(attr(object, "smooth"))
+    invisible(list(dim=dt,values=values, files=attr(object, "read"),
+              z=attr(object, "design")))
+  }else if ("fmrisegment" %in% class(object)) {
+    cat("Object of class fmrisegment created by\n")
+    print(object$call)
+    dt <- object$dim
+    cat("Data Dimension               :", dt,"\n")
+    values <- range(object$cbeta)
+    cat("Range of estimated parameters:", values[1], "...", values[2], "\n")
+    cat("Significance level", object$alpha,"  Minimal signal size", object$delta,"\n")
+    segm <- object$segm
+    cat("Activated:", sum(segm==1), "   Negative response:", sum(segm== -1), "   Non-significant:", sum(segm==0),"\n" )
+    cat("File(s)                      :", attr(object, "file"),"\n\n")
+    cat("Design Dimension             :", dim(attr(object, "design")), "\n")
     switch(attr(object, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
                                  cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
                                  cat("No prewhitening performed!\n"))
@@ -59,13 +81,14 @@ summary.fmridata <- function(object,...) {
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
               z=attr(object, "design")))
   } else {
+    cat("Object of class fmridata\n")
     dt <- object$dim
     cat("Data Dimension:", dt,"\n")
     values <- range(extract.data(object))
     cat("Data Range    :", values[1], "...", values[2], "\n")
     delta <- object$delta
     cat("Voxel Size    :", delta,"\n")
-    cat("File(s)", attr(object, "file"),"\n")
+    cat("File(s)       :", attr(object, "file"),"\n")
     invisible(list(dim=dt,delta=delta,values=values, files=attr(object, "read")))
   }
 
@@ -73,22 +96,43 @@ summary.fmridata <- function(object,...) {
 
 print.fmridata <- function(x,...) {
   if ("fmripvalue" %in% class(x)) {
-    cat("Data Dimension:", dim(x$pvalue),"\n")
+    cat("Object of class fmripvalue created by\n")
+    print(x$call)
+    cat("Data Dimension             :", dim(x$pvalue),"\n")
     values <- range(x$pvalue)
-    cat("Data Range    :", values[1], "...", values[2], "\n")
-    cat("File(s)", attr(x, "file"),"\n\n")
-    cat("Design Dimension:", dim(attr(x, "design")), "\n")
+    cat("Range of estimated p-values:", values[1], "...", values[2], "\n")
+    cat("File(s)                    :", attr(x, "file"),"\n\n")
+    cat("Design Dimension           :", dim(attr(x, "design")), "\n")
     switch(attr(x, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
                                  cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
                                  cat("No prewhitening performed!\n"))
     if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"),"\n")
     cat(attr(x, "mode"), "\n")
   } else if ("fmrispm" %in% class(x)) {
-    cat("Data Dimension:", x$dim,"\n")
+    cat("Object of class fmrispm created by\n")
+    print(x$call)
+    cat("Data Dimension               :", x$dim,"\n")
     values <- range(x$cbeta)
-    cat("Data Range    :", values[1], "...", values[2], "\n")
+    cat("Range of estimated parameters:", values[1], "...", values[2], "\n")
+    cat("File(s)                      :", attr(x, "file"),"\n\n")
+    cat("Design Dimension             :", dim(attr(x, "design")), "\n")
+    switch(attr(x, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
+                                 cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
+                                 cat("No prewhitening performed!\n"))
+    if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"))
+#    lmcall <- attr(x, "lm")
+#    cat("Linear Model - Number of stimuli
+  }else if ("fmrisegment" %in% class(x)) {
+    cat("Object of class fmrisegment created by\n")
+    print(x$call)    
+    cat("Data Dimension               :", x$dim,"\n")
+    values <- range(x$cbeta)
+    cat("Range of estimated parameters:", values[1], "...", values[2], "\n")
+    cat("Significance level: ", x$alpha,"  Minimal signal size: ", x$delta,"\n")
+    segm <- x$segm
+    cat("Activated: ", sum(segm==1), "   Negative response: ", sum(segm== -1), "   Non-significant: ", sum(segm==0),"\n" )
     cat("File(s)", attr(x, "file"),"\n\n")
-    cat("Design Dimension:", dim(attr(x, "design")), "\n")
+    cat("Design Dimension             :", dim(attr(x, "design")), "\n")
     switch(attr(x, "white"),cat("Prewhitening performed with smoothed map\nof autocorrelation parameter in AR(1) model for time series!\n"),
                                  cat("Prewhitening performed with map of autocorrelation parameter in AR(1) model for time series\n"),
                                  cat("No prewhitening performed!\n"))
@@ -96,11 +140,12 @@ print.fmridata <- function(x,...) {
 #    lmcall <- attr(x, "lm")
 #    cat("Linear Model - Number of stimuli
   } else {
+    cat("Object of class fmridata\n")
     cat("Data Dimension: ", x$dim,"\n")
     cat("Voxel Size    :", x$delta,"\n")
     values <- range(extract.data(x))
     cat("Data Range    :", values[1], "...", values[2], "\n")
-    cat("File(s)", attr(x, "file"),"\n")
+    cat("File(s)       :", attr(x, "file"),"\n")
   }
   invisible(NULL)
 }

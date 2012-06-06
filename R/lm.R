@@ -97,6 +97,7 @@ fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),v
   if (!class(data) == "fmridata") {
     warning("fmri.lm: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
+  args <- sys.call()
 
   ttt <- extract.data(data)
 
@@ -224,10 +225,10 @@ fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),v
           zprime <- a %*% as.matrix(z)
           svdresult <- svd(zprime) # calc SVD of prewhitened design
           v <- svdresult$v
-          vt <- t(v)
-          xtx <- v %*% diag(1/svdresult$d^2) %*% vt # xtx * <estimate of varince> of prewhitened noise is variance of parameter estimate
+          vtt <- t(v)
+          xtx <- v %*% diag(1/svdresult$d^2) %*% vtt # xtx * <estimate of varince> of prewhitened noise is variance of parameter estimate
           tttprime <- ttt[indar,] %*% t(a)
-          beta[indar,] <- tttprime %*% svdresult$u %*% diag(1/svdresult$d) %*% vt # estimate parameter
+          beta[indar,] <- tttprime %*% svdresult$u %*% diag(1/svdresult$d) %*% vtt # estimate parameter
           residuals[indar,] <- tttprime - beta[indar,] %*% t(zprime) # calculate residuals
           variancepart[indar] <- t(contrast) %*% xtx %*% contrast # variance estimate
           if (length(vvector) > 1) variancepartm[,indar] <- as.vector(xtx[as.logical(vvector),as.logical(vvector)])
@@ -330,11 +331,11 @@ fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),v
     result <- list(beta = beta, cbeta = cbeta, var = variance, res =
               residuals, arfactor = arfactor, rxyz = rxyz, scorr = corr, weights =
               data$weights, vwghts = vwghts, mask=data$mask, dim =
-              data$dim, hrf = z %*% contrast, resscale=scale, bw=bw, df=df)
+              data$dim, hrf = z %*% contrast, resscale=scale, bw=bw, df=df, call=args)
   } else {
     result <- list(cbeta = cbeta, var = variance, rxyz = rxyz, scorr = corr, weights =
               data$weights, vwghts = vwghts, mask=data$mask, dim = data$dim, 
-              hrf = z %*% contrast, res=NULL, resscale=NULL, bw=bw, df=df)
+              hrf = z %*% contrast, res=NULL, resscale=NULL, bw=bw, df=df, call=args)
   }
 
   if (length(vvector) > 1) {
@@ -351,8 +352,7 @@ fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),v
   result$header <- data$header
   result$format <- data$format
   result$dim0 <- data$dim0
-  
-  class(result) <- c("fmridata","fmrispm")
+    class(result) <- c("fmridata","fmrispm")
 
   attr(result, "file") <- attr(data, "file")
   attr(result, "design") <- z
