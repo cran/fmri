@@ -4,9 +4,8 @@ C   Perform one iteration in local constant three-variate aws (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine segm3dkb(y,res,si2,n1,n2,n3,nt,df,hakt,
-     1                  lambda,theta,bi,thn,kern,spmin,spmax,
-     2                  lwght,wght,swres,
-     3                  fov,varest,maxvalue,minvalue)
+     1                  lambda,theta,bi,thn,kern,lwght,wght,swres,
+     2                  fov,varest,maxvalue,minvalue)
 C
 C   y        observed values of regression function
 C   n1,n2,n3    design dimensions
@@ -17,15 +16,14 @@ C   bi       \sum  Wi   (output)
 C   ai       \sum  Wi Y     (output)
 C   model    specifies the probablilistic model for the KL-Distance
 C   kern     specifies the location kernel
-C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
       implicit logical (a-z)
       integer n1,n2,n3,nt,kern
       logical aws
       real*8 y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),df,
-     1       thn(n1,n2,n3),lambda,spmax,wght(2),si2(n1,n2,n3),
-     1       hakt,lwght(1),spmin,thi,getlwght,swres(nt),fov,
+     1       thn(n1,n2,n3),lambda,wght(2),si2(n1,n2,n3),
+     1       hakt,lwght(*),thi,getlwght,swres(nt),fov,
      1       varest(n1,n2,n3),res(nt,n1,n2,n3),maxvalue,minvalue
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
@@ -33,7 +31,7 @@ C
      1       varesti,thij,sij,z,si,swr,z1,dn,a,b
       external getlwght
       hakt2=hakt*hakt
-      spf=spmax/(spmax-spmin)
+      spf=4.d0/3.d0
       ih1=hakt
       aws=lambda.lt.1d40
 C
@@ -86,7 +84,7 @@ C  first stochastic term
                            thij=thi-theta(j1,j2,j3)
                            sij=thij*thij*bii
                            IF(sij.gt.1.d0) CYCLE
-                        IF(sij.gt.spmin) wj=wj*(1.d0-spf*(sij-spmin))
+                        IF(sij.gt.0.25) wj=wj*(1.d0-spf*(sij-0.25))
                         END IF
                         wj=wj*si2j
                         swj=swj+wj
@@ -105,13 +103,14 @@ C  weighted sum of residuals
                END DO
                thi=swjy/swj
                thn(i1,i2,i3)=thi
-               bi(i1,i2,i3)=swj
+C               bi(i1,i2,i3)=swj
                z1=z1/nt
                si = (z/nt - z1*z1)
 C    thtas the variance of residuals
                si=si/nt
                varest(i1,i2,i3)=si
 C    thats the variance of thi
+               bi(i1,i2,i3)=1.d0/si
                dn=si*si2i*fov
                call getdfnab(df,dn,a,b)
                si=sqrt(si)

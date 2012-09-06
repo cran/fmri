@@ -270,7 +270,6 @@ fmri.lm <- function(data,z,actype="smooth",vtype="var",step=0.01,contrast=c(1),v
   if (length(vvector) > 1) dim(variancem) <- c(dy[1:3],sum(as.logical(vvector)),sum(as.logical(vvector)))
   dim(arfactor) <- dy[1:3]
   residuals <- t(residuals)
-  dim(residuals) <- dy[c(4,1:3)]
 
   cat("fmri.lm: calculating spatial correlation\n")
 

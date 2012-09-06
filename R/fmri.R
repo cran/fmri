@@ -19,6 +19,9 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     propagation <- if ("propagation" %in% names(list(...)))
         list(...)[["propagation"]]
     else FALSE
+    restricted <- if ("restricted" %in% names(list(...)))
+        as.logical(list(...)[["restricted"]])
+    else FALSE
     if (!("fmrispm" %in% class(spm))) {
         warning("fmri.smooth: data not of class <fmrispm>. Try to proceed but strange things may happen")
     }
@@ -101,7 +104,8 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                       ddim = spm$dim,
                                       ladjust = ladjust, 
                                       delta = delta, 
-                                      alpha = alpha))
+                                      alpha = alpha,
+                                      restricted = restricted))
     cat("\n")
     cat("fmri.smooth: determine local smoothness\n")
     if (is.null(ttthat$scorr)) {
@@ -139,7 +143,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
             mask = ttthat$mask, call = args)
     }
     if (adaptation == "segment") {
-      class(z) <- c("fmridata", "fmrisegment")
+      class(z) <- c( "fmrisegment", "fmridata")
       z$alpha <- alpha
       z$delta <- delta
     } else {

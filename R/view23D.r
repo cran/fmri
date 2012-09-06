@@ -1871,3 +1871,171 @@ conv.ip <- function(data, what="i2p") {
           (not in fmri package):", data$format)
   }
 }
+
+show.segmentslice <- function(x, 
+		                       anatomic, 
+							   slice = 1, 
+							   view = "axial", 
+							   col.u, 
+							   col.o, 
+							   zlim.u, 
+							   zlim.o) {
+
+    if (length(col.o) != 128) stop( "length of overlay color scale has to be 128!")
+	if (length(col.u) != 128) stop( "length of underlay color scale has to be 128!")
+	
+	## we want to display the estimated parameter values					   
+    value <- x$cbeta
+	value[ x$segm == 0] <- NA ## no significant voxel
+
+	## create the index2position (and back) conversion functions
+	ind2pos.ana <- conv.ip( anatomic, what = "i2p")
+	pos2ind.ana <- conv.ip( anatomic, what = "p2i")
+	ind2pos.func <- conv.ip( x, what = "i2p")
+	pos2ind.func <- conv.ip( x, what = "p2i")
+	
+	## get the voxel extensions
+	pixdim.ana <- pixdim( anatomic$header, anatomic$format)
+	pixdim.func <- pixdim( x$header, x$format)
+
+	## extract the anatomical data from compressed object
+	ttt.ana <- extract.data( anatomic)
+	ddim.ana <- dim(ttt.ana) <- dim(ttt.ana)[1:3]
+	
+	## select correct overlay slice according to view
+	if (view == "axial") {
+		dim.o <- dim(value)[ 1:2]
+		if ((slice >= 1) & (slice <= dim(value)[3])) {
+			imgdata.o <- value[ , , slice]
+		} else {
+			imgdata.o <- array( NA, dim = dim.o)
+		}
+		scale <- ceiling( max( abs( pixdim.func[ 1:2]))/min( abs( pixdim.ana)))
+		aspect <- pixdim.func[2]/pixdim.func[1]
+	} else if (view == "coronal") {
+		dim.o <- dim(value)[ c( 1, 3)]
+		if ((slice >= 1) & (slice <= dim(value)[2])) {
+			imgdata.o <- value[ , slice, ]
+		} else {
+			imgdata.o <- array( NA,dim = dim.o)
+		}
+		scale <- ceiling( max( abs( pixdim.func[ c( 1, 3)]))/min( abs( pixdim.ana)))
+		aspect <- pixdim.func[3]/pixdim.func[1]
+	} else if (view == "sagittal") {
+		dim.o <- dim(value)[ c( 2, 3)]
+		if ((slice >= 1) & (slice <= dim(value)[1])) {
+			imgdata.o <- value[ slice, , ]
+		} else {
+			imgdata.o <- array(NA, dim = dim.o)
+		}
+		scale <- ceiling( max( abs( pixdim.func[ 2:3]))/min( abs( pixdim.ana)))
+		aspect <- pixdim.func[3]/pixdim.func[2]
+	} 
+	
+	## upscale overlay data slice
+	imgdata.n <- array( 0, dim = c( scale*dim(imgdata.o)))
+	for (i in 1:dim(imgdata.o)[1]) {
+		for (j in 1:dim(imgdata.o)[2]) {
+			imgdata.n[ (i-1)*scale + c(1:scale), (j-1)*scale + c(1:scale)] <- imgdata.o[ i, j]
+		}
+	}
+	imgdata.o <- imgdata.n
+
+	## create an upscaled underlay for this slice
+	imgdata.u <- array( 0, dim = dim.o*scale)
+	for (i in 1:(dim.o[1]*scale)) {
+		for (j in 1:(dim.o[2]*scale)) {
+			if (view == "axial") {
+				pos <- ind2pos.func( c(x$roixa+(2*i-1)/(2*scale)-0.5,
+								x$roiya+(2*j-1)/(2*scale)-0.5, x$roiza + slice - 1) )
+			} else if (view == "coronal") {
+				pos <- ind2pos.func( c(x$roixa+(2*i-1)/(2*scale)-0.5, 
+								x$roiya + slice - 1, x$roiza+(2*j-1)/(2*scale)-0.5) )
+			} else if (view == "sagittal") {
+				pos <- ind2pos.func( c(x$roixa + slice -1, 
+								x$roiya+(2*i-1)/(2*scale)-0.5, x$roiza+(2*j-1)/(2*scale)-0.5) )
+			}
+			ind.ana <- pos2ind.ana(pos)# this is real(!) index for anatomic image
+			ii <- ind.ana[1]
+			jj <- ind.ana[2]
+			kk <- ind.ana[3]
+			iint <- ceiling(ind.ana[1])# these are the integer indices
+			jint <- ceiling(ind.ana[2])
+			kint <- ceiling(ind.ana[3])
+			if ((iint >= 1) & (jint >= 1) & (kint >= 1) &
+					(iint <= ddim.ana[1]) & (jint <= ddim.ana[2]) & (kint <= ddim.ana[3])) {
+				imgdata.u[i,j] <- ttt.ana[iint,jint,kint] * (ii - iint + 1) * 
+						(jj - jint + 1) * (kk - kint + 1)
+				if (kint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint,jint,kint-1] * 
+							(ii - iint + 1) * (jj - jint + 1) * (kint - kk)
+				if (jint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint,jint-1,kint] * 
+							(ii - iint + 1) * (jint - jj) * (kk - kint + 1)
+				if (iint > 1) imgdata.u[i,j] <- imgdata.u[i,j] + ttt.ana[iint-1,jint,kint] *
+							(iint - ii) * (jj - jint + 1) * (kk - kint + 1)
+				if ((iint > 1) & (jint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] +
+							ttt.ana[iint-1,jint-1,kint] * (iint - ii) * (jint - jj) * (kk - kint + 1)
+				if ((iint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] +
+							ttt.ana[iint-1,jint,kint-1] * (iint - ii) * (jj - jint + 1) * (kint - kk)
+				if ((jint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] + 
+							ttt.ana[iint,jint-1,kint-1] * (ii - iint + 1) * (jint - jj) * (kint - kk)
+				if ((iint > 1) & (jint > 1) & (kint > 1)) imgdata.u[i,j] <- imgdata.u[i,j] +  
+							ttt.ana[iint-1,jint-1,kint-1] * (iint - ii) * (jint - jj) * (kint - kk)
+			}
+		}
+	}
+	
+	## user defined data limits to scale the image contrast
+	## not sure whether this is what the user wants
+	if (any(!is.na(imgdata.o))) {
+		if (is.null(zlim.o)) {
+			zlim.o <- range( abs(imgdata.o), na.rm = TRUE)
+		} else {
+			if (length(zlim.o) != 2) stop("zlim.o not length 2")
+			if (zlim.o[2] < zlim.o[1]) stop("zlim.o[2] < zlim.o[1]")
+			imgdata.o[imgdata.o > zlim.o[2]] <- zlim.o[2]
+			imgdata.o[imgdata.o < zlim.o[1]] <- zlim.o[1]
+			imgdata.o[imgdata.o < -zlim.o[2]] <- -zlim.o[2]
+			imgdata.o[imgdata.o > -zlim.o[1]] <- -zlim.o[1]
+		}
+	}
+	if (is.null(zlim.u)) {
+		zlim.u <- range(imgdata.u, na.rm = TRUE)
+	} else {
+		if (length(zlim.u) != 2) stop("zlim.u not length 2")
+		if (zlim.u[2] < zlim.u[1]) stop("zlim.u[2] < zlim.u[1]")
+		imgdata.u[imgdata.u > zlim.u[2]] <- zlim.u[2]
+		imgdata.u[imgdata.u < zlim.u[1]] <- zlim.u[1]
+	}
+	
+	## create the break points for the color scale
+	if (any(!is.na(imgdata.o))) {
+		zlim.o <- quantile( abs(imgdata.o), c( 0, 0.9, 1), na.rm = TRUE)
+		breaks.o <- c( -zlim.o[3], seq( -zlim.o[2], -zlim.o[1], length = 63), 0, seq( zlim.o[1], zlim.o[2], length = 63), zlim.o[3])
+	}
+	breaks.u <- seq( zlim.u[1], zlim.u[2], length = 129)
+	
+	## plot the image 
+	graphics::image(1:dim(imgdata.u)[1], 1:dim(imgdata.u)[2], imgdata.u, col = col.u, asp = aspect, axes = FALSE, xlab = "",	ylab = "")
+	if (any(!is.na(imgdata.o))) {
+		graphics::image(1:dim(imgdata.o)[1], 1:dim(imgdata.o)[2], imgdata.o, asp = aspect, col = col.o, breaks = breaks.o, add = TRUE)
+	}
+	
+	## finally create img for adimpro
+	img <- array(0, dim = c( dim(imgdata.u), 3))
+	for (i in 1:dim(imgdata.u)[1]) {
+		for (j in 1:dim(imgdata.u)[2]) {
+			if (!is.na(imgdata.o[ i, j])) { # use overlay
+				ind <- (0:128)[imgdata.o[ i, j] < breaks.o]
+				level <- ifelse(length(ind) == 0, 128, min(ind))
+				img[ i, j, ] <- as.integer( col2rgb( col.o[level])) * 256
+			} else { # use underlay
+				ind <- (0:128)[imgdata.u[ i, j] < breaks.u]
+				level <- ifelse(length(ind) == 0, 128, min(ind))
+				img[ i, j, ] <- as.integer( col2rgb( col.u[level])) * 256
+			}
+		}
+	}
+	
+	img
+}
+

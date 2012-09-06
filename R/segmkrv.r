@@ -1,12 +1,10 @@
 #########################################################################################################################
 #
-#    R - function  aws3D  for vector-valued  Adaptive Weights Smoothing (AWS) in 3D
-#    
-#    reduced version for qtau==1, heteroskedastic variances only, exact value for Variance reduction
+#    R - function  segm3Dkrv  for simulating critical values in segm3D
 #
 #    emaphazises on the propagation-separation approach 
 #
-#    Copyright (C) 2005 Weierstrass-Institut fuer
+#    Copyright (C) 2010-12 Weierstrass-Institut fuer
 #                       Angewandte Analysis und Stochastik (WIAS)
 #
 #    Author:  Joerg Polzehl
@@ -27,7 +25,7 @@
 #  USA.
 #
 
-segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
+segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
 #
 #
 #  Auxilary functions
@@ -36,23 +34,32 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
 # first check arguments and initialize
 #
    args <- match.call()
-# test dimension of data (vector of 3D) and define dimension related stuff
-   ddim <- dim(res)
-   y <- .Fortran("mean3D",
-                 as.double(res),
-                 as.integer(ddim[2]),
-                 as.integer(ddim[3]),
-                 as.integer(ddim[4]),
-                 as.integer(ddim[1]),
-                 y=double(prod(ddim[2:4])),
-                 PACKAGE="fmri",DUP=FALSE)$y
+   nt <- df+1
+   if (length(dy)!=3) {
+      stop("dy has to be of length 3")
+   }
    d <- 3
-   dy <- dim(y) <- ddim[2:4]
    n1 <- dy[1]
    n2 <- dy[2]
    n3 <- dy[3]
    n <- n1*n2*n3
-   nt <- ddim[1]
+   res <- array(rnorm(prod(dy)*nt),c(nt,dy))
+   if(any(h0>0)) {
+#      require(aws)
+      warning("for simulating critical values we need package aws")
+#      for(i in 1:nt) res[i,,,] <- kernsm(res[i,,,],h0)@yhat
+   }
+# test dimension of data (vector of 3D) and define dimension related stuff
+   ddim <- dim(res)
+   y <- .Fortran("mean3D",
+                 as.double(res),
+                 as.integer(n1),
+                 as.integer(n2),
+                 as.integer(n3),
+                 as.integer(nt),
+                 y=double(prod(dy)),
+                 PACKAGE="fmri",DUP=FALSE)$y
+   dim(y) <- dy
    if (length(dy)==d+1) {
       dim(y) <- dy[1:3]
    } else if (length(dy)!=d) {
@@ -62,10 +69,7 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
    lkern <- 1
    skern <- 1
 # define lambda
-   lambda <- ladjust*16
-# to have similar preformance compared to skern="Exp"
-   spmin <- .25 
-   spmax <- 1
+   lambda <- ladjust*(exp(2.6-3.17*log(df)+8.4*log(log(df)))+16) # corresponding to p_0 ~ 1e-6
    hinit <- 1
   
 # define hmax
@@ -77,27 +81,30 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
       hmax <- fwhm2bw(hmax)*4
       hinit <- min(hinit,hmax)
    }
-
-# define hincr
-# determine corresponding bandwidth for specified correlation
    if(is.null(h0)) h0 <- rep(0,3)
-
 # estimate variance in the gaussian case if necessary  
 # deal with homoskedastic Gaussian case by extending sigma2
   mask <- array(TRUE,dy[1:3])
+  res <- .Fortran("sweepm",res=as.double(res),
+                           as.logical(mask),
+                           as.integer(n1),
+                           as.integer(n2),
+                           as.integer(n3),
+                           as.integer(nt),
+                           PACKAGE="fmri",DUP=TRUE)$res                         
   cat("\nfmri.smooth: first variance estimate","\n")
   vartheta0 <- .Fortran("ivar",as.double(res),
                            as.double(1),
-                           as.logical(rep(TRUE,prod(ddim[2:4]))),
+                           as.logical(rep(TRUE,prod(dy))),
                            as.integer(n1),
                            as.integer(n2),
                            as.integer(n3),
                            as.integer(nt),
                            var = double(n1*n2*n3),
                            PACKAGE="fmri",DUP=FALSE)$var
-   sigma2 <- vartheta0/nt #  thats the variance of  y  ... !!!! assuming zero mean
+   sigma2 <- vartheta0/df #  thats the variance of  y  ... !!!! assuming zero mean
    sigma2 <- 1/sigma2 # need the inverse for easier computations
-   dim(sigma2) <- dy[1:3]
+   dim(sigma2) <- dy
 # Initialize  list for bi and theta
    wghts <- c(1,1,1)
    hinit <- hinit/wghts[1]
@@ -105,7 +112,7 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
    wghts <- (wghts[2:3]/wghts[1])
    tobj <- list(bi= rep(1,n))
    theta <- y
-   segm <- array(0,dy[1:3])
+   segm <- array(0,dy)
    varest <- 1/sigma2
    maxvol <- getvofh(hmax,lkern,wghts)
    fov <- prod(ddim[1:3])
@@ -132,17 +139,13 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
       hakt.oscale <- if(lkern==3) bw2fwhm(hakt/4) else hakt
       cat("step",k,"bandwidth",signif(hakt.oscale,3)," ")
       dlw <- (2*trunc(hakt/c(1,wghts))+1)[1:d]
-#  need bandwidth in voxel for Spaialvar.gauss, h0 is in voxel
-      if (any(h0>0)) lambda0 <- lambda0 * Spatialvar.gauss(bw2fwhm(hakt0)/4/c(1,wghts),h0,d)/
-      Spatialvar.gauss(h0,1e-5,d)/Spatialvar.gauss(bw2fwhm(hakt0)/4/c(1,wghts),1e-5,d)
-# Correction C(h0,hakt) for spatial correlation depends on h^{(k-1)}  all bandwidth-arguments in FWHM 
       hakt0 <- hakt
       theta0 <- theta
       bi0 <- tobj$bi
 #
 #   need these values to compute variances after the last iteration
 #
-      tobj <- .Fortran("segm3dkv",
+      tobj <- .Fortran("segm3dkb",
                        as.double(y),
                        as.double(res),
                        as.double(sigma2),
@@ -150,27 +153,25 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
                        as.integer(n2),
                        as.integer(n3),
                        as.integer(nt),
+                       as.double(df),
                        hakt=as.double(hakt),
                        as.double(lambda0),
                        as.double(theta0),
                        bi=as.double(bi0),
                        thnew=double(n1*n2*n3),
                        as.integer(lkern),
-                       as.double(spmin),
-                       as.double(spmax),
                        double(prod(dlw)),
                        as.double(wghts),
                        double(nt),#swres
-                       as.double(beta),
                        as.double(fov),
                        varest=as.double(varest),
                        maxvalue=double(1),
                        minvalue=double(1),
-                       PACKAGE="fmri",DUP=FALSE)[c("bi","thnew","hakt","varest","maxvalue","minvalue")]
+                       PACKAGE="fmri",DUP=TRUE)[c("bi","thnew","hakt","varest","maxvalue","minvalue")]
       gc()
-      theta <- array(tobj$thnew,dy[1:3]) 
-      varest <- array(tobj$varest,dy[1:3])
-      dim(tobj$bi) <- dy[1:3]
+      theta <- array(tobj$thnew,dy) 
+      varest <- array(tobj$varest,dy)
+      dim(tobj$bi) <- dy
       maxvalue[1,k] <- tobj$maxvalue
       maxvalue[2,k] <- -tobj$minvalue
       mae[k] <- mean(abs(theta))
@@ -191,11 +192,7 @@ segm3Dkrv <- function(res,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) {
       }
       k <- k+1
 #  adjust lambda for the high intrinsic correlation between  neighboring estimates 
-      c1 <- (prod(h0+1))^(1/3)
-      c1 <- 2.7214286 - 3.9476190*c1 + 1.6928571*c1*c1 - 0.1666667*c1*c1*c1
-      x <- (prod(1.25^(k-1)/c(1,wghts)))^(1/3)
-      scorrfactor <- (c1+x)/(c1*prod(h0+1)+x)
-      lambda0 <- lambda*scorrfactor
+      lambda0 <- lambda
       gc()
    }
 

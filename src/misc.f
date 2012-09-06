@@ -218,6 +218,26 @@ C  correlation in x
       END DO
       return
       end
+      subroutine mean3D(res,n1,n2,n3,nv,mres)
+
+      implicit logical(a-z)
+      integer n1,n2,n3,nv
+      real*8 res(nv,n1,n2,n3),mres(n1,n2,n3)
+      integer i1,i2,i3,k
+      real*8 z
+      Do i1=1,n1
+         Do i2=1,n2
+            Do i3=1,n3
+               z=0.d0
+               DO k=1,nv
+                  z=z+res(k,i1,i2,i3)
+               END DO
+               mres(i1,i2,i3)=z/nv
+            END DO
+         END DO
+      END DO
+      return
+      end
       subroutine mcorr(res,mask,n1,n2,n3,nv,scorr,l1,l2,l3)
 
       implicit logical(a-z)
@@ -399,8 +419,8 @@ C   assumes that we search for a connected region in segm==.TRUE.
 C   that contains seed voxel (i1,i2,i3)
 C   result: mask == .TRUE. if voxel is connected to seed
       implicit logical (a-z)
-      integer n1,n2,n3,i1,i2,i3,ind1(1),ind2(1),ind3(1)
-      logical final,checked(1),mask(n1,n2,n3),segm(n1,n2,n3)
+      integer n1,n2,n3,i1,i2,i3,ind1(*),ind2(*),ind3(*)
+      logical final,checked(*),mask(n1,n2,n3),segm(n1,n2,n3)
       integer j1,j2,j3,k,l1,l2,l3,lind,lind0,n
 C     first find pixel close to (i1,i2) with segm(j1,j2)=0
       n=n1*n2*n3
@@ -485,3 +505,28 @@ C     first find pixel close to (i1,i2) with segm(j1,j2)=0
       END DO
       RETURN
       END
+      subroutine countsgm(s,n1,n2,n3,anz)
+      implicit logical (a-z)
+      integer n1,n2,n3,anz(7)
+      logical s(n1,n2,n3)
+      integer i1,i2,i3,m
+      DO i1=2,n1-1
+         DO i2=2,n2-1
+            DO i3=2,n3-1
+               if(.not.s(i1,i2,i3)) CYCLE
+               m=1
+C  test neighbors
+               if(s(i1-1,i2,i3)) m=m+1
+               if(s(i1+1,i2,i3)) m=m+1
+               if(s(i1,i2-1,i3)) m=m+1
+               if(s(i1,i2+1,i3)) m=m+1
+               if(s(i1,i2,i3-1)) m=m+1
+               if(s(i1,i2,i3+1)) m=m+1
+               anz(m)=anz(m)+1
+            END DO
+         END DO
+      END DO
+      RETURN
+      END
+      
+      

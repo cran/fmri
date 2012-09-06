@@ -43,7 +43,10 @@ fmri.smooth(spm, hmax = 4, adaptation="aws",
     signal detection. It can be choosen between 0.01 and 0.2 as for
     other values we did not determine the critical values for the
     statistical tests. \code{delta} (default 0) defines the minimum
-    signal which should be detected. }
+    signal which should be detected. 
+    \code{restricted} determines if smoothing for voxel detected to be significant is restricted to use only voxel from the same segment. The 
+    default is \code{restricted=FALSE}. \code{restricted} slighty changes 
+    the behaviour under the altenative, i.e. not the interpretation of results.}
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map
@@ -53,7 +56,8 @@ fmri.smooth(spm, hmax = 4, adaptation="aws",
   \code{adaptation} as \code{"none"} for non adaptive
   smoothing. \code{lkern} can be used for specifying the
   localization kernel. For comparison with non adaptive methods use
-  "Gaussian" (hmax given in FWHM), for better adaptation use "Plateau" or "Triangle"
+  "Gaussian" (hmax times the voxelsize in x-direction will give the FWHM bandwidth in mm), 
+  for better adaptation use "Plateau" or "Triangle"
   (default, hmax given in voxel). For \code{lkern="Plateau"} and \code{lkern="Triangle"} thresholds may be inaccurate, due to a violation of
     the Gaussian random field assumption under homogeneity. \code{lkern="Plateau"} 
     is expected to provide best results with adaptive smoothing.

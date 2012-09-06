@@ -1,3 +1,108 @@
+plot.fmrisegment <- function(x, 
+		                      anatomic = NULL, 
+							  slice = 1, 
+							  view = c( "axial", "coronal", "sagittal"),
+							  zlim.u = NULL, 
+							  zlim.o = NULL, 
+							  col.o = c( rainbow( 64, start = 2/6, end = 4/6), rainbow( 64, start = 0, end = 1/6)), 
+		                      col.u = grey(0:127/127),
+							  verbose = FALSE,
+							  ...) {
+						
+   if (verbose) cat( "plot.fmrisegment: entering function\n")
+   view <- match.arg(view)
+   
+   if (is.null(anatomic)) anatomic <- array( 0, dim = x$dim[1:3])
+  
+   if ("fmridata" %in% class(anatomic)) {
+
+	   if (verbose) cat( "plot.fmrisegment: calculate exact overlay\n")
+	   img <- show.segmentslice(x, anatomic, slice =  slice, view = view, col.u = col.u, col.o = col.o, zlim.u, zlim.o)
+	   
+   } else {
+	   if ( any(dim(anatomic) != dim(x$cbeta))) {
+		   stop( "dimension of anatomic does not match overlay data!")
+	   } else {
+		   
+		   if (verbose) cat( "plot.fmrisegment: perform simple overlay\n") 
+		   ## select correct overlay slice according to view
+		   if (view == "axial") {
+			   imgdata.o <- x$cbeta[ , , slice]
+			   imgdata.o[ x$segm[ , , slice] == 0] <- NA ## no significant voxel
+			   imgdata.u <- anatomic[ , , slice]
+			   aspect <- x$delta[2]/x$delta[1]
+		   } else if (view == "coronal") {
+			   imgdata.o <- x$cbeta[ , slice, ]
+			   imgdata.o[ x$segm[ , slice, ] == 0] <- NA ## no significant voxel
+			   imgdata.u <- anatomic[ , slice, ]
+			   aspect <- x$delta[3]/x$delta[1]
+		   } else if (view == "sagittal") {
+			   imgdata.o <- x$cbeta[ slice, , ]
+			   imgdata.o[ x$segm[ slice, , ] == 0] <- NA ## no significant voxel
+			   imgdata.u <- anatomic[ slice, , ]
+			   aspect <- x$delta[3]/x$delta[2]
+		   } 
+		   
+		   ## user defined data limits to scale the image contrast
+		   ## not sure whether this is what the user wants
+		   if (any(!is.na(imgdata.o))) {
+			   if (is.null(zlim.o)) {
+				   zlim.o <- range( abs(imgdata.o), na.rm = TRUE)
+			   } else {
+				   if (length(zlim.o) != 2) stop("zlim.o not length 2")
+				   if (zlim.o[2] < zlim.o[1]) stop("zlim.o[2] < zlim.o[1]")
+				   imgdata.o[imgdata.o > zlim.o[2]] <- zlim.o[2]
+				   imgdata.o[imgdata.o < zlim.o[1]] <- zlim.o[1]
+				   imgdata.o[imgdata.o < -zlim.o[2]] <- -zlim.o[2]
+				   imgdata.o[imgdata.o > -zlim.o[1]] <- -zlim.o[1]
+			   }
+		   }
+		   if (is.null(zlim.u)) {
+			   zlim.u <- range(imgdata.u, na.rm = TRUE)
+		   } else {
+			   if (length(zlim.u) != 2) stop("zlim.u not length 2")
+			   if (zlim.u[2] < zlim.u[1]) stop("zlim.u[2] < zlim.u[1]")
+			   imgdata.u[imgdata.u > zlim.u[2]] <- zlim.u[2]
+			   imgdata.u[imgdata.u < zlim.u[1]] <- zlim.u[1]
+		   }
+		   
+		   ## create the break points for the color scale
+		   if (any(!is.na(imgdata.o))) {
+			   zlim.o <- quantile( abs(imgdata.o), c( 0, 0.9, 1), na.rm = TRUE)
+			   breaks.o <- c( -zlim.o[3], seq( -zlim.o[2], -zlim.o[1], length = 63), 0, seq( zlim.o[1], zlim.o[2], length = 63), zlim.o[3])
+		   }
+		   breaks.u <- seq( zlim.u[1], zlim.u[2], length = 129)
+		   
+		   ## plot the image 
+		   graphics::image(1:dim(imgdata.u)[1], 1:dim(imgdata.u)[2], imgdata.u, col = col.u, asp = aspect, axes = FALSE, xlab = "",	ylab = "")
+		   if (any(!is.na(imgdata.o))) {
+			   graphics::image(1:dim(imgdata.o)[1], 1:dim(imgdata.o)[2], imgdata.o, asp = aspect, col = col.o, breaks = breaks.o, add = TRUE)
+		   }
+		   
+		   ## finally create img for adimpro
+		   img <- array(0, dim = c( dim(imgdata.u), 3))
+		   for (i in 1:dim(imgdata.u)[1]) {
+			   for (j in 1:dim(imgdata.u)[2]) {
+				   if (!is.na(imgdata.o[ i, j])) { # use overlay
+					   ind <- (0:128)[imgdata.o[ i, j] < breaks.o]
+					   level <- ifelse(length(ind) == 0, 128, min(ind))
+					   img[ i, j, ] <- as.integer( col2rgb( col.o[level])) * 256
+				   } else { # use underlay
+					   ind <- (0:128)[imgdata.u[ i, j] < breaks.u]
+					   level <- ifelse(length(ind) == 0, 128, min(ind))
+					   img[ i, j, ] <- as.integer( col2rgb( col.u[level])) * 256
+				   }
+			   }
+		   }
+		   
+	   }	  
+   }
+		
+   if (verbose) cat( "plot.fmrisegment: exiting function\n")
+   return(invisible(img))
+   
+}
+
 # can be called from fmri.gui or the command line (by plot)
 # calls fmri.view2d or fmri.view3d with the fitting data
 plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
@@ -11,19 +116,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
   cutOff[cutOff>1] <- 1
   if (cutOff[1] > cutOff[2]) cutOff[2] <- 1     
   inputStuff <- list(anatomic,maxpvalue,cutOff)
-  if ("fmrisegment" %in% class(x)) {
-    pvalue <- rep(0.2, prod(x$dim[1:3]));
-    dim(pvalue) <- x$dim[1:3]
-    sigrange <- quantile(x$cbeta[x$segm == 1], c(0, 0.98))
-    if (is.null(zlim.o)) zlim.o <- -log(maxpvalue)*c(1,sigrange[2]/sigrange[1])
-    pvalue[x$segm == 1] <- exp(log(maxpvalue)*x$cbeta[x$segm == 1]/sigrange[1])
-    x$pvalue <- pvalue
-    class(x) <- c("fmridata", "fmripvalue")
-#
-#  this containes all information needed to fall back to handling fmripvalue objects 
-#
-  } 
-#  else 
+
   if ("fmripvalue" %in% class(x)) {
     if ("fmridata" %in% class(anatomic)) {
       img <- show.slice(x, anatomic, maxpvalue = maxpvalue, slice =  slice, 

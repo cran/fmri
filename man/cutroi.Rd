@@ -6,7 +6,8 @@
   This functions cuts a region-of-interest (ROI) from input data.
 }
 \usage{
-cutroi(data, xind = 1:data$dim[1], yind = 1:data$dim[2], zind = 1:data$dim[3], tind = 1:data$dim[4])
+cutroi(data, xind = 1:data$dim[1], yind = 1:data$dim[2], 
+             zind = 1:data$dim[3], tind = 1:data$dim[4])
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

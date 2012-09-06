@@ -106,7 +106,7 @@ C
       logical aws,wlse,mask(n1,n2,n3)
       real*8 y(n1,n2,n3,dv),theta(n1,n2,n3,dv0),bi(n1,n2,n3),
      1       thn(n1,n2,n3,dv),lambda,spmax,wght(2),si2(n1,n2,n3),
-     1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),getlwght
+     1       hakt,lwght(*),spmin,vwghts(dv0),thi(dv0),getlwght
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
       real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i,swjv
@@ -223,7 +223,7 @@ C
       logical aws,wlse,mask(n1,n2,n3)
       real*8 res(n4,n1,n2,n3),y(n1,n2,n3,dv),theta(n1,n2,n3,dv0),
      1       bi(n1,n2,n3),thn(n1,n2,n3,dv),lambda,spmax,wght(2),
-     1       si2(n1,n2,n3),hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),
+     1       si2(n1,n2,n3),hakt,lwght(*),spmin,vwghts(dv0),thi(dv0),
      1       resi(n4),getlwght,resnew(n4,n1,n2,n3)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
@@ -346,7 +346,7 @@ C
       logical aws,wlse,mask(n1,n2,n3)
       real*8 theta(n1,n2,n3,dv0),bi(n1,n2,n3),y(dv,n1,n2,n3),
      1       lambda,spmax,wght(2),si2(n1,n2,n3),thn(dv,n1,n2,n3),
-     1       hakt,lwght(1),spmin,vwghts(dv0),thi(dv0),getlwght
+     1       hakt,lwght(*),spmin,vwghts(dv0),thi(dv0),getlwght
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
       real*8 bii,swj,swjy(dv),wj,hakt2,spf,si2j,si2i
@@ -451,7 +451,7 @@ C
       integer n1,n2,n3,kern,dv
       logical wlse,mask(n1,n2,n3)
       real*8 y(n1,n2,n3,dv),thn(n1,n2,n3,dv),wght(2),
-     1       si2(n1,n2,n3),hakt,lwght(1),getlwght
+     1       si2(n1,n2,n3),hakt,lwght(*),getlwght
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n
       real*8 swj,swjy(dv),wj,hakt2
@@ -499,8 +499,8 @@ C   scaling of sij outside the loop
                      DO jw1=1,dlw1
 C  first stochastic term
                         j1=jw1-clw1+i1
-                        IF(mask(j1,j2,j3)) CYCLE
                         if(j1.lt.1.or.j1.gt.n1) CYCLE
+                        IF(mask(j1,j2,j3)) CYCLE
                         wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                         if(wj.le.0.d0) CYCLE
                         if(wlse) THEN 
