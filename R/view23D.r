@@ -99,10 +99,10 @@ fmri.view3d <- function(ttt, sigma=NULL,type = "data", col = grey(0:255/255), ex
       current <- as.numeric(tclvalue(posv[[i]]))
       if (current != pos[i]) {
         pos[i] <<- current
-        tkrreplot(img[[1]])
-        tkrreplot(img[[2]])
-        tkrreplot(img[[3]])
-        if (i == 4) tkrreplot(img[[4]])
+        tkrplot::tkrreplot(img[[1]])
+        tkrplot::tkrreplot(img[[2]])
+        tkrplot::tkrreplot(img[[3]])
+        if (i == 4) tkrplot::tkrreplot(img[[4]])
         tkconfigure(label2, text=pos[i])
       }
     }
@@ -123,9 +123,9 @@ fmri.view3d <- function(ttt, sigma=NULL,type = "data", col = grey(0:255/255), ex
       current <- as.numeric(tclvalue(posv[[i]]))
       if (current != pos[i]) {
         pos[i] <<- current
-        tkrreplot(img[[1]])
-        tkrreplot(img[[2]])
-        tkrreplot(img[[3]])
+        tkrplot::tkrreplot(img[[1]])
+        tkrplot::tkrreplot(img[[2]])
+        tkrplot::tkrreplot(img[[3]])
         tkconfigure(label2, text=pos[i])
       }
     }
@@ -1058,7 +1058,7 @@ fmri.view2d <- function(ttt, sigma=NULL,type = "data", col = grey(0:255/255), ex
     viewMask <- function(){
       ttt <- extract.data(data)
       ddim <- dim(ttt)    
-      X11(width=12,height=7)
+      dev.new(width=12,height=7)
       if (round(sqrt(ddim[3]))==sqrt(ddim[3])){
         nrrow <<- sqrt(ddim[3])
         nrcol <<- sqrt(ddim[3])  

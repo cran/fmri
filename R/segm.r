@@ -95,7 +95,7 @@ segm3D <- function(y,weighted=TRUE,
                            as.integer(n3),
                            as.integer(nt),
                            var = double(n1*n2*n3),
-                           PACKAGE="fmri",DUP=FALSE)$var
+                           PACKAGE="fmri",DUP=TRUE)$var
    vq <- varest0*sigma2
 #   plot(density(vq),main="Density of vq")
    if (is.null(wghts)) wghts <- c(1,1,1)

@@ -286,7 +286,7 @@ mask1 <- .Fortran("lconnect",
                  integer(n),
                  logical(n),
                  mask=logical(n),
-                 DUP=FALSE,
+                 DUP=TRUE,
                  PACKAGE="fmri")$mask
 dim(mask1) <- dm
 mask1
@@ -306,7 +306,7 @@ spatial.corr <- function(residuals){
                      as.integer(lags[1]),
                      as.integer(lags[2]),
                      as.integer(lags[3]),
-                     PACKAGE="fmri",DUP=FALSE)$scorr
+                     PACKAGE="fmri",DUP=TRUE)$scorr
   dim(corr) <- lags                     
   bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),upper=c(4,4,4),lag=lags,data=corr)$par  
   bw[bw<=.25] <- 0

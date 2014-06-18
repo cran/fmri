@@ -1,28 +1,35 @@
 Package: fmri
-Version: 1.5-0
-Date: 2012-09-06
+Version: 1.5-1
+Date: 2014-06-18
 Title: Analysis of fMRI experiments
-Author: Karsten Tabelow <tabelow@wias-berlin.de>, Joerg Polzehl
-        <polzehl@wias-berlin.de>
-Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
-Depends: tcltk
-Suggests: tkrplot, fastICA, adimpro
-Description: The package contains R-functions to perform an fmri
-        analysis as described in K. Tabelow, J. Polzehl, H.U. Voss, and
-        V. Spokoiny, Analysing fMRI experiments with structure adaptive
-        smoothing procedures, NeuroImage, 33:55-62 (2006), J. Polzehl,
-        H.U. Voss, K. Tabelow, Structural adaptive segmentation for
-        statistical parametric mapping, NeuroImage, 52:515-523 (2010)
-        and K. Tabelow, J. Polzehl, Statistical Parametric Maps for
-        Functional MRI Experiments in {R}: The Package {fmri}}, Journal
-        of Statistical Software, 44(11):1--21 (2011).
+Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
+                    email = "tabelow@wias-berlin.de"), 
+             person("Joerg", "Polzehl", role = c("aut"),
+                    email = "polzehl@wias-berlin.de"),
+             person("Brandon", "Whitcher", role = c("ctb")))
+Suggests: tcltk, tkrplot, fastICA, adimpro, oro.nifti
+Description: The package contains R-functions to perform an fmri analysis
+             as described in
+             K. Tabelow, J. Polzehl, H.U. Voss, and V. Spokoiny, 
+             Analysing fMRI experiments with structure adaptive smoothing procedures,
+             NeuroImage, 33:55-62 (2006),
+             J. Polzehl, H.U. Voss, K. Tabelow, Structural adaptive segmentation
+             for statistical parametric mapping, NeuroImage, 52:515-523 (2010)
+             and 
+             K. Tabelow, J. Polzehl, Statistical Parametric Maps for
+             Functional MRI Experiments in {R}: The Package {fmri}}, 
+             Journal of Statistical Software, 44(11):1--21 (2011).
 License: GPL (>= 2)
-Copyright: This package is Copyright (C) 2006-2012 Weierstrass
+Copyright: This package is Copyright (C) 2006-2014 Weierstrass
         Institute for Applied Analysis and Stochastics.
-URL: http://www.wias-berlin.de/projects/matheon_a3/
+URL: http://www.wias-berlin.de/software/imaging/
 Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
-Packaged: 2013-06-12 12:03:19 UTC; tabelow
+Packaged: 2014-06-18 07:58:46 UTC; tabelow
+Author: Karsten Tabelow [aut, cre],
+  Joerg Polzehl [aut],
+  Brandon Whitcher [ctb]
+Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2013-06-12 14:13:07
+Date/Publication: 2014-06-18 13:01:44

@@ -58,7 +58,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                  as.integer(n3),
                  as.integer(nt),
                  y=double(prod(dy)),
-                 PACKAGE="fmri",DUP=FALSE)$y
+                 PACKAGE="fmri",DUP=TRUE)$y
    dim(y) <- dy
    if (length(dy)==d+1) {
       dim(y) <- dy[1:3]
@@ -101,7 +101,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                            as.integer(n3),
                            as.integer(nt),
                            var = double(n1*n2*n3),
-                           PACKAGE="fmri",DUP=FALSE)$var
+                           PACKAGE="fmri",DUP=TRUE)$var
    sigma2 <- vartheta0/df #  thats the variance of  y  ... !!!! assuming zero mean
    sigma2 <- 1/sigma2 # need the inverse for easier computations
    dim(sigma2) <- dy

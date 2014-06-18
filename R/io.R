@@ -290,6 +290,7 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
               mask=NULL)
   }
 
+  z <- complete.fmriHeader(z)
   class(z) <- "fmridata"
 
   if (length(filename) > 1) {
@@ -584,6 +585,7 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
               mask=NULL)
   }
   
+  z <- complete.fmriHeader(z)
   class(z) <- "fmridata"
   attr(z,"file") <- paste(filename,".HEAD/BRIK",sep="")
   invisible(z)
@@ -1044,6 +1046,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
   }
   close(con)
 #  class(z) <- "fmridata"
+  z <- complete.fmriHeader(z)
 
   attr(z,"file") <- filename
   invisible(z)
@@ -1243,10 +1246,68 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
   }
 
   attr(z,"file") <- paste(filename, sep="")
-
+  z <- complete.fmriHeader(z)
   invisible(z)
 }
 
+complete.fmriHeader <- function(fmriobj){
+   header <- fmriobj$header
+     if (is.null(header)) header <- list()
+
+  if (!("datatype1" %in% names(header))) header$datatype1 <- paste(rep(" ",10),collapse="")
+  if (!("dbname" %in% names(header))) header$dbname <- paste(rep(" ",18),collapse="")
+  if (!("extents" %in% names(header))) header$extents <- c(0)
+  if (!("sessionerror" %in% names(header))) header$sessionerror <- c(0)
+  if (!("regular" %in% names(header))) header$regular <- "r"
+  if (!("diminfo" %in% names(header))) header$diminfo <- " "
+  if (!("dimension" %in% names(header))) {
+    if (is.null(header$dim0)) 
+      header$dimension <- rep(0,8)
+    else
+      header$dimension <- header$dim0
+  }
+  if (length(header$dimension) < 8) header$dimension[(length(header$dimension)+1):8] <- 0
+  if (!("intentp1" %in% names(header))) header$intentp1 <- 0
+  if (!("intentp2" %in% names(header))) header$intentp2 <- 0
+  if (!("intentp3" %in% names(header))) header$intentp3 <- 0
+  if (!("intentcode" %in% names(header))) header$intentcode <- 0
+  if (!("datatype" %in% names(header))) header$datatype <- c(4)
+  if (!("bitpix" %in% names(header))) header$bitpix <- c(0)
+  if (!("slicestart" %in% names(header))) header$slicestart <- c(0)
+  if (!("pixdim" %in% names(header))) header$pixdim <- c(0,4,4,4,rep(0,4))
+  if (length(header$pixdim) < 8) header$pixdim[(length(header$pixdim)+1):8] <- 0
+  if (!("voxoffset" %in% names(header))||header$voxoffset<348) header$voxoffset <- c(352)
+### check if test should be for 348 or 352  ###
+  if (!("sclslope" %in% names(header))) header$sclslope <- 0
+  if (!("sclinter" %in% names(header))) header$sclinter <- 0
+  if (!("sliceend" %in% names(header))) header$sliceend <- 0
+  if (!("slicecode" %in% names(header))) header$slicecode <- " "
+  if (!("xyztunits" %in% names(header))) header$xyztunits <- " "
+  if (!("calmax" %in% names(header))) header$calmax <- c(0)
+  if (!("calmin" %in% names(header))) header$calmin <- c(0)
+  if (!("sliceduration" %in% names(header))) header$sliceduration <- c(0)
+  if (!("toffset" %in% names(header))) header$toffset <- c(0)
+  if (!("glmax" %in% names(header))) header$glmax <- c(0)
+  if (!("glmin" %in% names(header))) header$glmin <- c(0)
+  if (!("describ" %in% names(header))) header$describ <- paste(rep(" ",80),collapse="")
+  if (!("auxfile" %in% names(header))) header$auxfile <- paste(rep(" ",24),collapse="")
+  if (!("qform" %in% names(header))) header$qform <- 0
+  if (!("sform" %in% names(header))) header$sform <- 0
+  if (!("quaternb" %in% names(header))) header$quaternb <- 0
+  if (!("quaternc" %in% names(header))) header$quaternc <- 0
+  if (!("quaternd" %in% names(header))) header$quaternd <- 0
+  if (!("qoffsetx" %in% names(header))) header$qoffsetx <- 0
+  if (!("qoffsety" %in% names(header))) header$qoffsety <- 0
+  if (!("qoffsetz" %in% names(header))) header$qoffsetz <- 0
+  if (!("srowx" %in% names(header))) header$srowx <- c(0,0,0,0)
+  if (!("srowy" %in% names(header))) header$srowy <- c(0,0,0,0)
+  if (!("srowz" %in% names(header))) header$srowz <- c(0,0,0,0)
+  if (!("intentname" %in% names(header))) header$intentname <- paste(rep(" ",16),collapse="")
+  header$magic <- "n+1"
+  if (!("extension" %in% names(header))) header$extension <- as.raw(rep(0,header$voxoffset-348))
+  fmriobj$header <- header
+  fmriobj
+}
 write.NIFTI <- function(ttt, header=NULL, filename) {
   if (is.null(header)) header <- list()
 

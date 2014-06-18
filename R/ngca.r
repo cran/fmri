@@ -32,7 +32,7 @@ if(all(class(data)=="fmridata")) {
                     xnew=double(prod(dx)),
                     double(as.integer(2*h.time+1)),
                     as.integer(2*h.time+1),
-                    DUP=FALSE,
+                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Smoothing in time finished)\n")
      dim(x) <- dx
@@ -56,7 +56,7 @@ if(all(class(data)=="fmridata")) {
                     as.integer(as.integer(2*h.space/wghts[1]+1)),
                     as.integer(as.integer(2*h.space/wghts[2]+1)),
                     as.integer(as.integer(2*h.space/wghts[3]+1)),
-                    DUP=FALSE,
+                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Spatial moothing finished)\n")
      dim(x) <- dx
@@ -134,7 +134,7 @@ fz <- .Fortran("fastica",
               as.double(s),
               double(npca),
               as.double(delta),
-              DUP=FALSE,
+              DUP=TRUE,
               PACKAGE="fmri")[c("v","normv")]
 v <- fz$v
 normv <- fz$normv
@@ -296,7 +296,7 @@ if(!is.null(zind)) mask[,,-zind] <- FALSE
                     xnew=double(prod(dx)),
                     double(as.integer(2*h.time+1)),
                     as.integer(2*h.time+1),
-                    DUP=FALSE,
+                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Smoothing in time finished)\n")
      dim(x) <- dx
@@ -319,7 +319,7 @@ if(!is.null(zind)) mask[,,-zind] <- FALSE
                     as.integer(as.integer(2*h.space/wghts[1]+1)),
                     as.integer(as.integer(2*h.space/wghts[2]+1)),
                     as.integer(as.integer(2*h.space/wghts[3]+1)),
-                    DUP=FALSE,
+                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Spatial moothing finished)\n")
      dim(x) <- dx

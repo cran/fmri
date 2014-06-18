@@ -865,7 +865,7 @@ fmri.gui <- function() {
 	viewMask <- function(width=14,height=7){
 		ttt <- extract.data(data)
 		ddim <- data$dim		
-		X11(width=12,height=7)
+	  dev.new(width=12,height=7)
 		if (round(sqrt(ddim[3]))==sqrt(ddim[3])){
 			nrrow <<- sqrt(ddim[3])
 			nrcol <<- sqrt(ddim[3])	
