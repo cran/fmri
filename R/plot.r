@@ -109,9 +109,10 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
                           pos = c(-1,-1,-1), type="slice", slice =  1, view = "axial",
                           zlim.u = NULL, zlim.o = NULL, col.o = heat.colors(256), 
                           col.u = grey(0:255/255), cutOff = c(0,1),...) {
-  require(tcltk)
-  if (!require(tkrplot))
-    stop("required package tkrplot not found. Please install from cran.r-project.org")  
+  if(!requireNamespace("tcltk",quietly=TRUE)) 
+      stop("package tcltk not found. Please install from cran.r-project.org")
+  if (!requireNamespace("tkrplot",quietly=TRUE))
+      stop("package tkrplot not found. Please install from cran.r-project.org")  
   cutOff[cutOff<0] <- 0
   cutOff[cutOff>1] <- 1
   if (cutOff[1] > cutOff[2]) cutOff[2] <- 1     

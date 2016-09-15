@@ -6,13 +6,12 @@
   Determine p-values.
 }
 \usage{
-fmri.pvalue(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
+fmri.pvalue(spm, mode="basic", na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{spm}{ \code{fmrispm} object }
   \item{mode}{ type of pvalue definition}
-  \item{delta}{ physically meaningful range of latency for HRF }
   \item{na.rm}{\code{na.rm} specifies how NA's in the SPM are handled. NA's may occur
    in voxel where the time series information did not allow for estimating parameters and their variances
    or where the time series information where constant over time. A high (1e19) value of the variance 

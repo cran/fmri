@@ -4,7 +4,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     cat("fmri.smooth: entering function\n")
     args <- sys.call()
     args <- c(spm$call,args)
-    if (!(tolower(adaptation) %in% c("none", "aws", "segment"))) {
+    if (!(tolower(adaptation) %in% c("none", "aws", "fullaws", "segment"))) {
         adaptation <- "aws"
     }
     ladjust <- if ("ladjust" %in% names(list(...)))
@@ -44,51 +44,45 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     }
     cat("fmri.smooth: smoothing the Statistical Parametric Map\n")
     ttthat <- switch(tolower(adaptation), 
-                     aws = vaws3D(y = spm$cbeta,
+                     aws = aws3D(y = spm$cbeta,
                                   sigma2 = variance, 
                                   hmax = hmax, 
                                   mask = spm$mask, 
                                   wghts = weights,
                                   h0 = bw, 
-                                  vwghts = spm$vwghts, 
                                   lkern = lkern, 
                                   skern = skern,
                                   weighted = weighted, 
                                   res = spm$res, 
                                   resscale = spm$resscale,
                                   ddim = spm$dim, 
-#                                  df = spm$df,
                                   ladjust = ladjust, 
                                   testprop = propagation),
-                     fullaws = vaws3Dfull(y = spm$cbeta, 
+                     fullaws = aws3Dfull(y = spm$cbeta, 
                                           sigma2 = variance,
                                           hmax = hmax, 
                                           mask = spm$mask, 
                                           wghts = weights, 
-                                          vwghts = spm$vwghts,
                                           lkern = lkern, 
                                           skern = skern, 
                                           weighted = weighted,
                                           res = spm$res, 
                                           resscale = spm$resscale, 
                                           ddim = spm$dim,
-#                                          df = spm$df,
                                           ladjust = ladjust, 
                                           testprop = propagation),
-                     none = vaws3D(y = spm$cbeta,
+                     none = aws3D(y = spm$cbeta,
                                    sigma2 = variance, 
                                    hmax = hmax, 
                                    mask = spm$mask,
                                    qlambda = 1, 
                                    wghts = weights, 
                                    h0 = bw, 
-                                   vwghts = spm$vwghts,
                                    lkern = lkern, 
                                    skern = skern, 
                                    weighted = weighted,
                                    res = spm$res, 
                                    resscale = spm$resscale, 
-#                                   df = spm$df,
                                    ddim = spm$dim,
                                    ladjust = ladjust),
                      segment = segm3D(y = spm$cbeta,
@@ -113,8 +107,8 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     }
     else {
         bw <- optim(c(2, 2, 2), corrrisk, method = "L-BFGS-B",
-            lower = c(0.25, 0.25, 0.25), upper = c(6, 6, 6),
-            lag = c(5, 5, 3), data = ttthat$scorr)$par
+            lower = c(0.25, 0.25, 0.25), upper = c(20, 20, 20),
+            lag = c(5,5,3), data = ttthat$scorr)$par
         bw[bw <= 0.25] <- 0
         dim(bw) <- c(1, 3)
     }
@@ -126,22 +120,10 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
         bw0[, 3]))
     dim(rxyz0) <- c(dim(bw0)[1], 3)
     cat("fmri.smooth: exiting function\n")
-    if (length(dim(ttthat$theta)) == 3)
-        dim(ttthat$theta) <- c(dim(ttthat$theta), 1)
-    if (dim(ttthat$theta)[4] == 1) {
-        z <- list(cbeta = ttthat$theta[, , , 1], var = ttthat$var,
-            rxyz = rxyz, rxyz0 = rxyz0, scorr = spm$scorr, weights = spm$weights,
-            vwghts = spm$vwghts, bw = bw, hmax = ttthat$hmax,
-            dim = spm$dim, hrf = spm$hrf, segm = ttthat$segm,
-            mask = ttthat$mask, call = args)
-    }
-    else {
-        z <- list(cbeta = ttthat$theta, var = ttthat$var, rxyz = rxyz,
-            rxyz0 = rxyz0, scorr = spm$scorr, weights = spm$weights,
-            vwghts = spm$vwghts, bw = bw, hmax = ttthat$hmax,
-            dim = spm$dim, hrf = spm$hrf, segm = ttthat$segm,
-            mask = ttthat$mask, call = args)
-    }
+    z <- list(cbeta = ttthat$theta, var = ttthat$var, rxyz = rxyz,
+              rxyz0 = rxyz0, scorr = spm$scorr, weights = spm$weights,
+              bw = bw, hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf, 
+              segm = ttthat$segm, mask = ttthat$mask,scale=ttthat$scale,res=ttthat$residuals, call = args)
     if (adaptation == "segment") {
       class(z) <- c( "fmrisegment", "fmridata")
       z$alpha <- alpha
@@ -181,7 +163,7 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     invisible(z)
 }
 
-fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.signal=0, alpha=0.05 ) {
+fmri.pvalue <- function(spm, mode="basic", na.rm=FALSE, minimum.signal=0, alpha=0.05 ) {
     args <- sys.call()
     args <- c(spm$call,args)
   cat("fmri.pvalue: entering function\n")
@@ -203,8 +185,6 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
     type <- "t"
     df <- spm$df
   }
-
-  if (length(dim(spm$cbeta)) < 4) {
 
     stat <- (spm$cbeta-minimum.signal)/sqrt(spm$var)
     dim(stat) <- prod(spm$dim[1:3])
@@ -230,75 +210,7 @@ fmri.pvalue <- function(spm, mode="basic", delta=NULL, na.rm=FALSE, minimum.sign
       thresh <- threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type=type,df=df)
       pv <- pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type=type,df=df)
     }
-
-  } else if (!is.null(delta)) {
-
-    l1 <- sqrt(spm$vwghts[2]/spm$vwghts[1]) * delta[1]
-    l2 <- sqrt(spm$vwghts[2]/spm$vwghts[1]) * delta[2]
-    theta1 <- atan(l1)
-    theta2 <- atan(l2)
-    t1 <- spm$cbeta[,,,1]/sqrt(spm$var * spm$vwghts[1])
-    t2 <- spm$cbeta[,,,2]/sqrt(spm$var * spm$vwghts[2])
-    ratio <- t2/t1
-    ratio[t1==0] <- l2 + 1
-    w1 <- (t1 + t2 * l1) / sqrt(1+l1^2)
-    w2 <- (t1 + t2 * l2) / sqrt(1+l2^2)
-    w3 <- (t1 > 0) * (l1 <= ratio) * (ratio <= l2) * sqrt(t1^2 + t2^2)
-    stat <- pmax(w1,w2,w3)
-    dim(stat) <- prod(spm$dim[1:3])
-    cat("fmri.pvalue: calculate p-value method:",mode,"\n")
-    if (mode == "local") {
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="norm",cone=theta2-theta1)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="norm",cone=theta2-theta1)
-    } else if (mode == "global") {
-      rxyz <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="norm",cone=theta2-theta1)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="norm",cone=theta2-theta1)
-    } else {
-      if ("rxyz0" %in% names(spm)) {
-        rxyz0 <- c(median(spm$rxyz0[,1]),median(spm$rxyz0[,2]),median(spm$rxyz0[,3]))
-      } else {
-        rxyz0 <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
-      }
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="norm",cone=theta2-theta1)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="norm",cone=theta2-theta1)
-    }
-
-  } else {
-
-    stat <- spm$cbeta[,,,1]^2/spm$var + spm$cbeta[,,,2]^2/spm$var/spm$vwghts[2]  # Wert der Statistik
-    dim(stat) <- prod(spm$dim[1:3])
-    cat("fmri.pvalue: calculate treshold and p-value method:",mode,"\n")
-    if (mode == "local") {
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="chisq",df=2)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],spm$rxyz[,1],spm$rxyz[,2],spm$rxyz[,3],type="chisq",df=2)
-    } else if (mode == "global") {
-      rxyz <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="chisq",df=2)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz[1],rxyz[2],rxyz[3],type="chisq",df=2)
-    } else {
-      if ("rxyz0" %in% names(spm)) {
-        rxyz0 <- c(median(spm$rxyz0[,1]),median(spm$rxyz0[,2]),median(spm$rxyz0[,3]))
-      } else {
-        rxyz0 <- c(median(spm$rxyz[,1]),median(spm$rxyz[,2]),median(spm$rxyz[,3]))
-      }
-      thresh <-
-        threshold(0.2,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="chisq",df=2)
-      pv <-
-        pvalue(stat,spm$dim[1],spm$dim[2],spm$dim[3],rxyz0[1],rxyz0[2],rxyz0[3],type="chisq",df=2)
-    }
-
-  }
+    
   cat("fmri.pvalue: thresholding\n")
   mask <- rep(TRUE,length=prod(spm$dim[1:3]))
   mask[stat < thresh] <- FALSE

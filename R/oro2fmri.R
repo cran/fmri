@@ -94,8 +94,10 @@ oro2fmri <- function(from, value=NULL, level=0.75, setmask=TRUE) {
 fmri2oro <- function(from, value=NULL, verbose=FALSE, reorient=FALSE,
                      call=NULL) {
   ## Convert "fmridata" S3 object to nifti() S4 object
-  require(oro.nifti)
-  nim <- nifti()
+  if(!requireNamespace("oro.nifti",quietly=TRUE)){
+     stop("package oro.nifti needed for this functionality, please install")
+  }
+  nim <- oro.nifti::nifti()
   nim@"sizeof_hdr" <- from$header$sizeofhdr
   nim@"data_type" <- from$header$datatype1
   nim@"db_name" <- from$header$dbname
@@ -160,7 +162,7 @@ fmri2oro <- function(from, value=NULL, verbose=FALSE, reorient=FALSE,
     if (is.null(call)) {
       call <- match.call()
     }
-    nim <- niftiExtensionToAuditTrail(nim, workingDirectory=getwd(),
+    nim <- oro.nifti::niftiExtensionToAuditTrail(nim, workingDirectory=getwd(),
                                       filename="fmridata", call=call)
   }
   return(nim)

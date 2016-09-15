@@ -29,12 +29,12 @@ sofw3D <- function(bw,kern,wght){
          PACKAGE="fmri")$fw
 }
 
-fdr <- function(pval,alpha=0.05){
-n <- length(pval)
-ind <- 1:n
-oind <- order(pval)
-nind <- length(ind[pval[oind] <= ind/n*alpha])
-oind[1:nind]
+fdr <- function(pval, alpha=0.05){
+  n <- length(pval)
+  ind <- 1:n
+  oind <- order(pval)
+  nind <- length(ind[pval[oind] <= ind/n*alpha])
+  oind[1:nind]
 }
 
 Varcor.gauss<-function(h,interv = 1){
@@ -261,7 +261,7 @@ thcorr3D <- function(bw,lag=rep(5,3)){
                     as.integer(lag[1]),
                     as.integer(lag[2]),
                     as.integer(lag[3]),
-                    PACKAGE="fmri",DUP=TRUE)$scorr
+                    PACKAGE="fmri")$scorr
   # bandwidth in FWHM in voxel units
   dim(scorr) <- lag
   scorr
@@ -286,7 +286,6 @@ mask1 <- .Fortran("lconnect",
                  integer(n),
                  logical(n),
                  mask=logical(n),
-                 DUP=TRUE,
                  PACKAGE="fmri")$mask
 dim(mask1) <- dm
 mask1
@@ -306,9 +305,9 @@ spatial.corr <- function(residuals){
                      as.integer(lags[1]),
                      as.integer(lags[2]),
                      as.integer(lags[3]),
-                     PACKAGE="fmri",DUP=TRUE)$scorr
+                     PACKAGE="fmri")$scorr
   dim(corr) <- lags                     
-  bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),upper=c(4,4,4),lag=lags,data=corr)$par  
+  bw <- optim(c(2,2,2),corrrisk,method="L-BFGS-B",lower=c(.25,.25,.25),upper=c(20,20,20),lag=lags,data=corr)$par  
   bw[bw<=.25] <- 0
   if( (max(bw) > 2.5 ) || (corr[lags[1],1,1]+corr[1,lags[2],1]+corr[1,1,lags[3]] >0.5) ) warning(paste("Local smoothness characterized by large bandwidth ",bw," check residuals for structure",collapse=","))
   rxyz <- c(resel(1,bw[1]), resel(1,bw[2]), resel(1,bw[3]))

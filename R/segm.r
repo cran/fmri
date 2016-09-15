@@ -95,7 +95,7 @@ segm3D <- function(y,weighted=TRUE,
                            as.integer(n3),
                            as.integer(nt),
                            var = double(n1*n2*n3),
-                           PACKAGE="fmri",DUP=TRUE)$var
+                           PACKAGE="fmri")$var
    vq <- varest0*sigma2
 #   plot(density(vq),main="Density of vq")
    if (is.null(wghts)) wghts <- c(1,1,1)
@@ -162,7 +162,7 @@ segm3D <- function(y,weighted=TRUE,
                        as.double(varest0),
                        varest=as.double(varest),
                        as.logical(restricted),
-                       PACKAGE="fmri",DUP=TRUE)[c("bi","thnew","hakt","segm","varest")]
+                       PACKAGE="fmri")[c("bi","thnew","hakt","segm","varest")]
       gc()
       theta <- array(tobj$thnew,dy[1:3]) 
       segm <- array(tobj$segm,dy[1:3])

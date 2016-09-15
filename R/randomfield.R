@@ -22,7 +22,11 @@ pvalue <- function(z,i,j,k,rx,ry,rz,type="norm",df=4,cone = 0) {
   }
   if (type == "t") {
     rho0 <- 1 - pt(z,df)
-    gdf <- if(df<=100) gamma((df+1)/2)/gamma(df/2) else sqrt(df/2)*(1-1/(4*df)) 
+    gdf <- numeric(length(df))
+    inddf <- (1:length(df))[df <= 100]
+    gdf[inddf] <- gamma((df[inddf]+1)/2)/gamma(df[inddf]/2)
+    gdf[-inddf] <- sqrt(df[-inddf]/2)*(1-1/(4*df[-inddf]))
+    #gdf <- if(df<=100) gamma((df+1)/2)/gamma(df/2) else sqrt(df/2)*(1-1/(4*df)) 
 # avoids overflow in gamma((df+1)/2), see Handbook of mathematical functions 5.11
     onepz2df <- (1+z*z/df)^(-0.5*(df-1))
     fgdf <- gdf /(df/2)^0.5* onepz2df
@@ -62,6 +66,7 @@ threshold <- function(p,i,j,k,rx,ry,rz,type="norm",df=4,step=.001,cone=0) {
   pxyz <- rx*ry*rz
   ind <- (1:length(pxyz))[pxyz==min(pxyz)][1]
   pv <- 1
+  # length(pxyz) > 1 after smoothing
   while (pv>p) {
      pv <- pvalue(x,i,j,k,rx[ind],ry[ind],rz[ind],type,df,cone=cone)
      x <- x+5*step
@@ -77,3 +82,4 @@ threshold <- function(p,i,j,k,rx,ry,rz,type="norm",df=4,step=.001,cone=0) {
   }
   thr
 }
+

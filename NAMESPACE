@@ -7,4 +7,24 @@ export(fmri.detrend)
 export(fmri.gui)
 export(plot.fmridata)
 export(oro2fmri,fmri2oro)
+export(fmri.designG,fmri.lmePar,fmri.metaPar)
+import(parallel,awsMethods,nlme)
+  importFrom("grDevices", "col2rgb", "dev.new", "gray", "grey",
+             "heat.colors", "hsv", "rainbow")
+  importFrom("graphics", "image", "layout", "legend", "lines", "par",
+             "plot", "polygon", "text", "title")
+  importFrom("methods", "getClassDef", "getValidity", "slot",
+             "slotNames")
+  importFrom("stats", "IQR", "convolve", "dchisq", "density", "dnorm",
+             "formula", "lm", "median", "optim", "pchisq", "pnorm",
+             "poly", "prcomp", "pt", "qchisq", "qt", "quantile", "rnorm",
+             "var", "vcov")
+  importFrom("utils", "flush.console", "setTxtProgressBar",
+             "txtProgressBar")
+importFrom(metafor,rma.uni)
+S3method(plot,fmridata)
+S3method(plot,fmrisegment)
+S3method(print,fmridata)
+S3method(summary,fmridata)
 useDynLib(fmri)
+

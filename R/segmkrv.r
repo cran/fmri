@@ -58,7 +58,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                  as.integer(n3),
                  as.integer(nt),
                  y=double(prod(dy)),
-                 PACKAGE="fmri",DUP=TRUE)$y
+                 PACKAGE="fmri")$y
    dim(y) <- dy
    if (length(dy)==d+1) {
       dim(y) <- dy[1:3]
@@ -91,7 +91,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                            as.integer(n2),
                            as.integer(n3),
                            as.integer(nt),
-                           PACKAGE="fmri",DUP=TRUE)$res                         
+                           PACKAGE="fmri")$res                         
   cat("\nfmri.smooth: first variance estimate","\n")
   vartheta0 <- .Fortran("ivar",as.double(res),
                            as.double(1),
@@ -101,7 +101,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                            as.integer(n3),
                            as.integer(nt),
                            var = double(n1*n2*n3),
-                           PACKAGE="fmri",DUP=TRUE)$var
+                           PACKAGE="fmri")$var
    sigma2 <- vartheta0/df #  thats the variance of  y  ... !!!! assuming zero mean
    sigma2 <- 1/sigma2 # need the inverse for easier computations
    dim(sigma2) <- dy
@@ -167,7 +167,7 @@ segm3Dkrv <- function(dy,df,hmax=NULL,ladjust=1,beta=0,graph=FALSE,h0=c(0,0,0)) 
                        varest=as.double(varest),
                        maxvalue=double(1),
                        minvalue=double(1),
-                       PACKAGE="fmri",DUP=TRUE)[c("bi","thnew","hakt","varest","maxvalue","minvalue")]
+                       PACKAGE="fmri")[c("bi","thnew","hakt","varest","maxvalue","minvalue")]
       gc()
       theta <- array(tobj$thnew,dy) 
       varest <- array(tobj$varest,dy)

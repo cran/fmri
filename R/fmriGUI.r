@@ -2,32 +2,32 @@
 # it is used to create your experimental design, to load your data and
 # to do the spm analysis and calculate the pvalues
 fmri.gui <- function() {
-        require(tcltk) || stop("install package tcltk!")
+        if(!requireNamespace("tcltk",quietly=TRUE)) stop("install package tcltk!")
 	
 	# functions
 
 	# select file, name saved in tclVar dataFile
 	selectFirstDataFile <- function(){
-		tclvalue(dataFileFirst) <- tkgetOpenFile(filetypes ="{{ANALYZE} {.IMG .Img .img .HDR .Hdr .hdr}} 
+	  tcltk::tclvalue(dataFileFirst) <- tcltk::tkgetOpenFile(filetypes ="{{ANALYZE} {.IMG .Img .img .HDR .Hdr .hdr}} 
 		{{AFNI} {.BRIK .Brik .brik .HEAD .Head .head}} {{NIFTI} {.NII .Nii .nii .HDR .Hdr .hdr}} {{All files} *}",title="Select Data")  
 	}	
 	selectDesignFileSave <- function(){
-        	tclvalue(designFile) <- tkgetSaveFile(filetypes ="{{Text} {.TXT .Txt .txt}} {{All files} *}",title="Save Design")  
+	  tcltk::tclvalue(designFile) <- tcltk::tkgetSaveFile(filetypes ="{{Text} {.TXT .Txt .txt}} {{All files} *}",title="Save Design")  
 	}
 	selectDesignFileLoad <- function(){
-        	tclvalue(designFile) <- tkgetOpenFile(filetypes ="{{Text} {.TXT .Txt .txt}} {{All files} *}",title="Load Design") 
+	  tcltk::tclvalue(designFile) <- tcltk::tkgetOpenFile(filetypes ="{{Text} {.TXT .Txt .txt}} {{All files} *}",title="Load Design") 
 	}
 
 	# view p values in 3D
 	results3D <- function(){
-		cat("significance level",as.numeric(tclvalue(slevel)))
-		plot(pvalue,type="3d",anatomic=extract.data(data)[,,,1],maxpvalue=as.numeric(tclvalue(slevel)))
+		cat("significance level",as.numeric(tcltk::tclvalue(slevel)))
+		plot(pvalue,type="3d",anatomic=extract.data(data)[,,,1],maxpvalue=as.numeric(tcltk::tclvalue(slevel)))
 	}
 	
 	# view p values as slices
 	resultsSlices <- function(){
-		cat("significance level",as.numeric(tclvalue(slevel)))
-		plot(pvalue,anatomic=extract.data(data)[,,,1],maxpvalue=as.numeric(tclvalue(slevel)))
+		cat("significance level",as.numeric(tcltk::tclvalue(slevel)))
+		plot(pvalue,anatomic=extract.data(data)[,,,1],maxpvalue=as.numeric(tcltk::tclvalue(slevel)))
 	}
 
 	# view segmentation results as slices
@@ -71,11 +71,11 @@ fmri.gui <- function() {
 		currPos = currPos + 2*length(durations)
 		textVar[currPos+1] = interscanInt # interscan intervals
 		textVar[currPos+2] = gap	
-		textVar[currPos+3] = as.character(tclvalue(rbDesign))
-		designFileOld = as.character(tclvalue(designFile))
+		textVar[currPos+3] = as.character(tcltk::tclvalue(rbDesign))
+		designFileOld = as.character(tcltk::tclvalue(designFile))
 		selectDesignFileSave()
-		if (tclvalue(designFile) != ""){
-			designFileText <- as.character(tclvalue(designFile))
+		if (tcltk::tclvalue(designFile) != ""){
+			designFileText <- as.character(tcltk::tclvalue(designFile))
 			help <- tolower(unlist(strsplit(designFileText,"")))
 			if (length(help)>3){
 				if (help[length(help)-3]!="."|| help[length(help)-2]!="t" || help[length(help)-1]!="x" || help[length(help)]!="t"){
@@ -91,18 +91,18 @@ fmri.gui <- function() {
 		else {  # no designfile chosen -> warning
 			print("Saving aborted")
 			onOk <- function(){
-					tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}	
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Information")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Please select a file, to be saved in",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Ok",command=onOk)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)	
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Information")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Please select a file, to be saved in",font="Arial 13",bg=wiasblue)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Ok",command=onOk)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)	
 		}	
 	}
 
@@ -111,24 +111,24 @@ fmri.gui <- function() {
 	loadDesignHelp <- function(){
 		if (nrStep>=1){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startDataLayout(loadPlan=1)
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to reload the design? 
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to reload the design? 
 			\n All progresses will be lost.",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startDataLayout(loadPlan=1)	
 	}
 	
@@ -137,24 +137,24 @@ fmri.gui <- function() {
 	createDesignHelp <- function(){
 		if (nrStep>=1){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startDataLayout(loadPlan=0)
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to recreate the design? 
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to recreate the design? 
 			\n All progresses will be lost.",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startDataLayout(loadPlan=0)	
 	}
 
@@ -166,17 +166,17 @@ fmri.gui <- function() {
 
 		selectDesignFileLoad()
 			
-		if (tclvalue(designFile)==""){
+		if (tcltk::tclvalue(designFile)==""){
 			nrStep <<- nrStep - 1
 		}
 		else {
-			designFileText <- as.character(tclvalue(designFile))
+			designFileText <- as.character(tcltk::tclvalue(designFile))
 			text = readChar(designFileText,1000) # read file
 			designData = unlist(strsplit(text,"\n\n")) # delete "\n\n"
 			designData[length(designData)] = strsplit(designData[length(designData)],"\n") # delete last "\n"
 			scanspS <<- as.numeric(designData[1]) # number of scans
 			interscanInt <<- as.numeric(designData[length(designData)-1]) # interscan intervals
-			tclvalue(rbDesign) <<- as.character(designData[length(designData)])
+			tcltk::tclvalue(rbDesign) <<- as.character(designData[length(designData)])
 			lengthOns = as.numeric(designData[2])
 			lengthDur = as.numeric(designData[2+lengthOns+1])
 			i=0
@@ -212,13 +212,13 @@ fmri.gui <- function() {
 				i = i + lengthCurr + 1
 				textDur[loops] = textCurr
 			}
-			tclvalue(rbDesign) <<- as.character(designData[length(designData)])
+			tcltk::tclvalue(rbDesign) <<- as.character(designData[length(designData)])
 			print("Loading completed")
 			#Print read in design for control		
 			text1 = paste("Interscan intervals",":",interscanInt)
 			text2 = paste("Scans per session",":",scanspS)
 			text3 = paste("Number of conditions",":",nrCond)
-			text4 = paste("Design in",":",as.character(tclvalue(rbDesign)))	
+			text4 = paste("Design in",":",as.character(tcltk::tclvalue(rbDesign)))	
 			print(text1)
 			print(text2)
 			print(text3)
@@ -241,49 +241,49 @@ fmri.gui <- function() {
 	createDesign <- function(){	
 		# new window
 		if(.Platform$OS.type == "windows") flush.console()
-    		base.design <- tktoplevel(bg=wiasblue)
-    		tkwm.title(base.design, "FMRI Analysis - Design Definition")
+    		base.design <- tcltk::tktoplevel(bg=wiasblue)
+    		tcltk::tkwm.title(base.design, "FMRI Analysis - Design Definition")
 	
 		# functions
 			
 		# quits design window
 		design.quit <- function(...){
 			onYes <- function(){
-				tkdestroy(base.design)
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(base.design)
+			  tcltk::tkdestroy(ttWarning)
 				nrStep <<- nrStep-1
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to quit the design definition? ",
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to quit the design definition? ",
 			font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)	
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)	
     		}
 	
 		# startDataHelp is called after defining the last condition
 		startDataHelp <- function(){
-			tkdestroy(base.design)
+		  tcltk::tkdestroy(base.design)
 			startData()
 		}
 		
 		# condition attributes defined here
 		# called from design.create
 		design.conditions <- function(){
-			tkdestroy(frame4)
-			n.comp = as.numeric(tclvalue(nrCondTc))
+		  tcltk::tkdestroy(frame4)
+			n.comp = as.numeric(tcltk::tclvalue(nrCondTc))
 			globali = 0			
 		
-			frame5 <- tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
+			frame5 <- tcltk::tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
 
 			# functions
 				
@@ -294,9 +294,9 @@ fmri.gui <- function() {
 				globali <<- globali+1
 				# conditon data read in
 				readCond <- function(){					
-					durationsTc[globali] <<- tclvalue(currDur)
-					onsetsTc[globali] <<- tclvalue(currOnset)	
-					namesTc[globali] <<- tclvalue(currName)			
+					durationsTc[globali] <<- tcltk::tclvalue(currDur)
+					onsetsTc[globali] <<- tcltk::tclvalue(currOnset)	
+					namesTc[globali] <<- tcltk::tclvalue(currName)			
 					nextCondition()
 				}
 				
@@ -313,19 +313,19 @@ fmri.gui <- function() {
 				}
 
 				# frame for the option to save the design
-				OkButton <- tkbutton(frame5,text="Ok",font="Arial 12",command=startDataHelp2,bg = wiaslightblue)
-				QuitButton <- tkbutton(frame5, text = "Quit",font="Arial 12", command = design.quit, bg = wiaslightblue)
-				SaveButton <-tkbutton(frame5, text = "Save",font="Arial 12", bg = wiaslightblue, command = saveDesign2)
+				OkButton <- tcltk::tkbutton(frame5,text="Ok",font="Arial 12",command=startDataHelp2,bg = wiaslightblue)
+				QuitButton <- tcltk::tkbutton(frame5, text = "Quit",font="Arial 12", command = design.quit, bg = wiaslightblue)
+				SaveButton <-tcltk::tkbutton(frame5, text = "Save",font="Arial 12", bg = wiaslightblue, command = saveDesign2)
 				
 				condition.next <- function(){
-					durationsTc[globali] <<- tclvalue(currDur)
-					onsetsTc[globali] <<- tclvalue(currOnset)
-					namesTc[globali] <<- tclvalue(currName)	
+					durationsTc[globali] <<- tcltk::tclvalue(currDur)
+					onsetsTc[globali] <<- tcltk::tclvalue(currOnset)
+					namesTc[globali] <<- tcltk::tclvalue(currName)	
 					
 					#Interscan intervals, number of scans and number of conditions saved as numerics		
-					interscanInt <<- as.numeric(tclvalue(interscanIntTc))
-					scanspS <<- as.numeric(tclvalue(scanspSTc))
-					nrCond <<- as.numeric(tclvalue(nrCondTc))	
+					interscanInt <<- as.numeric(tcltk::tclvalue(interscanIntTc))
+					scanspS <<- as.numeric(tcltk::tclvalue(scanspSTc))
+					nrCond <<- as.numeric(tcltk::tclvalue(nrCondTc))	
 					nrCondCurr <- nrCond
 					# help vars				
 					onsetsHelp <- list()
@@ -401,44 +401,44 @@ fmri.gui <- function() {
 						print(onsets)
 					}
 				}	
-				currOnset <- tclVar()
-				currDur <- tclVar()
-				currName <- tclVar("Condition Name")
+				currOnset <- tcltk::tclVar()
+				currDur <- tcltk::tclVar()
+				currName <- tcltk::tclVar("Condition Name")
 				labelText = paste("Condition","",globali)
-				condLabel  <- tklabel(tkCurr,text = labelText,bg=wiasblue,width=20,font="Arial 12 bold")	
-				nameLabel <- tklabel(tkCurr,text="Name",bg=wiasblue,font="Arial 12 bold")	
-				onsetsLabel <- tklabel(tkCurr,text="Onset times",bg=wiasblue,font="Arial 12 bold")	
-				durationsLabel <- tklabel(tkCurr,text="Duration",bg=wiasblue,font="Arial 12 bold")
-				nameEntry = tkentry(tkCurr,textvariable=currName,width=25,bg="#ffffff")
-				onsetsEntry = tkentry(tkCurr,textvariable=currOnset,width=25,bg="#ffffff")
-				durationsEntry = tkentry(tkCurr,textvariable=currDur,width=25,bg="#ffffff")
-				cOkB <- tkbutton(tkCurr,text="Next Condition",width=15,command=readCond,bg=wiaslightblue)
-				tkgrid(tkCurr,sticky="ew")		
+				condLabel  <- tcltk::tklabel(tkCurr,text = labelText,bg=wiasblue,width=20,font="Arial 12 bold")	
+				nameLabel <- tcltk::tklabel(tkCurr,text="Name",bg=wiasblue,font="Arial 12 bold")	
+				onsetsLabel <- tcltk::tklabel(tkCurr,text="Onset times",bg=wiasblue,font="Arial 12 bold")	
+				durationsLabel <- tcltk::tklabel(tkCurr,text="Duration",bg=wiasblue,font="Arial 12 bold")
+				nameEntry = tcltk::tkentry(tkCurr,textvariable=currName,width=25,bg="#ffffff")
+				onsetsEntry = tcltk::tkentry(tkCurr,textvariable=currOnset,width=25,bg="#ffffff")
+				durationsEntry = tcltk::tkentry(tkCurr,textvariable=currDur,width=25,bg="#ffffff")
+				cOkB <- tcltk::tkbutton(tkCurr,text="Next Condition",width=15,command=readCond,bg=wiaslightblue)
+				tcltk::tkgrid(tkCurr,sticky="ew")		
 				if (globali < n.comp){
-					tkgrid(condLabel,nameLabel,nameEntry,padx=10,pady=10)
-					tkgrid(onsetsLabel,onsetsEntry,padx=10,pady=10)	
-					tkgrid(durationsLabel,durationsEntry,cOkB,padx=10,pady=10)
-					tkgrid.configure(onsetsLabel,column=1)
-					tkgrid.configure(onsetsEntry,column=2)
-					tkgrid.configure(durationsLabel,column=1)
-					tkgrid.configure(durationsEntry,column=2)
-					tkgrid.configure(cOkB,column=3)
+				  tcltk::tkgrid(condLabel,nameLabel,nameEntry,padx=10,pady=10)
+				  tcltk::tkgrid(onsetsLabel,onsetsEntry,padx=10,pady=10)	
+				  tcltk::tkgrid(durationsLabel,durationsEntry,cOkB,padx=10,pady=10)
+				  tcltk::tkgrid.configure(onsetsLabel,column=1)
+				  tcltk::tkgrid.configure(onsetsEntry,column=2)
+				  tcltk::tkgrid.configure(durationsLabel,column=1)
+				  tcltk::tkgrid.configure(durationsEntry,column=2)
+				  tcltk::tkgrid.configure(cOkB,column=3)
 				}
 				if (globali == n.comp){
-					tkgrid(condLabel,nameLabel,nameEntry,padx=10,pady=10)
-					tkgrid(onsetsLabel,onsetsEntry,padx=10,pady=10)	
-					tkgrid(durationsLabel,durationsEntry,padx=10,pady=10)
-					tkgrid.configure(onsetsLabel,column=1)
-					tkgrid.configure(onsetsEntry,column=2)
-					tkgrid.configure(durationsLabel,column=1)
-					tkgrid.configure(durationsEntry,column=2)
-					tkgrid(OkButton,QuitButton,SaveButton,padx=10,pady=10)
-					tkgrid(frame5)	
+				  tcltk::tkgrid(condLabel,nameLabel,nameEntry,padx=10,pady=10)
+				  tcltk::tkgrid(onsetsLabel,onsetsEntry,padx=10,pady=10)	
+				  tcltk::tkgrid(durationsLabel,durationsEntry,padx=10,pady=10)
+				  tcltk::tkgrid.configure(onsetsLabel,column=1)
+				  tcltk::tkgrid.configure(onsetsEntry,column=2)
+				  tcltk::tkgrid.configure(durationsLabel,column=1)
+				  tcltk::tkgrid.configure(durationsEntry,column=2)
+				  tcltk::tkgrid(OkButton,QuitButton,SaveButton,padx=10,pady=10)
+				  tcltk::tkgrid(frame5)	
 				}				
 			}
 	
 			# condition window created
-			tkCurr = tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)		
+			tkCurr = tcltk::tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)		
 				
 			nextCondition()	# next condition started -> first line for condition attributes created 
 		}		
@@ -446,41 +446,41 @@ fmri.gui <- function() {
 		# frames in the design window (base.design)
 	
 		# frame for defining the time between scans and the number of scans
-		frame1D <- tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
-		objIntervalL <- tklabel(frame1D,text="Interscan Intervals",bg=wiasblue,font="Arial 12 bold")	
-		objIntervalE <-	tkentry(frame1D,textvariable=interscanIntTc,width=6,bg="#ffffff")
-		tkgrid(objIntervalL,objIntervalE,padx=10,pady=10)
-		objscanspSTcL <- tklabel(frame1D,text="Scans per Session",bg=wiasblue,font="Arial 12 bold")	
-		objscanspSTcE <- tkentry(frame1D,textvariable=scanspSTc,width=6,bg="#ffffff")
-		tkgrid(objscanspSTcL,objscanspSTcE,padx=10,pady=10)
-		tkgrid(frame1D,sticky="ew")
+		frame1D <- tcltk::tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
+		objIntervalL <- tcltk::tklabel(frame1D,text="Interscan Intervals",bg=wiasblue,font="Arial 12 bold")	
+		objIntervalE <-	tcltk::tkentry(frame1D,textvariable=interscanIntTc,width=6,bg="#ffffff")
+		tcltk::tkgrid(objIntervalL,objIntervalE,padx=10,pady=10)
+		objscanspSTcL <- tcltk::tklabel(frame1D,text="Scans per Session",bg=wiasblue,font="Arial 12 bold")	
+		objscanspSTcE <- tcltk::tkentry(frame1D,textvariable=scanspSTc,width=6,bg="#ffffff")
+		tcltk::tkgrid(objscanspSTcL,objscanspSTcE,padx=10,pady=10)
+		tcltk::tkgrid(frame1D,sticky="ew")
 		
 		# frame for the choice of designing in scans or seconds
-		frame2D <- tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
-		rbD1 <- tkradiobutton(frame2D,bg=wiasblue)
-		rbD2 <- tkradiobutton(frame2D,bg=wiasblue)
-		tkconfigure(rbD1,variable=rbDesign,value="scans",bg=wiasblue)
-		tkconfigure(rbD2,variable=rbDesign,value="seconds",bg=wiasblue)
-		tkgrid(tklabel(frame2D,text="Time unit (design) in scans or seconds?",bg = wiasblue,font="Arial 12 bold"))
-		tkgrid(tklabel(frame2D,text="scans ",bg = wiaslightblue,font="Arial 12"),rbD1,
-		       tklabel(frame2D,text="seconds ",bg = wiaslightblue,font="Arial 12"), rbD2, padx=10,pady=10)
-		tkgrid(frame2D,sticky="ew")	
+		frame2D <- tcltk::tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
+		rbD1 <- tcltk::tkradiobutton(frame2D,bg=wiasblue)
+		rbD2 <- tcltk::tkradiobutton(frame2D,bg=wiasblue)
+		tcltk::tkconfigure(rbD1,variable=rbDesign,value="scans",bg=wiasblue)
+		tcltk::tkconfigure(rbD2,variable=rbDesign,value="seconds",bg=wiasblue)
+		tcltk::tkgrid(tcltk::tklabel(frame2D,text="Time unit (design) in scans or seconds?",bg = wiasblue,font="Arial 12 bold"))
+		tcltk::tkgrid(tcltk::tklabel(frame2D,text="scans ",bg = wiaslightblue,font="Arial 12"),rbD1,
+		              tcltk::tklabel(frame2D,text="seconds ",bg = wiaslightblue,font="Arial 12"), rbD2, padx=10,pady=10)
+		tcltk::tkgrid(frame2D,sticky="ew")	
 	
 		# frame for appointing the number of conditions
-		frame3 <- tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
-		objNrCondL <- tklabel(frame3,text="Number of conditions",bg=wiasblue,font="Arial 12 bold")	
-		objNrCondE <- tkentry(frame3,textvariable=nrCondTc,width=6,bg="#ffffff")
-		tkgrid(objNrCondL,objNrCondE,padx=10,pady=10)
-		tkgrid(frame3,sticky="ew")
+		frame3 <- tcltk::tkframe(base.design,relief="groove",borderwidth=2,bg=wiasblue)
+		objNrCondL <- tcltk::tklabel(frame3,text="Number of conditions",bg=wiasblue,font="Arial 12 bold")	
+		objNrCondE <- tcltk::tkentry(frame3,textvariable=nrCondTc,width=6,bg="#ffffff")
+		tcltk::tkgrid(objNrCondL,objNrCondE,padx=10,pady=10)
+		tcltk::tkgrid(frame3,sticky="ew")
 	  	
 		# frame for "Ok" and Quit" button
 		# pushing the "Ok" button will start design.condition (see above)
 		# frame quitted after defining all conditions
-    		frame4 <- tkframe(base.design, borderwidth = 2, bg = wiasblue)
-    		ok.but<- tkbutton(frame4, text = "Ok", bg = wiaslightblue, command = design.conditions)
-    		q.but <- tkbutton(frame4, text = "Quit", command = design.quit, bg = wiaslightblue)
-    		tkgrid(ok.but, q.but, padx = 30, pady = 20)
-    		tkgrid(frame4)
+    		frame4 <- tcltk::tkframe(base.design, borderwidth = 2, bg = wiasblue)
+    		ok.but<- tcltk::tkbutton(frame4, text = "Ok", bg = wiaslightblue, command = design.conditions)
+    		q.but <- tcltk::tkbutton(frame4, text = "Quit", command = design.quit, bg = wiaslightblue)
+    		tcltk::tkgrid(ok.but, q.but, padx = 30, pady = 20)
+    		tcltk::tkgrid(frame4)
 
 	}
 
@@ -497,14 +497,14 @@ fmri.gui <- function() {
 	# is called from startDataHelp
         # it adds the graphical elements for the data choice	
 	startData <- function(){	
-		tkgrid(objFileL,pady = 10, padx = 10,sticky="ew")
-		tkgrid(frameData1)
-		tkgrid(objFileB1,objFileE1,pady = 10, padx = 10)
-		tkgrid(frameData2)
-		tkgrid(objFileLoad,helpButton2,pady=10,padx=15)
-		tkgrid(frameData4)
-		tkgrid(helpLabel1)	
-		tkgrid(frameData3,sticky="ew")		
+	  tcltk::tkgrid(objFileL,pady = 10, padx = 10,sticky="ew")
+	  tcltk::tkgrid(frameData1)
+	  tcltk::tkgrid(objFileB1,objFileE1,pady = 10, padx = 10)
+	  tcltk::tkgrid(frameData2)
+	  tcltk::tkgrid(objFileLoad,helpButton2,pady=10,padx=15)
+	  tcltk::tkgrid(frameData4)
+	  tcltk::tkgrid(helpLabel1)	
+	  tcltk::tkgrid(frameData3,sticky="ew")		
 	}
 
 	# startContrastHelp is the prefixed function of startContrast
@@ -512,24 +512,24 @@ fmri.gui <- function() {
 	startContrastHelp <- function(){
 		if (nrStep>=2){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startContrast()
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to readjust the mask? \n 
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to readjust the mask? \n 
 			                       All subsequent steps have to be redone.", font="Arial 13", bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startContrast()	
 
 	}
@@ -538,19 +538,19 @@ fmri.gui <- function() {
 	startContrast <- function(){
 		layoutFunction(2)	
 		
-		quantile = as.numeric(tclvalue(quantileTc))
+		quantile = as.numeric(tcltk::tclvalue(quantileTc))
 		anatomicHelp <- extract.data(data)[,,,1]
 		anatomicHelp[anatomicHelp<quantile] <- 0
 		data$mask <<- anatomicHelp>0
 	
-		tkgrid(objcontrastL,padx=10,pady=10)
-		tkgrid(frameContrast1)	
-		tkconfigure(objcontrastE,state="normal")
-		tkgrid(objcontrastE,objcontrastB,helpButton4,padx=10,pady=10)
-		tkgrid(frameContrast2)	
+		tcltk::tkgrid(objcontrastL,padx=10,pady=10)
+		tcltk::tkgrid(frameContrast1)	
+		tcltk::tkconfigure(objcontrastE,state="normal")
+		tcltk::tkgrid(objcontrastE,objcontrastB,helpButton4,padx=10,pady=10)
+		tcltk::tkgrid(frameContrast2)	
 		
 		if (nrCond==1){
-			tkconfigure(objcontrastE,state="readonly")
+		  tcltk::tkconfigure(objcontrastE,state="readonly")
 			startEstimationHelp()			
 		}
 		
@@ -561,24 +561,24 @@ fmri.gui <- function() {
 	startEstimationHelp <- function(){
 		if (nrStep>=3){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startEstimation()
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to change the contrast? \n 
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to change the contrast? \n 
 			                       All subsequent steps have to be redone.",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startEstimation()	
 	}
 
@@ -587,8 +587,8 @@ fmri.gui <- function() {
 	startEstimation <- function(){
 		layoutFunction(3)
 		
-		tkgrid(helpLabel2)
-		tkgrid(frameContrast3,stick="ew")
+	  tcltk::tkgrid(helpLabel2)
+	  tcltk::tkgrid(frameContrast3,stick="ew")
 		# main evaluations:
 		# 1.) data <- read.AFNI(tclvalue(dataFile))	
 		# 2.) hrfCurr = fmri.stimulus(nrSc,onsCurrCond,durCurrCond,intSc)
@@ -599,14 +599,14 @@ fmri.gui <- function() {
 		mycontrast <<- c()
 
 		if (nrCond==1){
-			tclvalue(mycontrastTc) = 1
+		  tcltk::tclvalue(mycontrastTc) = 1
 			mycontrast[1]<<-1
 		}
 		else {			
 			mycontrastHelp <- list()
 			contrSplVec <- c(0)	
 	
-			mycontrastHelp <- as.vector(tclvalue(mycontrastTc))
+			mycontrastHelp <- as.vector(tcltk::tclvalue(mycontrastTc))
 			allCharsC = unlist(strsplit(mycontrastHelp,""))
 			sepC = " "		
 			for (j in 1:length(allCharsC)){
@@ -639,7 +639,7 @@ fmri.gui <- function() {
 			}
 
 			if (i==1){
-				if (as.character(tclvalue(rbDesign))=="scans"){
+				if (as.character(tcltk::tclvalue(rbDesign))=="scans"){
 					hrf = fmri.stimulus(scanspS,onsCurrCond,durCurrCond,interscanInt)			
 				}
 				else { # secs
@@ -647,7 +647,7 @@ fmri.gui <- function() {
 				}
 			}
 			else {
-				if (as.character(tclvalue(rbDesign))=="scans"){
+				if (as.character(tcltk::tclvalue(rbDesign))=="scans"){
 					hrfCurr = fmri.stimulus(scanspS,onsCurrCond,durCurrCond,interscanInt)
 				}
 				else {	# secs
@@ -671,19 +671,19 @@ fmri.gui <- function() {
 				
 		
 		delta = data$delta
-		tclvalue(hMax) = round(as.numeric(10/min(delta)),2)
-		tclvalue(slevel) = 0.05
-                tkgrid(objhSignlevel,objhSignlevelE,padx=13,pady=10)
-		tkgrid(frameSigniflevel,sticky="ew");	
+		tcltk::tclvalue(hMax) = round(as.numeric(10/min(delta)),2)
+		tcltk::tclvalue(slevel) = 0.05
+		tcltk::tkgrid(objhSignlevel,objhSignlevelE,padx=13,pady=10)
+		tcltk::tkgrid(frameSigniflevel,sticky="ew");	
 
-		tkgrid(smoothChoiceL,padx=10,pady=10)
-		tkgrid(frameSmoothChoice1)
-		tkgrid(objhMaxL,objhMaxE,objButtonSmooth,objButtonSegmentation,padx=13,pady=10)
-		tkgrid(frameSmoothChoice2)
-		tkgrid(smoothChoiceB2,helpButton5,padx=15,pady=10)
-		tkgrid(frameSmoothChoice4)
-		tkgrid(helpLabel4)
-		tkgrid(frameSmoothChoice3,sticky="ew")		
+		tcltk::tkgrid(smoothChoiceL,padx=10,pady=10)
+		tcltk::tkgrid(frameSmoothChoice1)
+		tcltk::tkgrid(objhMaxL,objhMaxE,objButtonSmooth,objButtonSegmentation,padx=13,pady=10)
+		tcltk::tkgrid(frameSmoothChoice2)
+		tcltk::tkgrid(smoothChoiceB2,helpButton5,padx=15,pady=10)
+		tcltk::tkgrid(frameSmoothChoice4)
+		tcltk::tkgrid(helpLabel4)
+		tcltk::tkgrid(frameSmoothChoice3,sticky="ew")		
 	}
 		
 	# contWithoutHelp is the prefixed function of contWithout
@@ -691,24 +691,24 @@ fmri.gui <- function() {
 	contWithoutHelp <- function(){
 		if (nrStep>=4){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				contWithout()
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to continue? \n 
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to continue? \n 
 			                       The p values will get recalculated.",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else contWithout()	
 	}
 
@@ -724,8 +724,8 @@ fmri.gui <- function() {
 #		tclvalue(slevel) = 0.05
 #                tkgrid(objhSignlevel,objhSignlevelE,padx=10,pady=10)
 #		tkgrid(frameSigniflevel,sticky="ew");	
-                tkgrid(objResultsL,objResultsB1,objResultsB2,helpButton6,padx=20,pady=10)
-		tkgrid(frameResults,sticky="ew");	
+		tcltk::tkgrid(objResultsL,objResultsB1,objResultsB2,helpButton6,padx=20,pady=10)
+		tcltk::tkgrid(frameResults,sticky="ew");	
 	}
 
 	# startSmoothingHelp is the prefixed function of startSmoothing
@@ -733,24 +733,24 @@ fmri.gui <- function() {
 	startSmoothingHelp <- function(){
 		if (nrStep>=4){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startSmoothing()
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to (re)
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to (re)
 			             smooth the parametric map? \n The p values will get recalculated, too.", font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startSmoothing()	
 	}
 
@@ -760,7 +760,7 @@ fmri.gui <- function() {
 		layoutFunction(4)
 			
 		# smoothing of the parametric map and reporting about its success
-		spmsmooth <<- fmri.smooth(spm,hmax=as.numeric(tclvalue(hMax)))
+		spmsmooth <<- fmri.smooth(spm,hmax=as.numeric(tcltk::tclvalue(hMax)))
 					
 		print("Parametric map adaptively smoothed")
 	        smoothed = TRUE
@@ -773,8 +773,8 @@ fmri.gui <- function() {
 #		tclvalue(slevel) = 0.05
 #                tkgrid(objhSignlevel,objhSignlevelE,padx=10,pady=10)
 #		tkgrid(frameSigniflevel,sticky="ew");	
-                tkgrid(objResultsL,objResultsB1,objResultsB2,padx=20,pady=10)
-		tkgrid(frameResults,sticky="ew");				
+		tcltk::tkgrid(objResultsL,objResultsB1,objResultsB2,padx=20,pady=10)
+		tcltk::tkgrid(frameResults,sticky="ew");				
 	}
 
 	# startSegmentationHelp is the prefixed function of startSegmentation
@@ -782,23 +782,23 @@ fmri.gui <- function() {
 	startSegmentationHelp <- function(){
 		if (nrStep>=4){		
 			onYes <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 				startSegmentation()
 			}	
 			onNo <- function(){
-				tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Affirmation")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Are you sure you want to (re)segment the parametric map? \n", font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-			warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,warningB2,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Affirmation")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to (re)segment the parametric map? \n", font="Arial 13",bg=wiasblue)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+			warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)
 		}  else startSegmentation()	
 	}
 
@@ -808,15 +808,16 @@ fmri.gui <- function() {
 		layoutFunction(4)
 			
 		# smoothing of the parametric map and reporting about its success
-		cat("alpha =",as.numeric(tclvalue(slevel)),"\n")
-		spmsegment <<- fmri.smooth(spm,hmax=as.numeric(tclvalue(hMax)), adaptation="segment",alpha=as.numeric(tclvalue(slevel)))
+		cat("alpha =",as.numeric(tcltk::tclvalue(slevel)),"\n")
+		spmsegment <<- fmri.smooth(spm,hmax=as.numeric(tcltk::tclvalue(hMax)), adaptation="segment",
+		                           alpha=as.numeric(tcltk::tclvalue(slevel)))
 					
 		print("Parametric map adaptively segmented")
 	        segmented = TRUE
 	
 		# choice to view the p-values in 3d or as slices
-		tkgrid(objResultsL,objResultsB3,padx=10,pady=10)
-		tkgrid(frameResults,sticky="ew");				
+	        tcltk::tkgrid(objResultsL,objResultsB3,padx=10,pady=10)
+	        tcltk::tkgrid(frameResults,sticky="ew");				
 	}
 
 	# the layoutFunction handles the layout of the whole program
@@ -824,38 +825,38 @@ fmri.gui <- function() {
 	# the layout is constructed depending on the current step
 	layoutFunction <- function(currStep){
 		if (nrStep>=1 && currStep<=1){	
-			tkgrid.forget(frameData1)
-			tkgrid.forget(frameData2)
-			tkgrid.forget(frameData4)
-			tkgrid.forget(frameData3)
-			tkgrid.forget(helpLabel1)
+		  tcltk::tkgrid.forget(frameData1)
+		  tcltk::tkgrid.forget(frameData2)
+		  tcltk::tkgrid.forget(frameData4)
+		  tcltk::tkgrid.forget(frameData3)
+		  tcltk::tkgrid.forget(helpLabel1)
 		}	
 		
 		if (nrStep>=1.5 && currStep<=1.5){
 			if (conform == 1){				
-				tkgrid.forget(frameMask1)
-				tkgrid.forget(frameMask2)
-				tkgrid.forget(frameMask4)
-				tkgrid.forget(helpLabel5)
-				tkgrid.forget(frameMask3)			
+			  tcltk::tkgrid.forget(frameMask1)
+			  tcltk::tkgrid.forget(frameMask2)
+			  tcltk::tkgrid.forget(frameMask4)
+			  tcltk::tkgrid.forget(helpLabel5)
+			  tcltk::tkgrid.forget(frameMask3)			
 			}		
 		}
 		if (nrStep>=2 && currStep<=2){				
-			tkgrid.forget(frameContrast1)	
-			tkgrid.forget(frameContrast2)
-			tkgrid.forget(helpLabel2)
-			tkgrid.forget(frameContrast3)	
+		  tcltk::tkgrid.forget(frameContrast1)	
+		  tcltk::tkgrid.forget(frameContrast2)
+		  tcltk::tkgrid.forget(helpLabel2)
+		  tcltk::tkgrid.forget(frameContrast3)	
 		}
 		if (nrStep>=3 && currStep<=3){
-			tkgrid.forget(frameSmoothChoice1)
-			tkgrid.forget(frameSmoothChoice2)
-			tkgrid.forget(frameSmoothChoice4)
-			tkgrid.forget(helpLabel4)
-			tkgrid.forget(frameSmoothChoice3)
+		  tcltk::tkgrid.forget(frameSmoothChoice1)
+		  tcltk::tkgrid.forget(frameSmoothChoice2)
+		  tcltk::tkgrid.forget(frameSmoothChoice4)
+		  tcltk::tkgrid.forget(helpLabel4)
+		  tcltk::tkgrid.forget(frameSmoothChoice3)
 		}
 		if (nrStep>=4 && currStep<=4){
-			tkgrid.forget(frameResults)			
-			tkgrid.forget(frameSigniflevel)			
+		  tcltk::tkgrid.forget(frameResults)			
+		  tcltk::tkgrid.forget(frameSigniflevel)			
 		}
 
 		nrStep <<- currStep		
@@ -889,7 +890,7 @@ fmri.gui <- function() {
 		widthsvec[nrcol+1] = 0.5
 		layout(mat,widthsvec)
 		par(mar=c(0.5,0.5,0.5,0.5))
-		for (i in 1:ddim[3]) image(ttt[,,i,1]>as.numeric(tclvalue(quantileTc)),yaxt="n",xaxt="n")
+		for (i in 1:ddim[3]) image(ttt[,,i,1]>as.numeric(tcltk::tclvalue(quantileTc)),yaxt="n",xaxt="n")
 		par(mar=c(5,5,3,1))
 		bwV = diff(range(ttt))/(length(ttt[,,,1])/1200)
 		d0 <- density(ttt[,,,1],bw=bwV)	
@@ -904,7 +905,7 @@ fmri.gui <- function() {
 		lines(d1,col=2)
 		lines(d2,col=3)
 		lines(d3,col=4)		
-		lines(c(as.numeric(tclvalue(quantileTc)),as.numeric(tclvalue(quantileTc))),range(d0$y),col=6)
+		lines(c(as.numeric(tcltk::tclvalue(quantileTc)),as.numeric(tcltk::tclvalue(quantileTc))),range(d0$y),col=6)
 		legend(0.55*max(d0$x),0.98*max(d0$y),c("Data","Centered 75% of data","Centered 50% of data",
 		"Centered 25% of data","Threshold line"),text.col=c(1,2,3,4,6),pch=c(1,1,1,1,1),col=c(1,2,3,4,6),title="Density of",cex=1.5)
 	}
@@ -912,42 +913,42 @@ fmri.gui <- function() {
 	# startAdjustHelp is the prefixed function of startAdjust
 	# it handles the gui for the case that the choice is renewed	
 	startAdjustHelp <- function(){
-		if (as.character(tclvalue(dataFileFirst))==""){
+		if (as.character(tcltk::tclvalue(dataFileFirst))==""){
 			onOk <- function(){
-					tkdestroy(ttWarning)
+			  tcltk::tkdestroy(ttWarning)
 			}	
-			ttWarning = tktoplevel(bg=wiasblue)
-			tkwm.title(ttWarning, "Information")
-			warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-			warningLabel = tklabel(warningFrame1,text="Please select the file, to be loaded, first.",font="Arial 13",bg=wiasblue)
-			warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-			warningB1 = tkbutton(warningFrame2,text="Ok",command=onOk)	
-			tkgrid(warningLabel)
-			tkgrid(warningB1,padx=10,pady=10)
-			tkgrid(warningFrame1)	
-			tkgrid(warningFrame2)				
+			ttWarning = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttWarning, "Information")
+			warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+			warningLabel = tcltk::tklabel(warningFrame1,text="Please select the file, to be loaded, first.",font="Arial 13",bg=wiasblue)
+			warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+			warningB1 = tcltk::tkbutton(warningFrame2,text="Ok",command=onOk)	
+			tcltk::tkgrid(warningLabel)
+			tcltk::tkgrid(warningB1,padx=10,pady=10)
+			tcltk::tkgrid(warningFrame1)	
+			tcltk::tkgrid(warningFrame2)				
 		}
 		else {	
 			if (nrStep>=1.5){		
 				onYes <- function(){
-					tkdestroy(ttWarning)
+				  tcltk::tkdestroy(ttWarning)
 					startAdjust()
 				}	
 				onNo <- function(){
-					tkdestroy(ttWarning)
+				  tcltk::tkdestroy(ttWarning)
 				}
-				ttWarning = tktoplevel(bg=wiasblue)
-				tkwm.title(ttWarning, "Affirmation")
-				warningFrame1 = tkframe(ttWarning,bg=wiasblue)
-				warningLabel = tklabel(warningFrame1,text="Are you sure you want to reload the data? 
+				ttWarning = tcltk::tktoplevel(bg=wiasblue)
+				tcltk::tkwm.title(ttWarning, "Affirmation")
+				warningFrame1 = tcltk::tkframe(ttWarning,bg=wiasblue)
+				warningLabel = tcltk::tklabel(warningFrame1,text="Are you sure you want to reload the data? 
 				\n All progresses despite design definition will be lost.",font="Arial 13",bg=wiasblue)
-				warningFrame2 = tkframe(ttWarning,bg=wiasblue)	
-				warningB1 = tkbutton(warningFrame2,text="Yes",command=onYes)
-				warningB2 = tkbutton(warningFrame2,text="No",command=onNo)	
-				tkgrid(warningLabel)
-				tkgrid(warningB1,warningB2,padx=10,pady=10)
-				tkgrid(warningFrame1)	
-				tkgrid(warningFrame2)
+				warningFrame2 = tcltk::tkframe(ttWarning,bg=wiasblue)	
+				warningB1 = tcltk::tkbutton(warningFrame2,text="Yes",command=onYes)
+				warningB2 = tcltk::tkbutton(warningFrame2,text="No",command=onNo)	
+				tcltk::tkgrid(warningLabel)
+				tcltk::tkgrid(warningB1,warningB2,padx=10,pady=10)
+				tcltk::tkgrid(warningFrame1)	
+				tcltk::tkgrid(warningFrame2)
 			}  else startAdjust()
 		}	
 	}
@@ -957,7 +958,7 @@ fmri.gui <- function() {
 	startAdjust <- function(){
 		layoutFunction(1.5)
 
-		dataFile = as.character(tclvalue(dataFileFirst))
+		dataFile = as.character(tcltk::tclvalue(dataFileFirst))
 		help <- tolower(unlist(strsplit(dataFile,"")))
 		help2 <- unlist(strsplit(dataFile,""))
 		nrChars <- length(help) # nchar(dataFile)		
@@ -982,7 +983,7 @@ fmri.gui <- function() {
 		dataTypeGlobal = dataType			
 
 		if (dataType=="AFNI"){
-			data <<- read.AFNI(as.character(tclvalue(dataFileFirst)))
+			data <<- read.AFNI(as.character(tcltk::tclvalue(dataFileFirst)))
 		}
 
 		if (dataType=="ANALYZE"){
@@ -1037,38 +1038,38 @@ fmri.gui <- function() {
 		}
 		
 		if (dataType=="NIFTI"){
-			data <<- read.NIFTI(as.character(tclvalue(dataFileFirst)))
+			data <<- read.NIFTI(as.character(tcltk::tclvalue(dataFileFirst)))
 		}
 		
 				
 		if (dataType=="unknown"){
 			print("The data type is unknown !!")
 			print("Please check your stated path or press 'help'.")
-			tkconfigure(objFileLoad,bg="#FF0000")
+			tcltk::tkconfigure(objFileLoad,bg="#FF0000")
 		}
 		else {
 			print(paste("Data loaded  ...  data type: ",dataTypeGlobal,sep=""))
 			if (data$dim[4]==scanspS){
 				print("Check conformity of data and design  ...  Ok")
-				tkconfigure(objFileLoad,bg=wiaslightblue)	
+			  tcltk::tkconfigure(objFileLoad,bg=wiaslightblue)	
 				conform <<- 1
 			}	
 			else {
 				print("Check conformity of data and design ... Don't Conform !!")
 				print("Please redefine the design or check the data.")
-				tkconfigure(objFileLoad,bg="#FF0000")
+				tcltk::tkconfigure(objFileLoad,bg="#FF0000")
 				conform <<- 0
 			}		
 			if (conform==1){
-				tclvalue(quantileTc) = round(quantile(extract.data(data),0.75),2)
-				tkgrid(maskLabel1,padx=10,pady=10,sticky="ew")
-				tkgrid(frameMask1)
-				tkgrid(maskLabel2,maskEntry,maskButton1,padx=10,pady=10)
-				tkgrid(frameMask2)
-				tkgrid(maskButton2,helpButton3,padx=15,pady=10,sticky="ew")
-				tkgrid(frameMask4)			
-				tkgrid(helpLabel5,sticky="ew")
-				tkgrid(frameMask3,sticky="ew")
+			  tcltk::tclvalue(quantileTc) = round(quantile(extract.data(data),0.75),2)
+			  tcltk::tkgrid(maskLabel1,padx=10,pady=10,sticky="ew")
+			  tcltk::tkgrid(frameMask1)
+			  tcltk::tkgrid(maskLabel2,maskEntry,maskButton1,padx=10,pady=10)
+			  tcltk::tkgrid(frameMask2)
+			  tcltk::tkgrid(maskButton2,helpButton3,padx=15,pady=10,sticky="ew")
+			  tcltk::tkgrid(frameMask4)			
+			  tcltk::tkgrid(helpLabel5,sticky="ew")
+			  tcltk::tkgrid(frameMask3,sticky="ew")
 			}			
 		}		
 	}
@@ -1085,18 +1086,18 @@ fmri.gui <- function() {
 	# depending on the current step (represented by i) a help window is created
 	helpFunction <- function(i){	
 			onQuit <- function(){
-				tkdestroy(ttHelp)
+			  tcltk::tkdestroy(ttHelp)
 			}
-			ttHelp = tktoplevel(bg=wiasblue)
-			tkwm.title(ttHelp, "Help")
-			helpFrame1 = tkframe(ttHelp,bg=wiasblue)
-			helpLabel = tklabel(helpFrame1,text=helptextVec[i],font="Arial 13",bg=wiasblue)
-			helpFrame2 = tkframe(ttHelp,bg=wiasblue)	
-			helpB1 = tkbutton(helpFrame2,text="Quit",command=onQuit)
-			tkgrid(helpLabel)
-			tkgrid(helpB1,padx=10,pady=10)
-			tkgrid(helpFrame1)	
-			tkgrid(helpFrame2)	
+			ttHelp = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttHelp, "Help")
+			helpFrame1 = tcltk::tkframe(ttHelp,bg=wiasblue)
+			helpLabel = tcltk::tklabel(helpFrame1,text=helptextVec[i],font="Arial 13",bg=wiasblue)
+			helpFrame2 = tcltk::tkframe(ttHelp,bg=wiasblue)	
+			helpB1 = tcltk::tkbutton(helpFrame2,text="Quit",command=onQuit)
+			tcltk::tkgrid(helpLabel)
+			tcltk::tkgrid(helpB1,padx=10,pady=10)
+			tcltk::tkgrid(helpFrame1)	
+			tcltk::tkgrid(helpFrame2)	
 	}
 	
 	# quitAll quits the fmriGUI
@@ -1106,26 +1107,26 @@ fmri.gui <- function() {
 
 		# quit the fmriGUI with maintaining the local workspace  
 		quitWM <- function(){
-			tkdestroy(ttQuit)
+		  tcltk::tkdestroy(ttQuit)
 			if (nrStep>=3)   assign("fmriDesignMatrix",x,inherits=TRUE)
 			if (nrStep>=1.5) assign("fmriData",data,inherits=TRUE)
                         if (nrStep>=3)   assign("fmriSpm",spm,inherits=TRUE)
                         if (nrStep>=4 && smoothed)   assign("fmriSpmsmooth",spmsmooth,inherits=TRUE)
                         if (nrStep>=4 && segmented)   assign("fmriSpmsegment",spmsegment,inherits=TRUE)
                         if (nrStep>=4 && !segmented)   assign("fmriPvalue",pvalue,inherits=TRUE)
-			tkdestroy(base.aws)	
+		  tcltk::tkdestroy(base.aws)	
 		}
 	
 		# quit the fmriGUI without maintaining the local workspace	
 		quitWOM <- function(){
-			tkdestroy(ttQuit)
-			tkdestroy(base.aws)			
+		  tcltk::tkdestroy(ttQuit)
+		  tcltk::tkdestroy(base.aws)			
 		}
 
 		# export the local workspace to a file 
 		functSave <- function(){
-			text = unlist(strsplit(as.character(tclvalue(dataFileFirst)),""))
-			if (as.character(tclvalue(dataFileFirst))!=""){
+			text = unlist(strsplit(as.character(tcltk::tclvalue(dataFileFirst)),""))
+			if (as.character(tcltk::tclvalue(dataFileFirst))!=""){
 				index = length(text)
 				ind = -1 			
 				while (index>-1 && ind==-1){
@@ -1151,39 +1152,39 @@ fmri.gui <- function() {
 
 		# cancel quit
 		functCancel <- function(){
-			tkdestroy(ttQuit)
+		  tcltk::tkdestroy(ttQuit)
 		}
 
 		# helpmenu for this window
 		functHelp <- function(){
 			onQuit <- function(){
-				tkdestroy(ttHelp)
+			  tcltk::tkdestroy(ttHelp)
 			}
-			ttHelp = tktoplevel(bg=wiasblue)
-			tkwm.title(ttHelp, "Help")
-			helpFrame1 = tkframe(ttHelp,bg=wiasblue)
-			helpLabel = tklabel(helpFrame1,text=helptextVec[7],font="Arial 13",bg=wiasblue)
-			helpFrame2 = tkframe(ttHelp,bg=wiasblue)	
-			helpB1 = tkbutton(helpFrame2,text="Quit",command=onQuit)
-			tkgrid(helpLabel)
-			tkgrid(helpB1,padx=10,pady=10)
-			tkgrid(helpFrame1)	
-			tkgrid(helpFrame2)
+			ttHelp = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttHelp, "Help")
+			helpFrame1 = tcltk::tkframe(ttHelp,bg=wiasblue)
+			helpLabel = tcltk::tklabel(helpFrame1,text=helptextVec[7],font="Arial 13",bg=wiasblue)
+			helpFrame2 = tcltk::tkframe(ttHelp,bg=wiasblue)	
+			helpB1 = tcltk::tkbutton(helpFrame2,text="Quit",command=onQuit)
+			tcltk::tkgrid(helpLabel)
+			tcltk::tkgrid(helpB1,padx=10,pady=10)
+			tcltk::tkgrid(helpFrame1)	
+			tcltk::tkgrid(helpFrame2)
 		}
 
-		ttQuit = tktoplevel(bg=wiasblue)
-		tkwm.title(ttQuit, "Quit Window")
-		quitFrame1 = tkframe(ttQuit,bg=wiasblue)
-		quitFrame2 = tkframe(ttQuit,bg=wiasblue)	
-		quitB1 = tkbutton(quitFrame1,text="Quit without copying local environment",command=quitWOM,bg=wiaslightblue)
-		quitB2 = tkbutton(quitFrame1,text="Quit with copying local environment",command=quitWM,bg=wiaslightblue)
-		quitB3 = tkbutton(quitFrame2,text="Export local environment to file",command=functSave,bg=wiaslightblue)
-		quitB4 = tkbutton(quitFrame2,text="Cancel",command=functCancel,bg=wiaslightblue,width=15)
-		quitB5 = tkbutton(quitFrame2,text="Help",command=functHelp,bg=wiaslightblue,width=15)			
-		tkgrid(quitB1,quitB2,padx=10,pady=10)
-		tkgrid(quitB3,quitB4,quitB5,padx=13,pady=10)	
-		tkgrid(quitFrame1)
-		tkgrid(quitFrame2)	
+		ttQuit = tcltk::tktoplevel(bg=wiasblue)
+		tcltk::tkwm.title(ttQuit, "Quit Window")
+		quitFrame1 = tcltk::tkframe(ttQuit,bg=wiasblue)
+		quitFrame2 = tcltk::tkframe(ttQuit,bg=wiasblue)	
+		quitB1 = tcltk::tkbutton(quitFrame1,text="Quit without copying local environment",command=quitWOM,bg=wiaslightblue)
+		quitB2 = tcltk::tkbutton(quitFrame1,text="Quit with copying local environment",command=quitWM,bg=wiaslightblue)
+		quitB3 = tcltk::tkbutton(quitFrame2,text="Export local environment to file",command=functSave,bg=wiaslightblue)
+		quitB4 = tcltk::tkbutton(quitFrame2,text="Cancel",command=functCancel,bg=wiaslightblue,width=15)
+		quitB5 = tcltk::tkbutton(quitFrame2,text="Help",command=functHelp,bg=wiaslightblue,width=15)			
+		tcltk::tkgrid(quitB1,quitB2,padx=10,pady=10)
+		tcltk::tkgrid(quitB3,quitB4,quitB5,padx=13,pady=10)	
+		tcltk::tkgrid(quitFrame1)
+		tcltk::tkgrid(quitFrame2)	
 	}	
 	
 	# saveAll offers the user two possiblities to save his workspace
@@ -1191,7 +1192,7 @@ fmri.gui <- function() {
 
 		# overtake local workspace 
 		overtakeLW <- function(){
-			tkdestroy(ttSave)
+		  tcltk::tkdestroy(ttSave)
 			if (nrStep>=3)   assign("fmriDesignMatrix",x,inherits=TRUE)
 			if (nrStep>=1.5) assign("fmriData",data,inherits=TRUE)
                         if (nrStep>=3)   assign("fmriSpm",spm,inherits=TRUE)
@@ -1203,8 +1204,8 @@ fmri.gui <- function() {
 	
 		# export the local workspace to a file 
 		functSave <- function(){
-			text = unlist(strsplit(as.character(tclvalue(dataFileFirst)),""))
-			if (as.character(tclvalue(dataFileFirst))!=""){
+			text = unlist(strsplit(as.character(tcltk::tclvalue(dataFileFirst)),""))
+			if (as.character(tcltk::tclvalue(dataFileFirst))!=""){
 				index = length(text)
 				ind = -1 			
 				while (index>-1 && ind==-1){
@@ -1230,38 +1231,38 @@ fmri.gui <- function() {
 
 		# quit
 		quitttSave <- function(){
-			tkdestroy(ttSave)
+		  tcltk::tkdestroy(ttSave)
 		}
 
 		# helpmenu for this window
 		functHelp <- function(){
 			onQuit <- function(){
-				tkdestroy(ttHelp)
+			  tcltk::tkdestroy(ttHelp)
 			}
-			ttHelp = tktoplevel(bg=wiasblue)
-			tkwm.title(ttHelp, "Help")
-			helpFrame1 = tkframe(ttHelp,bg=wiasblue)
-			helpLabel = tklabel(helpFrame1,text=helptextVec[8],font="Arial 13",bg=wiasblue)
-			helpFrame2 = tkframe(ttHelp,bg=wiasblue)	
-			helpB1 = tkbutton(helpFrame2,text="Quit",command=onQuit)
-			tkgrid(helpLabel)
-			tkgrid(helpB1,padx=10,pady=10)
-			tkgrid(helpFrame1)	
-			tkgrid(helpFrame2)
+			ttHelp = tcltk::tktoplevel(bg=wiasblue)
+			tcltk::tkwm.title(ttHelp, "Help")
+			helpFrame1 = tcltk::tkframe(ttHelp,bg=wiasblue)
+			helpLabel = tcltk::tklabel(helpFrame1,text=helptextVec[8],font="Arial 13",bg=wiasblue)
+			helpFrame2 = tcltk::tkframe(ttHelp,bg=wiasblue)	
+			helpB1 = tcltk::tkbutton(helpFrame2,text="Quit",command=onQuit)
+			tcltk::tkgrid(helpLabel)
+			tcltk::tkgrid(helpB1,padx=10,pady=10)
+			tcltk::tkgrid(helpFrame1)	
+			tcltk::tkgrid(helpFrame2)
 		}
 
-		ttSave = tktoplevel(bg=wiasblue)
-		tkwm.title(ttSave, "Save Workspace")
-		saveFrame1 = tkframe(ttSave,bg=wiasblue)
-		saveFrame2 = tkframe(ttSave,bg=wiasblue)	
-		saveB1 = tkbutton(saveFrame1,text="Copy local environment to global",command=overtakeLW, bg=wiaslightblue)
-		saveB3 = tkbutton(saveFrame1,text="Export local environment to file",command=functSave, bg=wiaslightblue)
-		saveB4 = tkbutton(saveFrame2,text="Help",command=functHelp,bg=wiaslightblue,width=15)
-		saveB5 = tkbutton(saveFrame2,text="Quit",command=quitttSave,bg=wiaslightblue,width=15)			
-		tkgrid(saveB1,saveB3,padx=10,pady=10)
-		tkgrid(saveB5,saveB4,padx=10,pady=10)	
-		tkgrid(saveFrame1)
-		tkgrid(saveFrame2)	
+		ttSave = tcltk::tktoplevel(bg=wiasblue)
+		tcltk::tkwm.title(ttSave, "Save Workspace")
+		saveFrame1 = tcltk::tkframe(ttSave,bg=wiasblue)
+		saveFrame2 = tcltk::tkframe(ttSave,bg=wiasblue)	
+		saveB1 = tcltk::tkbutton(saveFrame1,text="Copy local environment to global",command=overtakeLW, bg=wiaslightblue)
+		saveB3 = tcltk::tkbutton(saveFrame1,text="Export local environment to file",command=functSave, bg=wiaslightblue)
+		saveB4 = tcltk::tkbutton(saveFrame2,text="Help",command=functHelp,bg=wiaslightblue,width=15)
+		saveB5 = tcltk::tkbutton(saveFrame2,text="Quit",command=quitttSave,bg=wiaslightblue,width=15)			
+		tcltk::tkgrid(saveB1,saveB3,padx=10,pady=10)
+		tcltk::tkgrid(saveB5,saveB4,padx=10,pady=10)	
+		tcltk::tkgrid(saveFrame1)
+		tcltk::tkgrid(saveFrame2)	
 	}
 
 	
@@ -1317,16 +1318,16 @@ fmri.gui <- function() {
 	wiasblue <- "#AACCDB" # colours of the gui
 	wiaslightblue <- "#BBDDEC"
 	nrStep <-0	
-	mycontrastTc <- tclVar()
+	mycontrastTc <- tcltk::tclVar()
 	mycontrast <- c()
-	quantileTc <- tclVar()
-	designFile <- tclVar("")
-	dataFileFirst <- tclVar("")
-	interscanIntTc <- tclVar()
+	quantileTc <- tcltk::tclVar()
+	designFile <- tcltk::tclVar("")
+	dataFileFirst <- tcltk::tclVar("")
+	interscanIntTc <- tcltk::tclVar()
 	interscanInt <- -1	
-	scanspSTc <- tclVar()
+	scanspSTc <- tcltk::tclVar()
 	scanspS <- -1	
-	nrCondTc <- tclVar("1")
+	nrCondTc <- tcltk::tclVar("1")
 	nrCond <- -1
 	namesTc <- c()
 	names <- c()	
@@ -1334,9 +1335,9 @@ fmri.gui <- function() {
 	durations <- c()		
 	onsetsTc <- c()	
 	onsets <- c()			
-	hMax <- tclVar("0")
-	slevel <- tclVar("0")
-	rbDesign <- tclVar("unused")
+	hMax <- tcltk::tclVar("0")
+	slevel <- tcltk::tclVar("0")
+	rbDesign <- tcltk::tclVar("unused")
 	dataType <- ""	
 	pvalue <- list()
 	spm <- list()
@@ -1359,30 +1360,30 @@ fmri.gui <- function() {
 
 	# base GUI window (base.aws)
 	if(.Platform$OS.type == "windows") flush.console()
-	base.aws <- tktoplevel(bg=wiasblue)	
-    	tkwm.title(base.aws, "FMRI Analysis - AWS")
+	base.aws <- tcltk::tktoplevel(bg=wiasblue)	
+	tcltk::tkwm.title(base.aws, "FMRI Analysis - AWS")
 
 	# mainframes
-	frameDesign1   <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameDesign2   <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameDesign3 <- tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)	
-	frameData1     <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameData2     <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameData4    <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)	
-	frameData3    <- tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
-	frameMask1 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameMask2 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameMask3 <- tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
-	frameMask4 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameContrast1 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameContrast2 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameContrast3    <- tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
-	frameResults <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameSmoothChoice1   <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameSmoothChoice2   <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameSmoothChoice3 <- tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
-	frameSmoothChoice4 <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
-	frameSigniflevel <- tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameDesign1   <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameDesign2   <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameDesign3 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)	
+	frameData1     <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameData2     <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameData4    <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)	
+	frameData3    <- tcltk::tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
+	frameMask1 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameMask2 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameMask3 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
+	frameMask4 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameContrast1 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameContrast2 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameContrast3    <- tcltk::tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
+	frameResults <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameSmoothChoice1   <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameSmoothChoice2   <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameSmoothChoice3 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=2,bg=wiasblue)
+	frameSmoothChoice4 <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
+	frameSigniflevel <- tcltk::tkframe(base.aws,relief="groove",borderwidth=0,bg=wiasblue)
 	intScLabel <- list()
 	nrScLabel <- list()
 	nrCoLabel <- list()	
@@ -1394,60 +1395,60 @@ fmri.gui <- function() {
 	dataLabel3 <- list()
 								
 	# buttons, labels, entries 	
-	objDesignL  <- tklabel(frameDesign1,text="Experimental Design",bg=wiasblue,font="Arial 13 bold")
-	objDesignB0 <- tkbutton(frameDesign1,text="Quit",width=9,command=quitAll,bg=wiaslightblue)
-	objDesignBSave <- tkbutton(frameDesign1,text="Save Workspace",width=15,command=saveAll, bg=wiaslightblue)	
-	objDesignB1 <- tkbutton(frameDesign2,text="Load",width=15,command=loadDesignHelp,bg=wiaslightblue)
-	objDesignB2 <- tkbutton(frameDesign2,text="Create",width=15,command=createDesignHelp,bg=wiaslightblue)
-	helpButton1 <- tkbutton(frameDesign2,text="Help",width=15,command=helpFunction1,bg=wiaslightblue)	
-	objFileL    <- tklabel(frameData1,text="Load Data",bg=wiasblue,font="Arial 13 bold")	
-	objFileE1   <- tkentry(frameData2, textvariable = dataFileFirst, width = 40, bg = "#ffffff")
-    	objFileB1   <- tkbutton(frameData2, text = "Select file", width = 15, command = selectFirstDataFile, bg = wiaslightblue, anchor = "c")	
-	objFileLoad <- tkbutton(frameData4, text = "Load", width = 15, command = startAdjustHelp, bg = wiaslightblue)
-	helpButton2 <- tkbutton(frameData4,text="Help",width=15,command=helpFunction2,bg=wiaslightblue)		
-	maskLabel1  <- tklabel(frameMask1,text="Adjust Mask",bg=wiasblue,font="Arial 13 bold")	
-	maskLabel2  <- tklabel(frameMask2,text="Threshold", width = 15, bg=wiasblue,font="Arial 12 bold")
-	maskEntry   <- tkentry(frameMask2, textvariable = quantileTc, width = 15, bg = "#ffffff")
-    	maskButton1 <- tkbutton(frameMask2, text = "View Mask", width = 20,command = viewMask, bg = wiaslightblue, anchor = "c")	
-	maskButton2 <- tkbutton(frameMask4, text = "Ok", width = 15, command = startContrastHelp, bg = wiaslightblue, anchor = "c")	
-	helpButton3 <- tkbutton(frameMask4,text="Help",width=15,command=helpFunction3,bg=wiaslightblue)	
-	objcontrastL<- tklabel(frameContrast1,text="Define Contrast",bg=wiasblue,font="Arial 13 bold")
-	objcontrastE<- tkentry(frameContrast2,textvariable = mycontrastTc, width = 20, bg = "#ffffff")
-	objcontrastB<- tkbutton(frameContrast2,text="Ok",width=15,command=startEstimationHelp,bg=wiaslightblue)
-	helpButton4 <- tkbutton(frameContrast2,text="Help",width=15,command=helpFunction4,bg=wiaslightblue)	
-	objResultsL  <- tklabel(frameResults,text="View results",bg=wiasblue,font="Arial 12 bold")
-	objResultsB1 <- tkbutton(frameResults,text="2D Visualization (slices)",width=21,command=resultsSlices,bg=wiaslightblue)
-	objResultsB2 <- tkbutton(frameResults,text="3D Visualization",width=21,command=results3D,bg=wiaslightblue)
-	objResultsB3 <- tkbutton(frameResults,text="2D Segmentation results",width=21,command=resultsSegmentation,bg=wiaslightblue)
-	helpButton6 <- tkbutton(frameResults,text="Help",width=11,command=helpFunction6,bg=wiaslightblue)		
-	objhMaxL <- tklabel(frameSmoothChoice2,text="Maximal bandwidth",bg=wiasblue,font="Arial 11 bold")
-	objhMaxE <- tkentry(frameSmoothChoice2,textvariable=hMax,width=6,bg="#ffffff")
-	objButtonSmooth <- tkbutton(frameSmoothChoice2,text="Start adaptive smoothing",width=20,command=startSmoothingHelp,bg=wiaslightblue)
-	objButtonSegmentation <- tkbutton(frameSmoothChoice2,text="Start adaptive segmentation",width=20,command=startSegmentationHelp,bg=wiaslightblue)
-	objhSignlevel <- tklabel(frameSigniflevel,text="Significance level",bg=wiasblue,font="Arial 11 bold")
-	objhSignlevelE <- tkentry(frameSigniflevel,textvariable=slevel,width=6,bg="#ffffff")
-	helpButton5 <- tkbutton(frameSmoothChoice4,text="Help",width=15,command=helpFunction5,bg=wiaslightblue)		
-	helpLabel1 <- tklabel(frameData3,text="",bg=wiasblue,width=0,font="Arial 1")
-	helpLabel2 <- tklabel(frameContrast3,text="",bg=wiasblue,width=0,font="Arial 1")
-	helpLabel3 <- tklabel(frameDesign3,text="",bg=wiasblue,width=0,font="Arial 1")
-	helpLabel4 <- tklabel(frameSmoothChoice3,text="",bg=wiasblue,width=0,font="Arial 1")
-	helpLabel5 <- tklabel(frameMask3,text="",bg=wiasblue,width=0,font="Arial 1")	
-	smoothChoiceL  <- tklabel(frameSmoothChoice1,text="Adaptive Smoothing",bg=wiasblue,font="Arial 13 bold")
-	smoothChoiceB2 <- tkbutton(frameSmoothChoice4,text="Continue with voxelwise results",width=33,command=contWithoutHelp,bg=wiaslightblue)
+	objDesignL  <- tcltk::tklabel(frameDesign1,text="Experimental Design",bg=wiasblue,font="Arial 13 bold")
+	objDesignB0 <- tcltk::tkbutton(frameDesign1,text="Quit",width=9,command=quitAll,bg=wiaslightblue)
+	objDesignBSave <- tcltk::tkbutton(frameDesign1,text="Save Workspace",width=15,command=saveAll, bg=wiaslightblue)	
+	objDesignB1 <- tcltk::tkbutton(frameDesign2,text="Load",width=15,command=loadDesignHelp,bg=wiaslightblue)
+	objDesignB2 <- tcltk::tkbutton(frameDesign2,text="Create",width=15,command=createDesignHelp,bg=wiaslightblue)
+	helpButton1 <- tcltk::tkbutton(frameDesign2,text="Help",width=15,command=helpFunction1,bg=wiaslightblue)	
+	objFileL    <- tcltk::tklabel(frameData1,text="Load Data",bg=wiasblue,font="Arial 13 bold")	
+	objFileE1   <- tcltk::tkentry(frameData2, textvariable = dataFileFirst, width = 40, bg = "#ffffff")
+    	objFileB1   <- tcltk::tkbutton(frameData2, text = "Select file", width = 15, command = selectFirstDataFile, bg = wiaslightblue, anchor = "c")	
+	objFileLoad <- tcltk::tkbutton(frameData4, text = "Load", width = 15, command = startAdjustHelp, bg = wiaslightblue)
+	helpButton2 <- tcltk::tkbutton(frameData4,text="Help",width=15,command=helpFunction2,bg=wiaslightblue)		
+	maskLabel1  <- tcltk::tklabel(frameMask1,text="Adjust Mask",bg=wiasblue,font="Arial 13 bold")	
+	maskLabel2  <- tcltk::tklabel(frameMask2,text="Threshold", width = 15, bg=wiasblue,font="Arial 12 bold")
+	maskEntry   <- tcltk::tkentry(frameMask2, textvariable = quantileTc, width = 15, bg = "#ffffff")
+    	maskButton1 <- tcltk::tkbutton(frameMask2, text = "View Mask", width = 20,command = viewMask, bg = wiaslightblue, anchor = "c")	
+	maskButton2 <- tcltk::tkbutton(frameMask4, text = "Ok", width = 15, command = startContrastHelp, bg = wiaslightblue, anchor = "c")	
+	helpButton3 <- tcltk::tkbutton(frameMask4,text="Help",width=15,command=helpFunction3,bg=wiaslightblue)	
+	objcontrastL<- tcltk::tklabel(frameContrast1,text="Define Contrast",bg=wiasblue,font="Arial 13 bold")
+	objcontrastE<- tcltk::tkentry(frameContrast2,textvariable = mycontrastTc, width = 20, bg = "#ffffff")
+	objcontrastB<- tcltk::tkbutton(frameContrast2,text="Ok",width=15,command=startEstimationHelp,bg=wiaslightblue)
+	helpButton4 <- tcltk::tkbutton(frameContrast2,text="Help",width=15,command=helpFunction4,bg=wiaslightblue)	
+	objResultsL  <- tcltk::tklabel(frameResults,text="View results",bg=wiasblue,font="Arial 12 bold")
+	objResultsB1 <- tcltk::tkbutton(frameResults,text="2D Visualization (slices)",width=21,command=resultsSlices,bg=wiaslightblue)
+	objResultsB2 <- tcltk::tkbutton(frameResults,text="3D Visualization",width=21,command=results3D,bg=wiaslightblue)
+	objResultsB3 <- tcltk::tkbutton(frameResults,text="2D Segmentation results",width=21,command=resultsSegmentation,bg=wiaslightblue)
+	helpButton6 <- tcltk::tkbutton(frameResults,text="Help",width=11,command=helpFunction6,bg=wiaslightblue)		
+	objhMaxL <- tcltk::tklabel(frameSmoothChoice2,text="Maximal bandwidth",bg=wiasblue,font="Arial 11 bold")
+	objhMaxE <- tcltk::tkentry(frameSmoothChoice2,textvariable=hMax,width=6,bg="#ffffff")
+	objButtonSmooth <- tcltk::tkbutton(frameSmoothChoice2,text="Start adaptive smoothing",width=20,command=startSmoothingHelp,bg=wiaslightblue)
+	objButtonSegmentation <- tcltk::tkbutton(frameSmoothChoice2,text="Start adaptive segmentation",width=20,command=startSegmentationHelp,bg=wiaslightblue)
+	objhSignlevel <- tcltk::tklabel(frameSigniflevel,text="Significance level",bg=wiasblue,font="Arial 11 bold")
+	objhSignlevelE <- tcltk::tkentry(frameSigniflevel,textvariable=slevel,width=6,bg="#ffffff")
+	helpButton5 <- tcltk::tkbutton(frameSmoothChoice4,text="Help",width=15,command=helpFunction5,bg=wiaslightblue)		
+	helpLabel1 <- tcltk::tklabel(frameData3,text="",bg=wiasblue,width=0,font="Arial 1")
+	helpLabel2 <- tcltk::tklabel(frameContrast3,text="",bg=wiasblue,width=0,font="Arial 1")
+	helpLabel3 <- tcltk::tklabel(frameDesign3,text="",bg=wiasblue,width=0,font="Arial 1")
+	helpLabel4 <- tcltk::tklabel(frameSmoothChoice3,text="",bg=wiasblue,width=0,font="Arial 1")
+	helpLabel5 <- tcltk::tklabel(frameMask3,text="",bg=wiasblue,width=0,font="Arial 1")	
+	smoothChoiceL  <- tcltk::tklabel(frameSmoothChoice1,text="Adaptive Smoothing",bg=wiasblue,font="Arial 13 bold")
+	smoothChoiceB2 <- tcltk::tkbutton(frameSmoothChoice4,text="Continue with voxelwise results",width=33,command=contWithoutHelp,bg=wiaslightblue)
 				
-	if (as.numeric(tclRequire("Img",warn=FALSE))!=0){ # if possible add a little image
-		image1 <- tclVar()
-		tkimage.create("photo",image1,file=system.file("img/wias.jpeg",package="fmri"))
-		imgAsLabel <- tklabel(base.aws,image=image1,bg="white")
-		tkgrid(objDesignL,imgAsLabel,objDesignBSave,objDesignB0,padx=21,pady=10)
+	if (as.numeric(tcltk::tclRequire("Img",warn=FALSE))!=0){ # if possible add a little image
+		image1 <- tcltk::tclVar()
+		tcltk::tkimage.create("photo",image1,file=system.file("img/wias.jpeg",package="fmri"))
+		imgAsLabel <- tcltk::tklabel(base.aws,image=image1,bg="white")
+		tcltk::tkgrid(objDesignL,imgAsLabel,objDesignBSave,objDesignB0,padx=21,pady=10)
 	}
 	else {
-		tkgrid(objDesignL,objDesignBSave,objDesignB0,pady = 10, padx = 17)
+	  tcltk::tkgrid(objDesignL,objDesignBSave,objDesignB0,pady = 10, padx = 17)
 	}
-	tkgrid(frameDesign1)	
-	tkgrid(objDesignB1,objDesignB2,helpButton1,padx=15,pady=10)
-	tkgrid(frameDesign2,sticky="ew")
- 	tkgrid(helpLabel3)	
-	tkgrid(frameDesign3,sticky="ew")
+	tcltk::tkgrid(frameDesign1)	
+	tcltk::tkgrid(objDesignB1,objDesignB2,helpButton1,padx=15,pady=10)
+	tcltk::tkgrid(frameDesign2,sticky="ew")
+	tcltk::tkgrid(helpLabel3)	
+	tcltk::tkgrid(frameDesign3,sticky="ew")
 
 } # the end

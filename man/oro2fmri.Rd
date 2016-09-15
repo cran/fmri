@@ -1,6 +1,6 @@
 % Part of the fmri package for R
 %
-% $Id: oro2fmri.Rd,v 1.1 2014/06/18 07:14:27 stat Exp $
+% $Id: oro2fmri.Rd,v 1.1 2014-06-18 07:14:27 stat Exp $
 
 \name{Convert Between fmridata and oro.nifti}
 \alias{oro2fmri}

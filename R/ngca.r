@@ -32,7 +32,6 @@ if(all(class(data)=="fmridata")) {
                     xnew=double(prod(dx)),
                     double(as.integer(2*h.time+1)),
                     as.integer(2*h.time+1),
-                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Smoothing in time finished)\n")
      dim(x) <- dx
@@ -56,7 +55,6 @@ if(all(class(data)=="fmridata")) {
                     as.integer(as.integer(2*h.space/wghts[1]+1)),
                     as.integer(as.integer(2*h.space/wghts[2]+1)),
                     as.integer(as.integer(2*h.space/wghts[3]+1)),
-                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Spatial moothing finished)\n")
      dim(x) <- dx
@@ -120,7 +118,7 @@ if(is.null(delta)) {
 cat("delta set to",delta,"\n")
 omega <- matrix(rnorm(Lsum*npca),npca,Lsum)
 omega <- sweep(omega,2,sqrt(apply(omega^2,2,sum)),"/")
-fz <- .Fortran("fastica",
+fz <- .Fortran("fastica1",
               as.double(t(y)),
               as.double(omega),
               as.integer(npca),
@@ -134,7 +132,6 @@ fz <- .Fortran("fastica",
               as.double(s),
               double(npca),
               as.double(delta),
-              DUP=TRUE,
               PACKAGE="fmri")[c("v","normv")]
 v <- fz$v
 normv <- fz$normv
@@ -271,8 +268,10 @@ filter.time="None",filter.space=FALSE,h.space=3,h.time=3,keepv=FALSE,...){
 #  ICA algorithm  for fMRI
 #  x should be either a fMRI object or a matrix 
 #
-if(!require(fastICA)) stop("Please install package fastICA from CRAN")
-if(all(class(data)=="fmridata")) {
+if(!requireNamespace("fastICA",quietly=TRUE)){
+   stop("Please install package fastICA from CRAN")
+}
+  if(all(class(data)=="fmridata")) {
    x <- extract.data(data)
    mask <- data$mask>0
 }  else {
@@ -296,7 +295,6 @@ if(!is.null(zind)) mask[,,-zind] <- FALSE
                     xnew=double(prod(dx)),
                     double(as.integer(2*h.time+1)),
                     as.integer(2*h.time+1),
-                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Smoothing in time finished)\n")
      dim(x) <- dx
@@ -319,7 +317,6 @@ if(!is.null(zind)) mask[,,-zind] <- FALSE
                     as.integer(as.integer(2*h.space/wghts[1]+1)),
                     as.integer(as.integer(2*h.space/wghts[2]+1)),
                     as.integer(as.integer(2*h.space/wghts[3]+1)),
-                    DUP=TRUE,
                     PACKAGE="fmri")$xnew
      cat("Spatial moothing finished)\n")
      dim(x) <- dx
@@ -346,7 +343,7 @@ n <- dim(x)[1]
 #
 #   now fast ICA
 #
-ttt <- fastICA(x,m,method="C",...)
+ttt <- fastICA::fastICA(x,m,method="C",...)
 if(method=="spatial"){
 z <- matrix(0,nn,m)
 z[mask,]<-ttt$A

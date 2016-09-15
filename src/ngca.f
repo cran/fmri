@@ -1,6 +1,6 @@
       subroutine fd1(z,s2,fv,dv)
-      real*8 z,s2,fv,dv
-      real*8 z2,zexp,z2s2
+      double precision z,s2,fv,dv
+      double precision z2,zexp,z2s2
       z2=z*z
       z2s2=z2/s2
       zexp=exp(-z2s2/2.d0)
@@ -9,38 +9,38 @@
       RETURN 
       END
       subroutine fd2(z,s,fv,dv)
-      real*8 z,s,fv,dv
-      real*8 ztanh
+      double precision z,s,fv,dv
+      double precision ztanh
       ztanh=tanh(s*z)
       fv=ztanh
       dv=s*(1.d0-ztanh*ztanh)
       RETURN 
       END
       subroutine fd3(z,s,fv,dv)
-      real*8 z,s,fv,dv
-      real*8 sz
+      double precision z,s,fv,dv
+      double precision sz
       sz=s*z
       fv=sin(sz)
       dv=s*cos(sz)
       RETURN 
       END
       subroutine fd4(z,s,fv,dv)
-      real*8 z,s,fv,dv
-      real*8 sz
+      double precision z,s,fv,dv
+      double precision sz
       sz=s*z
       fv=cos(sz)
       dv=-s*sin(sz)
       RETURN 
       END
-      subroutine fastica(y,omega,d,n,l,ifun,t,beta,v,normv,s,omegak,
+      subroutine fastica1(y,omega,d,n,l,ifun,t,beta,v,normv,s,omegak,
      1                   delta)
       implicit logical (a-z)
       integer d,n,l,t,ifun(l)
-      real*8 y(d,n),omega(d,l),v(d,l),beta(d),s(l),normv(l),omegak(d),
-     1       delta
-      real*8 dnrm2,ddot
+      double precision y(d,n),omega(d,l),v(d,l),beta(d),s(l),normv(l),
+     1       omegak(d),delta
+      double precision dnrm2,ddot
       integer i,j,k,o,ifunk,icount
-      real*8 nk,z,fw,fwd1,nbeta,zv,zdelta,sk,ninv,eps
+      double precision nk,z,fw,fwd1,nbeta,zv,zdelta,sk,ninv,eps
       external dnrm2,ddot,dscal
       call dblepr("delta",5,delta,1)
       eps=1.d-6
@@ -132,9 +132,9 @@ C End Loop t
       implicit logical (a-z)
       integer n1,n2,n3,nt,lw
       logical mask(n1,n2,n3)
-      real*8 x(n1,n2,n3,nt),xnew(n1,n2,n3,nt),w(lw),h
+      double precision x(n1,n2,n3,nt),xnew(n1,n2,n3,nt),w(lw),h
       integer i1,i2,i3,j,jn,ja,je,clw,clw1
-      real*8 z,sw
+      double precision z,sw
       clw=lw/2
       clw1=clw+1
 C  Use Epanechnikov kernel
@@ -172,10 +172,11 @@ C  Use Epanechnikov kernel
       implicit logical (a-z)
       integer n1,n2,n3,nt,lw1,lw2,lw3
       logical mask(n1,n2,n3)
-      real*8 x(n1,n2,n3,nt),xnew(n1,n2,n3,nt),vext(3),w(lw1,lw2,lw3),h
+      double precision x(n1,n2,n3,nt),xnew(n1,n2,n3,nt),vext(3),
+     1       w(lw1,lw2,lw3),h
       integer j1,j2,j3,jt,jn1,jn2,jn3,ja1,je1,ja2,je2,ja3,je3,
      1        clw1,clw2,clw3,clw11,clw21,clw31,jj1,jj2
-      real*8 z,z1,z2,z3,sw
+      double precision z,z1,z2,z3,sw
       clw1=lw1/2
       clw2=lw2/2
       clw3=lw3/2

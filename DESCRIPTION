@@ -1,35 +1,32 @@
 Package: fmri
-Version: 1.5-1
-Date: 2014-06-18
-Title: Analysis of fMRI experiments
+Version: 1.7-2
+Date: 2016-09-09
+Title: Analysis of fMRI Experiments
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "tabelow@wias-berlin.de"), 
              person("Joerg", "Polzehl", role = c("aut"),
                     email = "polzehl@wias-berlin.de"),
-             person("Brandon", "Whitcher", role = c("ctb")))
+             person("Brandon", "Whitcher", role = c("ctb")),
+             person("Dames", "Sibylle", role = c("ctb")))
+Depends: R (>= 2.14.0), awsMethods (>= 1.0-1), nlme
+Imports: parallel, metafor, methods
 Suggests: tcltk, tkrplot, fastICA, adimpro, oro.nifti
-Description: The package contains R-functions to perform an fmri analysis
-             as described in
-             K. Tabelow, J. Polzehl, H.U. Voss, and V. Spokoiny, 
-             Analysing fMRI experiments with structure adaptive smoothing procedures,
-             NeuroImage, 33:55-62 (2006),
-             J. Polzehl, H.U. Voss, K. Tabelow, Structural adaptive segmentation
-             for statistical parametric mapping, NeuroImage, 52:515-523 (2010)
-             and 
-             K. Tabelow, J. Polzehl, Statistical Parametric Maps for
-             Functional MRI Experiments in {R}: The Package {fmri}}, 
-             Journal of Statistical Software, 44(11):1--21 (2011).
+Description: Contains R-functions to perform an fMRI analysis as described in
+             Tabelow et al. (2006) <DOI:10.1016/j.neuroimage.2006.06.029>,
+             Polzehl et al. (2010) <DOI:10.1016/j.neuroimage.2010.04.241>,
+             Tabelow and Polzehl (2011) <DOI:10.18637/jss.v044.i11>.
 License: GPL (>= 2)
-Copyright: This package is Copyright (C) 2006-2014 Weierstrass
+Copyright: This package is Copyright (C) 2006-2016 Weierstrass
         Institute for Applied Analysis and Stochastics.
 URL: http://www.wias-berlin.de/software/imaging/
 Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
-Packaged: 2014-06-18 07:58:46 UTC; tabelow
+NeedsCompilation: yes
+Packaged: 2016-09-15 07:14:47 UTC; tabelow
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
-  Brandon Whitcher [ctb]
+  Brandon Whitcher [ctb],
+  Dames Sibylle [ctb]
 Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
-NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-06-18 13:01:44
+Date/Publication: 2016-09-15 12:30:35

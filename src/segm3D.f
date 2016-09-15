@@ -23,28 +23,27 @@ C
       implicit logical (a-z)
       integer n1,n2,n3,nt,kern,segm(n1,n2,n3)
       logical aws,wlse,mask(n1,n2,n3),restrict
-      real*8 y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),delta,thresh,
+      double precision y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),delta,
      1      thn(n1,n2,n3),lambda,wght(2),si2(n1,n2,n3),pval(n1,n2,n3),
      1      hakt,lwght(*),thi,getlwght,swres(nt),fov,vq(n1,n2,n3),
      1      varest(n1,n2,n3),res(nt,n1,n2,n3),vest0i(n1,n2,n3),df,
-     1      kv(n1,n2,n3)
+     1      thresh,kv(n1,n2,n3)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,segmi
-      real*8 bii,swj,swjy,wj,hakt2,spf,si2j,si2i,vqi,
+      double precision bii,swj,swjy,wj,hakt2,spf,si2j,si2i,vqi,
      1       varesti,fpchisq,ti,thij,sij,z,si,swr,z1,
      2       a,b,dn,pvali
       external getlwght,fpchisq
       kern=1
       hakt2=hakt*hakt
       spf=4.d0/3.d0
-      ih1=hakt
       aws=lambda.lt.1d40
 C
 C   first calculate location weights
 C
-      ih3=hakt/wght(2)
-      ih2=hakt/wght(1)
-      ih1=hakt
+      ih3=FLOOR(hakt/wght(2))
+      ih2=FLOOR(hakt/wght(1))
+      ih1=FLOOR(hakt)
       dlw1=min(2*n1-1,2*ih1+1)
       dlw2=min(2*n2-1,2*ih2+1)
       dlw3=min(2*n3-1,2*ih3+1)
@@ -217,8 +216,8 @@ C   df \in 10:264   n \in  100 : 20000
 C   max. approx error < 0.002 for a   and < 0.006   for b
 C
       implicit logical (a-z)
-      real*8 a,b,df,n
-      real*8 dfinv,ldf,dfq,ninvh,x1,x2,x3,x4,x5,x6,lna,lnb,ln
+      double precision a,b,df,n
+      double precision dfinv,ldf,dfq,ninvh,x1,x2,x3,x4,x5,x6,lna,lnb,ln
       dfinv=1.d0/(df-1.d0)
       dfq=sqrt(sqrt(df))
       ldf=log(df+1.d1)

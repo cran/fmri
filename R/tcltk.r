@@ -4,12 +4,12 @@
 mytkrplot <- function(parent, fun, hscale=1, vscale=1,slicenr=-1,which="unset",parent2=list(),typeV=2,overview=FALSE) {
     if (!overview) if (typeV == 2) parent = parent2  
     # ACHTUNG aenderung, bisher nur in vied2dNew benutzt!!
-    image <- paste("Rplot", .make.tkindex(), sep="")
-    .my.tkdev(hscale, vscale)
+    image <- paste("Rplot", tkrplot::.make.tkindex(), sep="")
+    tkrplot::.my.tkdev(hscale, vscale)
     try(fun())
-   .Tcl(paste("image create Rplot", image))
-    lab<-tklabel(parent,image=image) #**** use try, delete image on failure
-   tkbind(lab,"<Destroy>", function() .Tcl(paste("image delete", image)))
+    tcltk::.Tcl(paste("image create Rplot", image))
+    lab<-tcltk::tklabel(parent,image=image) #**** use try, delete image on failure
+    tcltk::tkbind(lab,"<Destroy>", function() tcltk::.Tcl(paste("image delete", image)))
     lab$image <- image
     lab$fun <- fun
     lab$hscale <- hscale
@@ -17,7 +17,7 @@ mytkrplot <- function(parent, fun, hscale=1, vscale=1,slicenr=-1,which="unset",p
     lab
 }
 helpFunc <- function(a){
-  a <- tclVar()
+  a <- tcltk::tclVar()
 }
 
 

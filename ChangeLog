@@ -1,3 +1,19 @@
+2015-07-24 version 1.7.1
+  - new functions on group analysis
+
+2014-10-30 version 1.6.1
+  - code now assumes that spm$cbeta is a 3D array of scalars
+    simplified R- and Fortran-code
+    vaws3D and vaws3Dfull simplified and renamed to aws3D and aws3Dfull 
+  - removed unused code from function fmri.pvalue
+  - removed arg delta (latency) from function fmri.pvalue
+2014-09-25 version 1.6.0
+  - rewrite of the fmri.lm(), fmri.design(), fmri.stimulus() functions
+  - dropped some obsolet arguments, see documentation
+
+2014-09-23 version 1.6.0
+  - parallel version of the smoothing functions "aws", "awsfull"
+
 2012-09-13 version 1.5.0
   - new plot method for fmrisegment class which takes into account that a two-sided test is performed and should be shown! 
 
