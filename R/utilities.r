@@ -6,7 +6,7 @@ cutroi <- function(data,
                     tind=1:data$dim[4]) {
 
   if (("fmridata" %in% class(data)) & (!any(c("fmrispm","fmripvalue") %in% class(data)))) {
-    ttt <- extract.data(data)[xind,yind,zind,tind]
+    ttt <- extractData(data)[xind,yind,zind,tind]
     data$ttt <- writeBin(as.numeric(ttt),raw(),4)
     data$dim <- c(length(xind),length(yind),length(zind),length(tind))
     data$mask <- data$mask[xind,yind,zind]
@@ -84,7 +84,7 @@ summary.fmridata <- function(object,...) {
     cat("Object of class fmridata\n")
     dt <- object$dim
     cat("Data Dimension:", dt,"\n")
-    values <- range(extract.data(object))
+    values <- range(extractData(object))
     cat("Data Range    :", values[1], "...", values[2], "\n")
     delta <- object$delta
     cat("Voxel Size    :", delta,"\n")
@@ -124,7 +124,7 @@ print.fmridata <- function(x,...) {
 #    cat("Linear Model - Number of stimuli
   }else if ("fmrisegment" %in% class(x)) {
     cat("Object of class fmrisegment created by\n")
-    print(x$call)    
+    print(x$call)
     cat("Data Dimension               :", x$dim,"\n")
     values <- range(x$cbeta)
     cat("Range of estimated parameters:", values[1], "...", values[2], "\n")
@@ -143,7 +143,7 @@ print.fmridata <- function(x,...) {
     cat("Object of class fmridata\n")
     cat("Data Dimension: ", x$dim,"\n")
     cat("Voxel Size    :", x$delta,"\n")
-    values <- range(extract.data(x))
+    values <- range(extractData(x))
     cat("Data Range    :", values[1], "...", values[2], "\n")
     cat("File(s)       :", attr(x, "file"),"\n")
   }

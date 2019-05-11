@@ -11,7 +11,10 @@
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{stimulus}{ matrix containing expected BOLD repsonse(s) for the linear model as columns}
+  \item{stimulus}{ matrix containing expected BOLD response(s) for the linear
+     model as columns or list of expected BOLD responses containing matrices
+      of dimension \code{scans, number of slices} as returned by function
+      \code{\link{fmri.stimulus}}.}
   \item{order}{ order of the polynomial drift terms }
   \item{cef}{ confounding effects }
   \item{verbose}{ Report more if \code{TRUE} }
@@ -26,7 +29,7 @@
   Confounding effects can be included in a matrix \code{cef}.
 
   The polynomials are defined orthogonal to the stimuli given in
-  \code{stimulus}. 
+  \code{stimulus}.
 }
 \value{
   design matrix of the linear model
@@ -36,7 +39,8 @@
   \emph{fmri: A Package for Analyzing fmri Data},
   R News, 7:13-17 .
 }
-\author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
+\author{ Karsten Tabelow \email{tabelow@wias-berlin.de},
+         Joerg Polzehl \email{polzehl@wias-berlin.de} }
 \seealso{ \code{\link{fmri.stimulus}}, \code{\link{fmri.lm}} }
 \examples{
   # Example 1

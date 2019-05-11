@@ -109,7 +109,9 @@ for (t in 1:scans) noisy4[,,,t] <- gkernsm(noisy4[,,,t],c(0.8,0.8,0.4))$gkernsm
 
 # finally we got the data
 ttt <- sig4 + noisy4
-data1 <- list(ttt=writeBin(as.numeric(ttt),raw(),4),dim=c(i,j,k,scans),weights=c(1,1,2),mask=array(1,c(i,j,k)))
+data1 <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
+              dim=c(i,j,k,scans),weights=c(1,1,2),mask=array(1,c(i,j,k)),
+              delta = rep(1, 4))
 class(data1) <- "fmridata"
 
 # create design matrix and estimate parameters from linear model

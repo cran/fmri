@@ -1,5 +1,5 @@
-\name{extract.data}
-\alias{extract.data}
+\name{extractData}
+\alias{extractData}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ Extract data or residuals from a fmridata object }
 \description{
@@ -7,7 +7,7 @@
 'fmridata'.
 }
 \usage{
-extract.data(z, what = "data")
+extractData(z, what = "data")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

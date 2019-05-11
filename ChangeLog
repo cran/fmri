@@ -1,10 +1,12 @@
+2017-10-12 version 1.8-0
+  - slice-timing implemented in fmri2.stimulus, fmri2.design and fmri2.lm 
 2015-07-24 version 1.7.1
   - new functions on group analysis
 
 2014-10-30 version 1.6.1
   - code now assumes that spm$cbeta is a 3D array of scalars
     simplified R- and Fortran-code
-    vaws3D and vaws3Dfull simplified and renamed to aws3D and aws3Dfull 
+    vaws3D and vaws3Dfull simplified and renamed to aws3D and aws3Dfull
   - removed unused code from function fmri.pvalue
   - removed arg delta (latency) from function fmri.pvalue
 2014-09-25 version 1.6.0
@@ -15,17 +17,17 @@
   - parallel version of the smoothing functions "aws", "awsfull"
 
 2012-09-13 version 1.5.0
-  - new plot method for fmrisegment class which takes into account that a two-sided test is performed and should be shown! 
+  - new plot method for fmrisegment class which takes into account that a two-sided test is performed and should be shown!
 
 2012-09-06 version 1.5.0
-  - bugfix in extract.data for residuals, which 
-    set wrong dimension (time as last index 
+  - bugfix in extract.data for residuals, which
+    set wrong dimension (time as last index
     instead of first)
 
 2012-06-06 version 1.5.0
-  - final adjustments for kritical values in segm3D 
+  - final adjustments for kritical values in segm3D
     (old values were far to conservative)
-    
+
 2012-06-06 version 1.4.8
   - correcting problem in extract.data
 
@@ -51,8 +53,8 @@
     as the user should not set them
 
 2011-01-26 version 1.4.3
-  - fix for bug for usage of mri.colors() in plot.fmridata() which 
-    threw an error due to negative arguments in hsv() call. 
+  - fix for bug for usage of mri.colors() in plot.fmridata() which
+    threw an error due to negative arguments in hsv() call.
 
 2010-12-08 version 1.4.3
   - bugfix for read.DICOM() use readChar(con, n, TRUE) now to prevent from utf8 error
@@ -65,13 +67,13 @@
 2010-10-06 version 1.4.2
   - fmri.gui() includes possibility of evoking
     structural adaptive segmentation
-  - corrected R CMD check error for invisible binding 
+  - corrected R CMD check error for invisible binding
     of global variables
   - initialized nbeta in fastica in ngca.f, otherwise
     compiler warning
 
 2010-09-20 version 1.4.2
-  - results of segmentation results can be 
+  - results of segmentation results can be
     plotted by plot.fmridata() now.
 
 2010-04-06 version 1.4.1
@@ -84,7 +86,7 @@
 
 2010-03-01 version 1.4.1
   - CITATION file
-  - documentation of cutroi() falsely referred to lists instead of 
+  - documentation of cutroi() falsely referred to lists instead of
     vectors in argument description
 
 2010-02-22 version 1.4.0
@@ -109,14 +111,14 @@
   - new function detrend
 
 2008-06-17 version 1.3
-  - region growing for bandwidth iteration in adaptive smoothing is 25% more variance reduction 
+  - region growing for bandwidth iteration in adaptive smoothing is 25% more variance reduction
     at each step now. Thus, the bandwidth sequence is no longer geometric, and it leads to more
     balanced adaptation.
   - fmri.lm() has default actype="smooth" to stabilize the estimate for temporal autocorrelation.
-    the bandwidth for this smoothing operation can no longer be set in order to provide general 
+    the bandwidth for this smoothing operation can no longer be set in order to provide general
     setting for the adaptation parameter in fmri.smooth()
   - The adaptation parameters have been re-tuned for most of the statistical kernels in fmri.smooth().
-    This was missing in former version. It could have lead to adaptation to noise and thus signal detection 
+    This was missing in former version. It could have lead to adaptation to noise and thus signal detection
     with many false positives.
   - bugfix in plot.fmridata() with (real) anatomical underlay for no symmetric rotation matrices!
   - implemtented method 3 from NIFTI spec. in plot.fmridata() with (real) anatomical underlay
@@ -125,21 +127,21 @@
 
   - new function cut.roi()
   - plot.fmridata() is now able to produce anatomical overlay for pvalue data for AFNI, and NIFTI data
-  - read.AFNI() should be able to interpret filenames more flexible: with, without 
+  - read.AFNI() should be able to interpret filenames more flexible: with, without
     extensions, with dots in name.
 
 2008-01-21 version 1.2-5
 
-  - read.AFNI() can read BRICK_TYPES 3 and 5 now. Beware: all sub-bricks are assumed to have 
+  - read.AFNI() can read BRICK_TYPES 3 and 5 now. Beware: all sub-bricks are assumed to have
     the same BRICK_TYPE
   - bugfix in write.AFNI() for writing BRICKTYPES 3 (float) and 5 (complex)
   - bugfix for numbered ANALYZE files in read.ANALYZE() which lead to reading only one file.
-  - set level for mask in all read functions as argument. reset data to zero only 
+  - set level for mask in all read functions as argument. reset data to zero only
     for NA values not for !mask
   - bugfix for SQ in read.DICOM which caused incorrect reading of data sequences
     of unknown length
   - dimension setting bugfix in read.ANALYZE()
-  - several corrections for ngca, 
+  - several corrections for ngca,
   - function ngca now works for matrix- and fmridata-objects
   - new fastICA function for fmri (fmriica)
   - fmriica allows to restrict data cube by arguments xind, yind, zind and tind
@@ -147,26 +149,26 @@
 2007-12-07 version 1.2-4
 
   - if dataset contains NA, set mask at these voxels to FALSE, set data to zero.
-  - to determine the (head) mask the quantile function in all read functions 
+  - to determine the (head) mask the quantile function in all read functions
     has na.rm = TRUE now. This avoids error for datasets with NaN in datacube.
 
 2007-11-12 version 1.2-3
 
-  - read.AFNI() has a new argument 'vol' which contains a vector of 
-    volumes to be read. This hopefully enables to read parts of large datastes 
+  - read.AFNI() has a new argument 'vol' which contains a vector of
+    volumes to be read. This hopefully enables to read parts of large datastes
     without running into memory problems.
   - if in fmri.pvalue() the df is larger than 171, a Gaussian Random Field instead of t-field is used.
     gamma() is not defined otherwise. On the other df is large enough!
-  - bugfix in read.NIFTI which contained a misinterpretation of the header entries 
+  - bugfix in read.NIFTI which contained a misinterpretation of the header entries
     (bitpix, dim)
   - new function write.NIFTI()
 
 2007-09-05 version 1.2-2
 
-  - write.AFNI() completely re-written, it has new arguments header (AFNI-header 
+  - write.AFNI() completely re-written, it has new arguments header (AFNI-header
     list with entries such as DATASET_RANK etc.) and logical taxis, which controls,
-    whether sub-bricks contain time series data. All other (old) arguments are 
-    depreciated, but the function should behave as in former version when called 
+    whether sub-bricks contain time series data. All other (old) arguments are
+    depreciated, but the function should behave as in former version when called
     as such. This will be removed in some future version!
   - read.AFNI() now does not include ' and ~ in string-attributes in header
 
@@ -177,6 +179,6 @@
 
 2007-04-23 version 1.2-0
 
-  - to save memory fmri datasets are now stored in in the $ttt list element in 
+  - to save memory fmri datasets are now stored in in the $ttt list element in
     raw() format. This allows for handling much larger time series. To directly
     access the data (including dimension) use the extract.data() function.

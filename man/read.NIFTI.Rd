@@ -6,12 +6,14 @@
   Read fMRI data from NIFTI file(s).
 }
 \usage{
-read.NIFTI(filename, level = 0.75,setmask=TRUE)
+read.NIFTI(filename, level = 0.75, mask=NULL, setmask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{filename}{ name of the NIFTI file }
   \item{level}{Quantile level defining the mask}
+  \item{mask}{array or nifti-object containing the mask. If set this replaces
+  the mask defined by argument level.}
   \item{setmask}{Logical (default \code{TRUE}), whether to define a suitable mask based on \code{level}}
 }
 \details{

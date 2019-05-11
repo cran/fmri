@@ -5,12 +5,12 @@ read.ANALYZE.header <- function(filename) {
   con <- file(filename,"rb")
 
   header <- list()
-  
+
   # read 4 bytes and get the endianess by comparing filesize with 348
   endian <- if ((sizeofhdr <- readBin(con,"int",1,4,endian="little")) == 348) "little" else "big"
   header$sizeofhdr <- 348
   header$endian <- endian
-  
+
   header$datatype1 <- readChar(con,10, TRUE)
   header$dbname <- readChar(con,18, TRUE)
   header$extents <- readBin(con,"int",1,4,endian=endian)
@@ -99,13 +99,13 @@ read.ANALYZE.volume <- function(filename) {
     signed <- TRUE
     size <- 1
   }
-  
+
   con <- file(filename,"rb")
   ttt <- readBin(con, what, n=dx*dy*dz*dt*size, size=size, signed=signed, endian=endian)
   close(con)
 
   dim(ttt) <- c(dx,dy,dz,dt)
-  
+
   invisible(list(ttt=ttt,header=header))
 }
 
@@ -151,7 +151,7 @@ write.ANALYZE.header <- function(header,filename) {
   writeBin(as.integer(header$omin), con, 4)
   writeBin(as.integer(header$smax), con, 4)
   writeBin(as.integer(header$smin), con, 4)
-  
+
   close(con)
 }
 
@@ -162,7 +162,8 @@ write.ANALYZE.volume <- function(ttt,filename,size) {
   close(con)
 }
 
-read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstart = 1, numbpic = 1,level=0.75,setmask=TRUE) {
+read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "",
+              picstart = 1, numbpic = 1, level=0.75, mask=NULL, setmask=TRUE) {
   counter <- c(paste("00", 1:9, sep=""), paste("0", 10:99, sep=""),paste(100:999,sep=""));
 
   prefix <- strsplit(prefix,".img")
@@ -185,8 +186,8 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
     ddim <- dim(ttt)
     cat(".")
     header <- analyze$header;
-    
-    if ((numbpic > 1) && numbered) { 
+
+    if ((numbpic > 1) && numbered) {
       for (i in 2:numbpic) {
         a <- read.ANALYZE.volume(filename[i])$ttt
         if (sum() != 0)
@@ -196,9 +197,9 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
         cat(".")
       }
     }
-    
+
     dim(ttt) <- ddim
-    
+
     if (min(abs(header$pixdim[2:4])) != 0) {
       weights <-
         abs(header$pixdim[2:4]/min(abs(header$pixdim[2:4])))
@@ -242,15 +243,15 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
 
 
 
-    mask <- array(TRUE,ddim[1:3])
+    mask0 <- array(TRUE,ddim[1:3])
     if (setmask) {
-      mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      mask0[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
       dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
       na <- ttt %*% rep(1,dim(ttt)[2])
-      mask[is.na(na)] <- FALSE
+      mask0[is.na(na)] <- FALSE
       ttt[is.na(na),] <- 0
-      dim(mask) <- ddim[1:3]
-      mask <- connect.mask(mask)
+      dim(mask0) <- ddim[1:3]
+      mask0 <- connect.mask(mask0)
     }
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
               format="ANALYZE",
@@ -267,8 +268,8 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
               roize=ddim[3],
               roit=1:ddim[4],
               weights=weights,
-              header=header, 
-              mask=mask)
+              header=header,
+              mask=mask0)
   } else {
     warning(paste("Error: file",filename[1],"does not exist!"))
     z <- list(ttt=NULL,
@@ -300,7 +301,7 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "", picstar
   } else {
     attr(z,"file") <- paste(filename[1], sep="")
   }
-  
+  if(!is.null(mask)) z <- setmask(z,mask)
   invisible(z)
 }
 
@@ -394,7 +395,7 @@ write.ANALYZE <- function(ttt, header=NULL, filename) {
 
 
 
-read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
+read.AFNI <- function(filename, vol=NULL, level=0.75, mask=NULL, setmask=TRUE){
   fileparts <- strsplit(filename,"\\.")[[1]]
 
   if (length(fileparts) == 1) {
@@ -422,7 +423,7 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
   args <- NULL
   counts <- NULL
   values <- NULL
-  
+
   for (i in 1:length(header)) {
     if (regexpr("^type *= *", header[i]) != -1) {
       tmptype <- strsplit(header[i]," *= *")[[1]][2]
@@ -443,7 +444,7 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
         tmpvalue <- sub("~$","",sub("^\'","",tmpvalue))
       }
       values <- c(values,list(value=tmpvalue))
-    }        
+    }
   }
 
   names(values) <- args
@@ -484,9 +485,9 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
   } else {
     weights <- NULL
   }
-  
+
   if (is.null(vol)) vol <- 1:dt
-  
+
   if ((as.integer(size) == size) && (length(vol) > 0)) {
     myttt <- array(0,dim=c(ddim,length(vol)))
     kk <- 1
@@ -536,15 +537,15 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
 #      myttt <- myttt[,,ddim[3]:1,,drop=FALSE]
 #    }
 
-    mask <- array(TRUE,ddim)
+    mask0 <- array(TRUE,ddim)
     if (setmask) {
-      mask[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      mask0[myttt[,,,1] < quantile(myttt[,,,1],level,na.rm = TRUE)] <- FALSE
       dim(myttt) <- c(prod(ddim),dim(myttt)[4])
       na <- myttt %*% rep(1,dim(myttt)[2])
-      mask[is.na(na)] <- FALSE
+      mask0[is.na(na)] <- FALSE
       myttt[is.na(na),] <- 0
-      dim(mask) <- ddim
-      mask <- connect.mask(mask)
+      dim(mask0) <- ddim
+      mask0 <- connect.mask(mask0)
     }
     z <-
       list(ttt=writeBin(as.numeric(myttt),raw(),4),
@@ -561,9 +562,9 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
            roiza=1,
            roize=ddim[3],
            roit=vol,
-           weights=weights, 
+           weights=weights,
            header=values,
-           mask=mask)
+           mask=mask0)
   } else {
     warning("Error reading file: Could not detect size per voxel\n")
     z <- list(ttt=NULL,
@@ -584,10 +585,11 @@ read.AFNI <- function(filename,vol=NULL,level=0.75,setmask=TRUE) {
               header=values,
               mask=NULL)
   }
-  
+
   z <- complete.fmriHeader(z)
   class(z) <- "fmridata"
   attr(z,"file") <- paste(filename,".HEAD/BRIK",sep="")
+  if(!is.null(mask)) z <- setmask(z,mask)
   invisible(z)
 }
 
@@ -674,7 +676,7 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
   afni.header$DATASET_NAME <- c("DATASET_NAME", "string", 9, 1, 1, FALSE)
   afni.header$DATASET_KEYWORDS <- c("DATASET_KEYWORDS", "string", 9, 1, 1, FALSE)
   afni.header$BRICK_KEYWORDS <- c("BRICK_KEYWORDS", "string", 9, 1, 1, FALSE)
-  
+
   AFNIheaderpart <- function(name, value, conhead, check=NULL) {
     if (regexpr("_[0-9]*$", name)) if (!is.null(afni.header[[sub("_[0-9]*$","", name)]])) {
       if (as.logical(afni.header[[sub("_[0-9]*$","", name)]][6])) {
@@ -702,7 +704,7 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
       }
 
       if (regexpr("string",type) == 1) {
-        if (!is.null(check)) if (!(value %in% check)) 
+        if (!is.null(check)) if (!(value %in% check))
           warning("value ", value, " for attribute ", name," does not seem to be valid! Please check!", call.=FALSE)
         value <- paste("'", value, "~", sep="")                         # make syntax highlightening work:'
         a <- paste(a, "count = ", nchar(value) - 1, "\n", sep ="")
@@ -717,7 +719,7 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
           if (!is.null(check)) {
             length(check) <- as.integer(header.entry[5])
             check[is.na(check)] <- 0
-            if (!as.logical(prod((value[1:as.integer(header.entry[4])] == check[1:as.integer(header.entry[4])])))) 
+            if (!as.logical(prod((value[1:as.integer(header.entry[4])] == check[1:as.integer(header.entry[4])]))))
               warning("value ", value, " for attribute ", name," does not seem to be valid or match dataset! Please check!", call.=FALSE)
           }
         }
@@ -752,25 +754,25 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
   if (is.null(header$DATASET_DIMENSIONS)) header$DATASET_DIMENSIONS <- c(dim(ttt)[1:3])
   AFNIheaderpart("DATASET_DIMENSIONS",header$DATASET_DIMENSIONS, conhead,c(dim(ttt)[1:3]))
   header$DATASET_DIMENSIONS <- NULL
-  if (is.null(header$TYPESTRING)) {header$TYPESTRING <- "3DIM_HEAD_FUNC"; 
+  if (is.null(header$TYPESTRING)) {header$TYPESTRING <- "3DIM_HEAD_FUNC";
           warning("TYPESTRING not given, setting to 3DIM_HEAD_FUNC for backward compatibility", call.=FALSE) }
   AFNIheaderpart("TYPESTRING",header$TYPESTRING, conhead,c("3DIM_HEAD_ANAT","3DIM_HEAD_FUNC","3DIM_GEN_ANAT","3DIM_GEN_ANAT"))
   header$TYPESTRING <- NULL
-  if (is.null(header$SCENE_DATA)) {header$SCENE_DATA <- c(0,11,1,-999,-999,-999,-999,-999); 
+  if (is.null(header$SCENE_DATA)) {header$SCENE_DATA <- c(0,11,1,-999,-999,-999,-999,-999);
            warning("SCENE_DATA not given, setting to c(0,11,1,-999,-999,-999,-999,-999) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("SCENE_DATA",header$SCENE_DATA, conhead)
   header$SCENE_DATA <- NULL
-  if (is.null(header$ORIENT_SPECIFIC)) {header$ORIENT_SPECIFIC <- c(0,3,4); 
+  if (is.null(header$ORIENT_SPECIFIC)) {header$ORIENT_SPECIFIC <- c(0,3,4);
              warning("ORIENT_SPECIFIC not given, setting to c(0,3,4) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("ORIENT_SPECIFIC",header$ORIENT_SPECIFIC, conhead)
   header$ORIENT_SPECIFIC <- NULL
   if (!is.null(origin)) header$ORIGIN <- origin
-  if (is.null(header$ORIGIN)) { header$ORIGIN <- c(0,0,0); 
+  if (is.null(header$ORIGIN)) { header$ORIGIN <- c(0,0,0);
              warning("ORIGIN not given, setting to c(0,0,0) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("ORIGIN",header$ORIGIN, conhead)
   header$ORIGIN <- NULL
   if (!is.null(delta)) header$DELTA <- delta
-  if (is.null(header$DELTA)) { header$DELTA <- c(4,4,4); 
+  if (is.null(header$DELTA)) { header$DELTA <- c(4,4,4);
           warning("DELTA not given, setting to c(4,4,4) for backward compatibility", call.=FALSE) }
   AFNIheaderpart("DELTA",header$DELTA, conhead)
   header$DELTA <- NULL
@@ -785,7 +787,7 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
     if (!is.null(header$TAXIS_NUMS[2])) if (header$TAXIS_NUMS[2] != 0) if (is.null(header$TAXIS_OFFSETS)) {
       stop("TAXIS_OFFSETS not given", call.=FALSE) } else { AFNIheaderpart("TAXIS_OFFSETS",header$TAXIS_OFFSETS, conhead); header$TAXIS_OFFSETS <- NULL }
     header$TAXIS_NUMS <- NULL
-  } 
+  }
 
   # almost mandatory attributes
   if (!is.null(idcode)) header$IDCODE_STRING <- idcode
@@ -814,7 +816,7 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
     header$BRICK_TYPES <- rep(1,dim(ttt)[4])
   }
   bricktypes <- header$BRICK_TYPES[1]
-  if ((bricktypes == 1) && (max(abs(header$BRICK_STATS)) > 32767)) { 
+  if ((bricktypes == 1) && (max(abs(header$BRICK_STATS)) > 32767)) {
     for (k in 1:dim(ttt)[4]) {
       header$BRICK_FLOAT_FACS[k] <- max(abs(header$BRICK_STATS[2*k-1]),abs(header$BRICK_STATS[2*k]))/32767
       ttt[,,,k] <- ttt[,,,k] / header$BRICK_FLOAT_FACS[k]
@@ -852,19 +854,19 @@ write.AFNI <- function(filename, ttt, label=NULL, note=NULL, origin=NULL, delta=
 }
 
 
-read.DICOM <- function(filename,includedata=TRUE) {
+read.DICOM <- function(filename, includedata=TRUE) {
   read.DICOM.groupelement <- function(con,endian="little") {
     if (endian == "little") {
       paste(paste(rev(readBin(con,"raw",2,1)),collapse=""),paste(rev(readBin(con,"raw",2,1)),collapse=""),sep=",")
     } else {
       paste(paste(readBin(con,"raw",2,1),collapse=""),paste(readBin(con,"raw",2,1),collapse=""),sep=",")
-    }    
+    }
   }
-  
+
   con <- file(filename,"rb")
 
   endian <- "little"
-  
+
   headerdetails <- list()
   bytes <- 0
 
@@ -878,7 +880,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
   if (dicom != "DICM") {
     warning("This does not seem to be a DICOM file\n")
   }
-  
+
   groupelement <- 0
   while (TRUE) {
     groupelement <- read.DICOM.groupelement(con)
@@ -909,7 +911,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
               } else {
                 testelement <- paste(paste(sqv[(length(sqv)-3):(length(sqv)-2)],collapse=""),
                                      paste(sqv[(length(sqv)-1):length(sqv)],collapse=""),sep=",")
-              }    
+              }
               if (testelement == "fffe,e00d") {
                 length <- readBin(con,"integer",1,4,signed=FALSE,endian=endian)
                 bytes <- bytes + 4
@@ -935,7 +937,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
 
     if (length != 0) {
       if (vr %in% c("UI","DS","SH","IS")) {
-        value <- readChar(con, length, TRUE)      
+        value <- readChar(con, length, TRUE)
         bytes <- bytes + length
       } else if (vr %in% c("US")) {
         total <- 0
@@ -988,7 +990,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
 #  cat("Bytes for Header:",bytes,"\n")
 
   close(con)
-  
+
   if (!is.null(headerdetails[["0028,0010"]])) {
     xdim <- as.integer(headerdetails[["0028,0010"]])
   } else {
@@ -1027,11 +1029,11 @@ read.DICOM <- function(filename,includedata=TRUE) {
     image <- NULL
   }
 
-  # read again 
+  # read again
   con <- file(filename,"rb")
 
   header <- readBin(con,"raw",bytes)
-  
+
   if (includedata) {
     if (is.null(xdim) || is.null(ydim)) {
       ttt <- readBin(con,"integer",length/depth,depth,signed=FALSE,endian=endian)
@@ -1039,7 +1041,7 @@ read.DICOM <- function(filename,includedata=TRUE) {
     } else {
       ttt <- array(readBin(con,"integer",length/depth,depth,signed=FALSE,endian=endian),c(xdim,ydim))
     }
-    
+
     z <- list(header=headerdetails,ttt=writeBin(as.numeric(ttt),raw(),4),format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
   } else {
     z <- list(header=headerdetails,format="DICOM",delta=delta,series=series,image=image,dim=c(xdim,ydim))
@@ -1054,12 +1056,12 @@ read.DICOM <- function(filename,includedata=TRUE) {
 
 read.NIFTI.header <- function(con) {
   header <- list()
-  
+
   # read 4 bytes and get the endianess by comparing filesize with 348
   endian <- if ((sizeofhdr <- readBin(con,"int",1,4,endian="little")) == 348) "little" else "big"
   header$sizeofhdr <- 348
   header$endian <- endian
-  
+
   header$datatype1 <- readChar(con,10, TRUE)
   header$dbname <- readChar(con,18, TRUE)
   header$extents <- readBin(con,"int",1,4,endian=endian)
@@ -1102,11 +1104,11 @@ read.NIFTI.header <- function(con) {
   header$srowz <- readBin(con,"double",4,4,endian=endian)
   header$intentname <- readChar(con,16, TRUE)
   header$magic <- readChar(con,4, TRUE)
-  
+
   header
 }
 
-read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
+read.NIFTI <- function(filename, level=0.75, mask=NULL, setmask=TRUE) {
   fileparts <- strsplit(filename,"\\.")[[1]]
   ext <- tolower(fileparts[length(fileparts)])
 
@@ -1129,7 +1131,7 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
   if ((ext != "hdr") && (ext != "img") && (!is.na(file.info(filename.nii)$size))) {
     con <- file(filename.nii,"rb")
     header <- read.NIFTI.header(con)
-    if (!(header$magic == "n+1") && !(header$magic == "ni1")) 
+    if (!(header$magic == "n+1") && !(header$magic == "ni1"))
       warning("Hmmm! Dont see the magic NIFTI string! Try to proceed, but maybe some weird results will occur!");
     bytes <- header$voxoffset - 348
     header$extension <- readBin(con,"raw",bytes)
@@ -1138,9 +1140,9 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
       stop("Hmmm! This does not seem to be a NIFTI header (hdr/img-pair)! Wrong size or does not exist!");
     con <- file(filename.hdr,"rb")
     header <- read.NIFTI.header(con)
-    header$extension <- NULL  
+    header$extension <- NULL
     close(con)
-    if (is.na(file.info(filename.img)$size))     
+    if (is.na(file.info(filename.img)$size))
       stop("Hmmm! This does not seem to be a NIFTI header (hdr/img-pair)! img-file not found!");
     con <- file(filename.img,"rb")
   }
@@ -1185,7 +1187,7 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
     signed <- TRUE
     size <- 1
   }
-  ttt <- readBin(con, what, n=dx*dy*dz*dt*dd, size=size, signed=signed, endian=endian) 
+  ttt <- readBin(con, what, n=dx*dy*dz*dt*dd, size=size, signed=signed, endian=endian)
   close(con)
 
   if (min(abs(header$pixdim[2:4])) != 0) {
@@ -1197,15 +1199,15 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
   dim(ttt) <- if (dd == 1) c(dx,dy,dz,dt) else if (dt == 1) c(dx,dy,dz,dd) else c(dx,dy,dz,dt,dd)
 
   if (dd == 1) {
-    mask <- array(TRUE,c(dx,dy,dz))
+    mask0 <- array(TRUE,c(dx,dy,dz))
     if (setmask) {
-      mask[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
+      mask0[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
       dim(ttt) <- c(prod(dim(ttt)[1:3]),dim(ttt)[4])
       na <- ttt %*% rep(1,dim(ttt)[2])
-      mask[is.na(na)] <- FALSE
+      mask0[is.na(na)] <- FALSE
       ttt[is.na(na),] <- 0
-      dim(mask) <- c(dx,dy,dz)
-      mask <- connect.mask(mask)
+      dim(mask0) <- c(dx,dy,dz)
+      mask0 <- connect.mask(mask0)
     }
     z <- list(ttt=writeBin(as.numeric(ttt),raw(),4),
               format="NIFTI",
@@ -1223,7 +1225,7 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
               roit=1:dt,
               weights=weights,
               header=header,
-              mask=mask)
+              mask=mask0)
 
     class(z) <- "fmridata"
   } else {
@@ -1247,6 +1249,7 @@ read.NIFTI <- function(filename,level=0.75,setmask=TRUE) {
 
   attr(z,"file") <- paste(filename, sep="")
   z <- complete.fmriHeader(z)
+  if(!is.null(mask)) z <- setmask(z,mask)
   invisible(z)
 }
 
@@ -1261,7 +1264,7 @@ complete.fmriHeader <- function(fmriobj){
   if (!("regular" %in% names(header))) header$regular <- "r"
   if (!("diminfo" %in% names(header))) header$diminfo <- " "
   if (!("dimension" %in% names(header))) {
-    if (is.null(header$dim0)) 
+    if (is.null(header$dim0))
       header$dimension <- rep(0,8)
     else
       header$dimension <- header$dim0
@@ -1454,21 +1457,25 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
   close(con)
 }
 
-extract.data <- function(z,what="data"){
-  if (what=="residuals") {  
+extractData <- function(z,what="data"){
+  if (what=="residuals") {
       if(!is.null(z$resscale)){
-          ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale 
+          ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale
           dim(ttt) <- z$dim[c(4,1:3)]
           } else {
-          warning("extract.data: No residuals available, returning NULL")
+          warning("extractData: No residuals available, returning NULL")
           ttt <- NULL
       }
-      } else { 
+      } else {
       if(!is.null(z$ttt)){
-      ttt <- readBin(z$ttt,"numeric",prod(z$dim),4)
-      dim(ttt) <- z$dim
-          } else {
-          warning("extract.data: No residuals available, returning NULL")
+        if(is.null(z$datascale)){
+           ttt <- readBin(z$ttt,"numeric",prod(z$dim),4)
+        } else {
+           ttt <- readBin(z$ttt,"integer",prod(z$dim),2)*z$datascale
+        }
+        dim(ttt) <- z$dim
+        } else {
+          warning("extractData: No residuals available, returning NULL")
           ttt <- NULL
       }
       }

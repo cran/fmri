@@ -45,10 +45,10 @@ write.AFNI(filename, ttt, label = NULL, note = NULL, origin = NULL,
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{read.AFNI}},\code{\link{write.ANALYZE}} }
 \examples{
- \dontrun{write.AFNI("afnifile", array(as.integer(65526*runif(10*10*10*20)),
+ \dontrun{write.AFNI(tempfile(), array(as.integer(65526*runif(10*10*10*20)),
      c(10,10,10,20)), c("signal"), note="random data",
      origin=c(0,0,0), delta=c(4,4,5), idcode="unique ID")}
- write.AFNI("afnifile", array(as.integer(65526*runif(10*10*10*20)),
+ write.AFNI(tempfile(), array(as.integer(65526*runif(10*10*10*20)),
      c(10,10,10,20)), header=list(HISTORY_NOTE="random data",
      ORIGIN=c(0,0,0), DELTA=c(4,4,5), IDCODE_STRING="unique ID"),taxis=FALSE)
 }

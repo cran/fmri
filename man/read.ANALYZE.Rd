@@ -7,7 +7,7 @@
 }
 \usage{
 read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
-             picstart = 1, numbpic = 1, level = 0.75,setmask=TRUE)
+             picstart = 1, numbpic = 1, level = 0.75, mask=NULL, setmask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,6 +19,8 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
   \item{picstart}{ number of the first image to be read. }
   \item{numbpic}{ number of images to be read }
   \item{level}{Quantile level defining the mask}
+  \item{mask}{array or nifti-object containing the mask. If set this replaces
+  the mask defined by argument level.}
   \item{setmask}{Logical (default \code{TRUE}), whether to define a suitable mask based on \code{level}}
 }
 \details{
@@ -57,7 +59,7 @@ read.ANALYZE(prefix = "", numbered = FALSE, postfix = "",
 
 }
 \note{   Since numbering and naming of ANALYZE files widely vary, this
-  function may not meet your personal needs. See Details section above for 
+  function may not meet your personal needs. See Details section above for
   a description.
 }
 \seealso{ \code{\link{write.ANALYZE}}, \code{\link{read.AFNI}} }

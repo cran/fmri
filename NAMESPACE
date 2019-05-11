@@ -1,30 +1,37 @@
-export(read.AFNI,read.ANALYZE,read.DICOM,read.NIFTI,extract.data,cutroi)
+useDynLib(fmri, .registration = TRUE, .fixes = "C_")
+export(read.AFNI,read.ANALYZE,read.DICOM,read.NIFTI,extractData,cutroi,setmask)
 export(write.AFNI,write.ANALYZE,write.NIFTI)
-export(fmri.stimulus,fmri.design,fmri.lm)
-export(fmri.smooth,fmri.pvalue)
+export(fmri.stimulus,fmri.design,fmri.lm,sincfilter,slicetiming)
+export(fmri.smooth,fmri.pvalue,fmri.searchlight,fmri.cluster)
+export(getSearchlightPattern)
 export(plot.fmridata,plot.fmrisegment,summary.fmridata,print.fmridata)
-export(fmri.detrend)
-export(fmri.gui)
-export(plot.fmridata)
+export(fmri.detrend,fmri.sICA,ICAfingerprint,plot.fmriICA,fmri.sgroupICA,
+       plot.fmrigroupICA)
+export(plot.fmridata, plot.fmripvalue)
 export(oro2fmri,fmri2oro)
+export(gen_fmridata)
+# export(findclusters,simclusterthr)
 export(fmri.designG,fmri.lmePar,fmri.metaPar)
+export(niftiImage2fmri)
 import(parallel,awsMethods,nlme)
   importFrom("grDevices", "col2rgb", "dev.new", "gray", "grey",
              "heat.colors", "hsv", "rainbow")
   importFrom("graphics", "image", "layout", "legend", "lines", "par",
-             "plot", "polygon", "text", "title")
+             "plot", "polygon", "text", "title", "hist", "stars")
   importFrom("methods", "getClassDef", "getValidity", "slot",
-             "slotNames")
-  importFrom("stats", "IQR", "convolve", "dchisq", "density", "dnorm",
+             "slotNames", "is")
+  importFrom("stats", "IQR", "convolve", "dchisq", "density", "dnorm", "qnorm",
              "formula", "lm", "median", "optim", "pchisq", "pnorm",
-             "poly", "prcomp", "pt", "qchisq", "qt", "quantile", "rnorm",
-             "var", "vcov")
+             "poly", "prcomp", "pt", "qchisq", "qt", "quantile", "rnorm", "cor",
+             "rt", "var", "vcov", "sd", "spectrum", "dist", "as.dist", "hclust")
   importFrom("utils", "flush.console", "setTxtProgressBar",
              "txtProgressBar")
 importFrom(metafor,rma.uni)
+importFrom(aws, kernsm)
 S3method(plot,fmridata)
+S3method(plot,fmripvalue)
 S3method(plot,fmrisegment)
+S3method(plot,fmriICA)
+S3method(plot,fmrigroupICA)
 S3method(print,fmridata)
 S3method(summary,fmridata)
-useDynLib(fmri)
-

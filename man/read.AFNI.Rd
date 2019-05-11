@@ -6,18 +6,20 @@
   Read HEAD/BRIK file.
 }
 \usage{
-read.AFNI(filename,vol=NULL,level=0.75,setmask=TRUE)
+read.AFNI(filename,vol=NULL,level=0.75,mask=NULL,setmask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{filename}{ name of the file (without extension) }
   \item{vol}{vector of volumes of the dataset to be read}
   \item{level}{Quantile level defining the mask}
+  \item{mask}{array or nifti-object containing the mask. If set this replaces
+  the mask defined by argument level.}
   \item{setmask}{Logical (default \code{TRUE}), whether to define a suitable mask based on \code{level}}
 }
 \details{
   The function reads a HEAD/BRIK file. If \code{vol} is given (defaults to
-  \code{NULL}), only volumes in this vector are read, in order to save 
+  \code{NULL}), only volumes in this vector are read, in order to save
   memory.
 }
 \value{
@@ -36,7 +38,7 @@ read.AFNI(filename,vol=NULL,level=0.75,setmask=TRUE)
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \references{R. W. Cox (1996). AFNI: Software for analysis and visualization of
-  functional magnetic resonance neuroimages. Computers and Biomed. Res. 
+  functional magnetic resonance neuroimages. Computers and Biomed. Res.
   29:162-173.
 
  Polzehl, J. and Tabelow, K. (2007)

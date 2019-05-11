@@ -11,14 +11,16 @@
   (from the \pkg{fmri} package) and \code{nifti} S4 objects.
 }
 \usage{
-oro2fmri(from, value = NULL, level = 0.75, setmask = TRUE)
+oro2fmri(from, value = NULL, level = 0.75, mask=NULL, setmask = TRUE)
 fmri2oro(from, value = NULL, verbose = FALSE, reorient = FALSE,
-         call = NULL) 
+         call = NULL)
 }
 \arguments{
   \item{from}{is the object to be converted.}
   \item{value}{\code{NULL}}
   \item{level}{is the quantile level defining the mask.}
+  \item{mask}{array or nifti-object containing the mask. If set this replaces
+  the mask defined by argument level.}
   \item{setmask}{is a logical variable (default = \code{TRUE}), whether
     to define a suitable mask based on \code{level}.}
   \item{verbose}{is a logical variable (default = \code{FALSE}) that

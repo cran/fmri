@@ -4,7 +4,7 @@
 
 ## setAs("nifti", "fmridata", function(from) { oro2fmri(from) })
 
-oro2fmri <- function(from, value=NULL, level=0.75, setmask=TRUE) {
+oro2fmri <- function(from, value=NULL, level=0.75, mask=NULL, setmask=TRUE) {
   ## Convert nifti() S4 object to "fmridata" S3 object
   header <- vector("list", length(slotNames(from)))
   for (i in 2:length(header)) {
@@ -41,33 +41,33 @@ oro2fmri <- function(from, value=NULL, level=0.75, setmask=TRUE) {
     }
   }
   if (dd == 1) {
-    mask <- array(TRUE, c(dx,dy,dz))
+    mask0 <- array(TRUE, c(dx,dy,dz))
     if (setmask) {
-      mask[ttt[,,,1] < quantile(ttt[,,,1], level, na.rm=TRUE)] <- FALSE
+      mask0[ttt[,,,1] < quantile(ttt[,,,1], level, na.rm=TRUE)] <- FALSE
       dim(ttt) <- c(prod(dim(ttt)[1:3]), dim(ttt)[4])
       na <- ttt %*% rep(1, dim(ttt)[2])
-      mask[is.na(na)] <- FALSE
+      mask0[is.na(na)] <- FALSE
       ttt[is.na(na), ] <- 0
-      dim(mask) <- c(dx, dy, dz)
-      mask <- connect.mask(mask)
+      dim(mask0) <- c(dx, dy, dz)
+      mask0 <- connect.mask(mask0)
     }
-    z <- list(ttt = writeBin(as.numeric(ttt), raw(), 4), 
+    z <- list(ttt = writeBin(as.numeric(ttt), raw(), 4),
               format = "NIFTI",
               delta = header$pixdim[2:4],
               origin = c(header$qoffsetx, header$qoffsety, header$qoffsetz),
-              orient = NULL, 
+              orient = NULL,
               dim = header$dimension[2:5],
               dim0 = header$dimension[2:5],
               roixa = 1,
               roixe = dx,
               roiya = 1,
               roiye = dy,
-              roiza = 1, 
+              roiza = 1,
               roize = dz,
               roit = 1:dd,
               weights = weights,
               header = header,
-              mask = mask)
+              mask = mask0)
     class(z) <- "fmridata"
   } else {
         z <- list(ttt = writeBin(as.numeric(ttt), raw(), 4),
@@ -88,6 +88,7 @@ oro2fmri <- function(from, value=NULL, level=0.75, setmask=TRUE) {
               header = header)
   }
   attr(z, "file") <- ""
+  if(!is.null(mask)) z <- setmask(z,mask)
   return(z)
 }
 

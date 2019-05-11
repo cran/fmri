@@ -7,7 +7,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       integer dw1,dw2,dw3,j1,j2,j3
       double precision lwght(dw1,dw2,dw3)
       getlwght=lwght(j1,j2,j3)
-      RETURN 
+      RETURN
       END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
@@ -21,7 +21,7 @@ C          Kern=3     Gaussian
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       double precision function lkern(kern,xsq)
-      implicit logical (a-z)
+      implicit none
       integer kern
       double precision xsq
       IF (xsq.ge.1) THEN
@@ -42,42 +42,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C        use Epanechnikov
          lkern=1.d0-xsq
       ENDIF
-      RETURN 
-      END
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
-C
-C          Compute aws-weights  w_{ij}
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      subroutine awswghts(n1,n2,n3,j1,j2,j3,dv0,thi,theta,
-     1                    vwghts,skern,spf,spmin,spmax,bii,wj)
-      implicit logical (a-z)
-      integer n1,n2,n3,j1,j2,j3,dv0,skern
-      double precision thi(dv0),theta(n1,n2,n3,dv0),vwghts(dv0),spf,
-     1       spmin,spmax,bii,wj,wjin
-      integer k
-      double precision sij,z
-      wjin=wj
-      sij=0.d0
-C  compute distance in sij
-      DO k=1,dv0
-         z=thi(k)-theta(j1,j2,j3,k)
-         sij=sij+z*z*vwghts(k)
-      END DO
-      sij=bii*sij
-      IF (sij.gt.spmax) THEN
-         wj=0.d0
-      ELSE IF (skern.eq.1) THEN
-C  skern == "Plateau"
-         wj=wj*min(1.d0,1.d0-spf*(sij-spmin))
-      ELSE IF (skern.eq.2) THEN
-C  skern == "Triangle"
-         wj=wj*(1.d0-sij)
-      ELSE
-C  skern == "Exp"
-         IF (sij.gt.spmin) wj=wj*exp(-spf*(sij-spmin))
-      ENDIF
       RETURN
       END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -85,10 +49,15 @@ C
 C
 C          Compute aws-weights  w_{ij}
 C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C
+C          Compute aws-weights  w_{ij}
+C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine awswght3(thi,theta,skern,
      1                    spf,spmin,spmax,bii,wj)
-      implicit logical (a-z)
+      implicit none
       integer skern
       double precision thi,theta,spf,spmin,spmax,bii,wj,wjin
       double precision sij,z
@@ -131,7 +100,7 @@ C   kern     specifies the location kernel
 C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
-      implicit logical (a-z)
+      implicit none
       integer n1,n2,n3,kern,skern
       logical aws,wlse,mask(*)
       double precision y(*),theta(*),bi(*),thn(*),lambda,spmax,
@@ -139,7 +108,7 @@ C
      2       getlwght
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,clw1,
      1        clw2,clw3,dlw1,dlw2,dlw3,n,iind,jind,n12,jind2,jind3,
-     2        a1,e1,a2,e2,a3,e3
+     2        a1,e1,a2,e2,a3,e3,k
       double precision bii,swj,swjy,thi,wj,hakt2,spf,si2i,swjv
       external getlwght
       hakt2=hakt*hakt
@@ -183,7 +152,7 @@ C$OMP DO SCHEDULE(GUIDED)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n12+1         
+         i3=(iind-i1-(i2-1)*n1)/n12+1
          if(mask(iind)) THEN
             thn(iind)=0.d0
             CYCLE
@@ -250,7 +219,7 @@ C                  if(j1.lt.1.or.j1.gt.n1) CYCLE
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN 
+                  if(wlse) THEN
                      wj=wj*si2(jind)
                   ELSE
                      swjv=swjv+wj/si2(jind)
@@ -293,7 +262,7 @@ C   kern     specifies the location kernel
 C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
-      implicit logical (a-z)
+      implicit none
       integer n1,n2,n3,n4,kern,skern
       logical aws,wlse,mask(*)
       double precision res(n4,*),y(*),theta(*),
@@ -305,7 +274,7 @@ C
      2       rthrednr
       double precision bii,swj,swjy,thi,wj,hakt2,spf,si2i,sresisq,resik
       external getlwght
-!$      integer omp_get_thread_num 
+!$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
@@ -345,13 +314,13 @@ C$OMP DO SCHEDULE(GUIDED)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n1/n2+1         
+         i3=(iind-i1-(i2-1)*n1)/n1/n2+1
          if(mask(iind)) THEN
                thn(iind)=0.d0
             DO k=1,n4
                resnew(k,iind)=0.d0
             END DO
-            bi(iind)=1.d0            
+            bi(iind)=1.d0
             CYCLE
          END IF
          si2i=si2(iind)
@@ -382,14 +351,14 @@ C  first stochastic term
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN 
+                  if(wlse) THEN
                      wj=wj*si2(jind)
                   END IF
                   swj=swj+wj
                   swjy=swjy+wj*y(jind)
                   call daxpy(n4,wj,res(1,jind),1,resi(1+rthrednr),1)
 C                  DO k=1,n4
-C                     resi(k+rthrednr)=resi(k+rthrednr)+wj*res(k,jind)                     
+C                     resi(k+rthrednr)=resi(k+rthrednr)+wj*res(k,jind)
 C                  END DO
                END DO
             END DO
@@ -397,7 +366,7 @@ C                  END DO
          thn(iind)=swjy/swj
          sresisq=0.d0
          DO k=1,n4
-            resik=resi(k+rthrednr) 
+            resik=resi(k+rthrednr)
             resnew(k,iind)=resik/swj
             sresisq=sresisq+resik*resik
          END DO
@@ -429,7 +398,7 @@ C   kern     specifies the location kernel
 C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
-      implicit logical (a-z)
+      implicit none
       integer dv,n1,n2,n3,kern,skern,ncores
       logical aws,wlse,mask(*)
       double precision theta(*),bi(*),y(dv,*),
@@ -439,7 +408,7 @@ C
      1        clw1,clw2,clw3,dlw1,dlw2,dlw3,k,n,thrednr,iind,jind
       double precision bii,swj,wj,hakt2,spf,si2i,thi
       external getlwght
-!$      integer omp_get_thread_num 
+!$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       hakt2=hakt*hakt
       spf=spmax/(spmax-spmin)
@@ -476,7 +445,7 @@ C$OMP DO SCHEDULE(GUIDED)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n1/n2+1         
+         i3=(iind-i1-(i2-1)*n1)/n1/n2+1
          if(mask(iind)) THEN
             DO k=1,dv
                thn(k,iind)=0.d0
@@ -510,7 +479,7 @@ C  first stochastic term
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN 
+                  if(wlse) THEN
                      wj=wj*si2(jind)
                   END IF
                   swj=swj+wj
@@ -547,7 +516,7 @@ C   kern     specifies the location kernel
 C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
-      implicit logical (a-z)
+      implicit none
       integer n1,n2,n3,kern,dv
       logical wlse,mask(n1,n2,n3)
       double precision y(n1,n2,n3,dv),thn(n1,n2,n3,dv),wght(2),
@@ -602,7 +571,7 @@ C  first stochastic term
                         IF(mask(j1,j2,j3)) CYCLE
                         wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                         if(wj.le.0.d0) CYCLE
-                        if(wlse) THEN 
+                        if(wlse) THEN
                            wj=wj*si2(j1,j2,j3)
                         END IF
                         swj=swj+wj
@@ -625,7 +594,7 @@ C
 C   calculate location weights in lwght
 C
       subroutine locwghts(dlw1,dlw2,dlw3,wght,hakt2,kern,lwght)
-      implicit logical (a-z)
+      implicit none
       integer dlw1,dlw2,dlw3,kern
       double precision wght(2),hakt2,lwght(dlw1,dlw2,dlw3),lkern
       external lkern

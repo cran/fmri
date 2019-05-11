@@ -6,12 +6,13 @@
   Detrend fMRI dataset with a polynomial of given degree
 }
 \usage{
-fmri.detrend(data, degree = 1, accoef = 0)
+fmri.detrend(data, degree = 1, nuisance=NULL, accoef = 0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{ fMRI dataset of class ''\code{fmridata}'' }
   \item{degree}{ Degree of the polynomial used to detrend the data. defaults to 1 (linear trends). }
+  \item{nuisance}{ Matrix of additional nuisance parameters to regree against. }
   \item{accoef}{ Coefficient of AR(1) model used for prewhitening. default 0. }
 }
 \details{
@@ -23,7 +24,7 @@ fmri.detrend(data, degree = 1, accoef = 0)
 \references{
   Polzehl, J. and Tabelow, K. (2007).
   \emph{fmri: A Package for Analyzing fmri Data},
-  R News, 7:13-17. 
+  R News, 7:13-17.
 }
 \author{ Joerg Polzehl \email{polzehl@wias-berlin.de} }
 \seealso{ \code{\link{fmri.lm}} }

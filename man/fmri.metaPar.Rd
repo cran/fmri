@@ -6,8 +6,8 @@
 Group maps are estimated from BOLD effect estimates and their variances previously determined for each subject. The function \code{\link{rma.uni}} from R package \pkg{metafor} is used to fit mixed-effects meta-analytic models at group level. Voxel-wise regression analysis is accelerated by optional parallel processing using R package \pkg{parallel}.
 }
 \usage{
-fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML", 
-             weighted = TRUE, knha = FALSE, mask = NULL, cluster = 2, 
+fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML",
+             weighted = TRUE, knha = FALSE, mask = NULL, cluster = 2,
              wghts = c(1, 1, 1))
 }
 %- maybe also 'usage' for other objects documented here.
@@ -37,9 +37,9 @@ fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML",
 %%  ~~ If necessary, more details than the description above ~~
 \code{fmri.metaPar()} fits the configured linear mixed-effects meta-analytic (MEMA) model separately at each voxel and extracts the first regression coefficient (usually the overall group mean), corresponding squared standard errors and degrees of freedom as well as the residuals from resulting \code{rma.uni()} objects, to obtain a statistical parametric map (SPM) for the group. Voxel-by-voxel analysis is performed by either the function \code{\link{apply}} or \code{\link{parApply}} from \pkg{parallel} package, which walks through the \code{Cbold} array.
 
-This two-stage approach reduces the computational burden of fitting a full linear mixed-effects (LME) model, \code{\link{fmri.lmePar}} would do. It assumes first level design is same across subjects and normally distributed not necessarily homogeneous within-subject errors. Warping to standard space has been done before first-stage analyses are carried out. Either no masking or a uniform brain mask should be applied at individual subject analysis level, to avoid loss of information at group level along the edges. 
+This two-stage approach reduces the computational burden of fitting a full linear mixed-effects (LME) model, \code{\link{fmri.lmePar}} would do. It assumes first level design is same across subjects and normally distributed not necessarily homogeneous within-subject errors. Warping to standard space has been done before first-stage analyses are carried out. Either no masking or a uniform brain mask should be applied at individual subject analysis level, to avoid loss of information at group level along the edges.
 
-At the second stage, observed individual BOLD effects from each study are combined in a meta-analytic model. There is the opportunity of weighting the fMRI studies by the precision of their respective effect estimate to take account of first level residual heterogeneity (\code{weighted = TRUE}). This is how to deal with intra-subject variability. The REML estimate of cross-subject variability (tau-squared) assumes that each of these observations is drawn independently from the same Gaussian distribution. Since correlation structures cannot be modeled, multi-subject fMRI studies with repeated measures cannot be analyzed in this way. 
+At the second stage, observed individual BOLD effects from each study are combined in a meta-analytic model. There is the opportunity of weighting the fMRI studies by the precision of their respective effect estimate to take account of first level residual heterogeneity (\code{weighted = TRUE}). This is how to deal with intra-subject variability. The REML estimate of cross-subject variability (tau-squared) assumes that each of these observations is drawn independently from the same Gaussian distribution. Since correlation structures cannot be modeled, multi-subject fMRI studies with repeated measures cannot be analyzed in this way.
 
 Spatial correlation among voxels, e.g. through the activation of nearby voxels, is ignored at this stage, but corrects for it, when random field theory define a threshold for significant activation at inference stage.
 
@@ -53,7 +53,7 @@ An object of class \code{"fmrispm"} and \code{"fmridata"}, basically a list with
   \item{var}{estimated variance of the BOLD contrast parameters}
   \item{mask}{brain mask}
   \item{res}{raw (integer size 2) vector containing residuals of the estimated linear mixed-effects meta-analytic model up to scale factor \code{resscale}}
-  \item{resscale}{\code{resscale*extract.data(object,"residuals")} are the residuals.}
+  \item{resscale}{\code{resscale*extractData(object,"residuals")} are the residuals.}
   \item{tau2}{estimated amount of (residual) heterogeneity. Always 0 when \code{method = "FE"}.}
   \item{rxyz}{array of smoothness from estimated correlation for each voxel in resel space (for analysis without smoothing).}
   \item{scorr}{array of spatial correlations with maximal lags 5, 5, 3 in x, y and z-direction}
@@ -106,22 +106,22 @@ stim <- matrix(hrf, nrow= dx*dy*dz, ncol=dt, byrow=TRUE)
 mask <- array(FALSE, c(dx, dy, dz))
 mask[12:22,12:22,12:22] <- TRUE
 
-ds1 <- list(ttt=writeBin(1.0*rnorm(dx*dy*dz*dt) + as.vector(5*stim), 
+ds1 <- list(ttt=writeBin(1.0*rnorm(dx*dy*dz*dt) + as.vector(5*stim),
            raw(), 4), mask = mask, dim = c(dx, dy, dz, dt))
-ds2 <- list(ttt=writeBin(1.7*rnorm(dx*dy*dz*dt) + as.vector(3*stim), 
+ds2 <- list(ttt=writeBin(1.7*rnorm(dx*dy*dz*dt) + as.vector(3*stim),
            raw(), 4), mask = mask, dim = c(dx, dy, dz, dt))
-ds3 <- list(ttt=writeBin(0.8*rnorm(dx*dy*dz*dt) + as.vector(1*stim), 
+ds3 <- list(ttt=writeBin(0.8*rnorm(dx*dy*dz*dt) + as.vector(1*stim),
            raw(), 4), mask = mask, dim = c(dx, dy, dz, dt))
-ds4 <- list(ttt=writeBin(1.2*rnorm(dx*dy*dz*dt) + as.vector(2*stim), 
+ds4 <- list(ttt=writeBin(1.2*rnorm(dx*dy*dz*dt) + as.vector(2*stim),
            raw(), 4), mask = mask, dim = c(dx, dy, dz, dt))
 class(ds1) <- class(ds2) <- class(ds3) <- class(ds4) <- "fmridata"
 
 ## Stage 1: single-session regression analysis
 x <- fmri.design(hrf, order=2)
 spm.sub01 <- fmri.lm(ds1, x, mask, actype = "smooth", verbose = TRUE)
-spm.sub02 <- fmri.lm(ds2, x, mask, actype = "smooth", verbose = TRUE) 
-spm.sub03 <- fmri.lm(ds3, x, mask, actype = "smooth", verbose = TRUE) 
-spm.sub04 <- fmri.lm(ds4, x, mask, actype = "smooth", verbose = TRUE) 
+spm.sub02 <- fmri.lm(ds2, x, mask, actype = "smooth", verbose = TRUE)
+spm.sub03 <- fmri.lm(ds3, x, mask, actype = "smooth", verbose = TRUE)
+spm.sub04 <- fmri.lm(ds4, x, mask, actype = "smooth", verbose = TRUE)
 
 ## Store observed individual BOLD effects and their variance estimates
 subj <- 4
@@ -140,7 +140,7 @@ Vbold[,,,4] <- spm.sub04$var
 ## Stage 2: Random-effects meta-regression analysis
 ## a) Check your model
 library(metafor)
-M1.1 <- rma.uni(Cbold[16,16,16, ], 
+M1.1 <- rma.uni(Cbold[16,16,16, ],
                 Vbold[16,16,16, ],
                 method = "REML",
                 weighted = TRUE,
@@ -148,7 +148,7 @@ M1.1 <- rma.uni(Cbold[16,16,16, ],
                 verbose = TRUE,
                 control = list(stepadj=0.5, maxiter=2000, threshold=0.001))
 
-# Control list contains convergence parameters later used 
+# Control list contains convergence parameters later used
 # at whole data cube. Values were adjusted to fMRI data.
 
 summary(M1.1)
@@ -157,10 +157,10 @@ qqnorm(M1.1)
 
 ## b) Estimate a group map
 ## without parallelizing
-spm.group1a <- fmri.metaPar(Cbold, Vbold, knha = TRUE, 
+spm.group1a <- fmri.metaPar(Cbold, Vbold, knha = TRUE,
                             mask = mask, cluster = 1)
 ## same with 4 parallel threads
-spm.group1b <- fmri.metaPar(Cbold, Vbold, knha = TRUE, 
+spm.group1b <- fmri.metaPar(Cbold, Vbold, knha = TRUE,
                             mask = mask, cluster = 4)}
 }
 \keyword{ regression }% at least one, from doc/KEYWORDS

@@ -309,10 +309,10 @@ fmri.lmePar <- function (bold,
     
     cat("fmri.lme: calculating spatial correlation\n")
     lags <- c(5, 5, 3)
-    corr <- .Fortran("mcorr", as.double(resid), as.logical(mask), 
+    corr <- .Fortran(C_mcorr, as.double(resid), as.logical(mask), 
                      as.integer(dx), as.integer(dy), as.integer(dz), 
                      as.integer(dNt), scorr = double(prod(lags)), as.integer(lags[1]), 
-                     as.integer(lags[2]), as.integer(lags[3]), PACKAGE = "fmri")$scorr
+                     as.integer(lags[2]), as.integer(lags[3]))$scorr
     dim(corr) <- lags
     # attention: NaNs in corr
     # if analyzed brain region is too small (e.g. 1 or 2 Slices)
@@ -448,16 +448,16 @@ fmri.lmePar <- function (bold,
     
     cat("fmri.lme: calculating spatial correlation\n")
     lags <- c(5, 5, 3)
-    corr <- .Fortran("mcorr", as.double(resid), as.logical(mask), 
+    corr <- .Fortran(C_mcorr, as.double(resid), as.logical(mask), 
                       as.integer(dx), as.integer(dy), as.integer(dz), 
                       as.integer(dNt1), scorr = double(prod(lags)), as.integer(lags[1]), 
-                      as.integer(lags[2]), as.integer(lags[3]), PACKAGE = "fmri")$scorr
+                      as.integer(lags[2]), as.integer(lags[3]))$scorr
     dim(corr) <- lags
     
-    corr2 <- .Fortran("mcorr", as.double(resid2), as.logical(mask), 
+    corr2 <- .Fortran(C_mcorr, as.double(resid2), as.logical(mask), 
                       as.integer(dx), as.integer(dy), as.integer(dz), 
                       as.integer(dNt2), scorr = double(prod(lags)), as.integer(lags[1]), 
-                      as.integer(lags[2]), as.integer(lags[3]), PACKAGE = "fmri")$scorr
+                      as.integer(lags[2]), as.integer(lags[3]))$scorr
     dim(corr2) <- lags
     # attention: NaNs in corr
     # if analyzed brain region is too small (e.g. 1 or 2 Slices)
@@ -747,10 +747,10 @@ fmri.metaPar <- function (Cbold,
   
   cat("fmri.meta: calculating spatial correlation\n")
   lags <- c(5, 5, 3)
-  corr <- .Fortran("mcorr", as.double(resid), as.logical(mask), 
+  corr <- .Fortran(C_mcorr, as.double(resid), as.logical(mask), 
                    as.integer(dx), as.integer(dy), as.integer(dz), 
                    as.integer(dk), scorr = double(prod(lags)), as.integer(lags[1]), 
-                   as.integer(lags[2]), as.integer(lags[3]), PACKAGE = "fmri")$scorr
+                   as.integer(lags[2]), as.integer(lags[3]))$scorr
   dim(corr) <- lags
   # attention: NaNs in corr
   # if analyzed brain region is too small (e.g. 1 or 2 Slices)

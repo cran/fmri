@@ -20,7 +20,7 @@ C   kern     specifies the location kernel
 C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
-      implicit logical (a-z)
+      implicit none
       integer n1,n2,n3,nt,kern,segm(n1,n2,n3)
       logical aws,wlse,mask(n1,n2,n3),restrict
       double precision y(n1,n2,n3),theta(n1,n2,n3),bi(n1,n2,n3),delta,
@@ -79,7 +79,7 @@ C   this should be more conservative using actual variance reduction instead of 
             END DO
          END DO
       END DO
-      END IF 
+      END IF
 C   scaling of sij outside the loop
       DO i3=1,n3
          DO i2=1,n2
@@ -127,7 +127,7 @@ C
                                  sij=pvali*sij
                               ELSE
 C
-C   no smoothing if voxel i is classified as 1 or -1 and 
+C   no smoothing if voxel i is classified as 1 or -1 and
 C                   voxel i and j are in different segments
 C
                                  CYCLE
@@ -176,7 +176,7 @@ C  smoothing restricted within segmented ares
                      varest(i1,i2,i3)=si
                      bi(i1,i2,i3)=si2i/si*si2(i1,i2,i3)
                   END IF
-               END IF 
+               END IF
                END IF
 C  end if for smoothing restricted within segmented ares
                thn(i1,i2,i3)=thi
@@ -187,7 +187,7 @@ C               si = si/nt
 C   keep the detected segment
                dn=si/si2i*fov
                call getdfnab(df,dn,a,b)
-C 
+C
 C   note that a and b refer to  1/a_n and b_n/a_n
 C
 C   this should be more conservative using actual variance reduction instead of theoretical
@@ -208,14 +208,14 @@ C   thats the SD of thi
       subroutine getdfnab(df,n,a,b)
 C
 C   this function computes approximations for constants a=1/a_n and b=b_n/a_n
-C   such that for the maximum T_n of n r.v. from student t_df  
+C   such that for the maximum T_n of n r.v. from student t_df
 C   a_n T_n +b_n  ~ \Phi_\df    (asymp. extreme value distribution for t_df)
 C
-C   approximation formulaes obtained from samples of 100000 Extremes 
-C   df \in 10:264   n \in  100 : 20000   
+C   approximation formulaes obtained from samples of 100000 Extremes
+C   df \in 10:264   n \in  100 : 20000
 C   max. approx error < 0.002 for a   and < 0.006   for b
 C
-      implicit logical (a-z)
+      implicit none
       double precision a,b,df,n
       double precision dfinv,ldf,dfq,ninvh,x1,x2,x3,x4,x5,x6,lna,lnb,ln
       dfinv=1.d0/(df-1.d0)

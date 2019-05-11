@@ -1,32 +1,34 @@
 Package: fmri
-Version: 1.7-2
-Date: 2016-09-09
+Version: 1.9
+Date: 2019-05-08
 Title: Analysis of fMRI Experiments
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
-                    email = "tabelow@wias-berlin.de"), 
+                    email = "tabelow@wias-berlin.de"),
              person("Joerg", "Polzehl", role = c("aut"),
                     email = "polzehl@wias-berlin.de"),
              person("Brandon", "Whitcher", role = c("ctb")),
              person("Dames", "Sibylle", role = c("ctb")))
-Depends: R (>= 2.14.0), awsMethods (>= 1.0-1), nlme
-Imports: parallel, metafor, methods
+Depends: R (>= 3.2.0), awsMethods (>= 1.0-1), nlme
+Imports: parallel, metafor, methods, aws
 Suggests: tcltk, tkrplot, fastICA, adimpro, oro.nifti
+LazyData: true
 Description: Contains R-functions to perform an fMRI analysis as described in
              Tabelow et al. (2006) <DOI:10.1016/j.neuroimage.2006.06.029>,
              Polzehl et al. (2010) <DOI:10.1016/j.neuroimage.2010.04.241>,
              Tabelow and Polzehl (2011) <DOI:10.18637/jss.v044.i11>.
 License: GPL (>= 2)
-Copyright: This package is Copyright (C) 2006-2016 Weierstrass
+Copyright: This package is Copyright (C) 2006-2019 Weierstrass
         Institute for Applied Analysis and Stochastics.
 URL: http://www.wias-berlin.de/software/imaging/
 Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
+RoxygenNote: 6.1.0
 NeedsCompilation: yes
-Packaged: 2016-09-15 07:14:47 UTC; tabelow
+Packaged: 2019-05-09 11:30:42 UTC; polzehl
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
   Brandon Whitcher [ctb],
   Dames Sibylle [ctb]
 Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
 Repository: CRAN
-Date/Publication: 2016-09-15 12:30:35
+Date/Publication: 2019-05-11 16:40:07 UTC
