@@ -18,7 +18,7 @@ write.NIFTI(ttt, header=NULL, filename)
   Writes the datacube \code{ttt} to a file named \code{file} in NIFTI file
   format. \code{header} is a list that contains the header
   information.
-  
+
   See NIFTI documentation for details.
 }
 \value{
@@ -34,7 +34,7 @@ write.NIFTI(ttt, header=NULL, filename)
 \examples{
 ## Example 1
 write.NIFTI(array(as.integer(65526*runif(10*10*10*20)),c(10,10,10,20)),
-              file="niftifile")
+              file=file.path(tempdir(),"niftifile"))
 }
 \keyword{ IO }% at least one, from doc/KEYWORDS
 \keyword{ utilities }% __ONLY ONE__ keyword per line

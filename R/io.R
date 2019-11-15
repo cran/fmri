@@ -1048,7 +1048,7 @@ read.DICOM <- function(filename, includedata=TRUE) {
   }
   close(con)
 #  class(z) <- "fmridata"
-  z <- complete.fmriHeader(z)
+#  z <- complete.fmriHeader(z)
 
   attr(z,"file") <- filename
   invisible(z)

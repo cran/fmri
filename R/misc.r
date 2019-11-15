@@ -191,7 +191,7 @@ n2 <- dm[2]
 n3 <- dm[3]
 n <- n1*n2*n3
 mask1 <- .Fortran(C_lconnect,
-                 as.logical(mask),
+                 as.integer(mask),
                  as.integer(n1),
                  as.integer(n2),
                  as.integer(n3),
@@ -201,8 +201,9 @@ mask1 <- .Fortran(C_lconnect,
                  integer(n),
                  integer(n),
                  integer(n),
-                 logical(n),
-                 mask=logical(n))$mask
+                 integer(n),
+                 mask=integer(n))$mask
+mask1 <- as.logical(mask1)                 
 dim(mask1) <- dm
 mask1
 }
@@ -212,7 +213,7 @@ spatial.corr <- function(residuals){
   dy <- dim(residuals)
   mask <- array(TRUE,dy[2:4])
   corr <- .Fortran(C_mcorr,as.double(residuals),
-                     as.logical(mask),
+                     as.integer(mask),
                      as.integer(dy[2]),
                      as.integer(dy[3]),
                      as.integer(dy[4]),

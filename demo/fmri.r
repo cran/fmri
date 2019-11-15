@@ -67,14 +67,14 @@ sig[1:28,38:65,] <- signal * efactor^7
 sig * create.mask()
 }
 # some values describing the data
-signal <- 1.5
+signal <- 3
 noise <- 20
 arfactor <- .3
 
 # maximaum bandwidth for adaptive smoothing
 hmax <- 3.06
 
-# datacube dimension 
+# datacube dimension
 i <- 65
 j <- 65
 k <- 26
@@ -87,7 +87,7 @@ sig <- array(0,dim=c(i,j,k))
 # create the mask for activation
 mask <- create.mask()
 
-# assign amplitudes of signals to activated areas 
+# assign amplitudes of signals to activated areas
 sig <- create.sig(signal)
 
 # expected BOLD response for some stimulus
@@ -119,19 +119,22 @@ hrf <- fmri.stimulus(scans, c(18, 48, 78), 15, 2)
 z <- fmri.design(hrf)
 spm <- fmri.lm(data1,z)
 
+detectspm <- fmri.pvalue(spm)
+smask <- apply(detectspm$pvalue<0.05,c(1,2),sum,na.rm=TRUE)
 # adaptively smooth the spm
 resultaws <- fmri.smooth(spm,hmax=hmax,lkern="Gaussian")
 detectaws <- fmri.pvalue(resultaws)
-pmask <- apply(detectaws$pvalue<0.05,c(1,2),sum)
+pmask <- apply(detectaws$pvalue<0.05,c(1,2),sum,na.rm=TRUE)
 
 # smooth non adaptively
 resultnonaws <- fmri.smooth(spm,hmax=hmax,adaptation="none",lkern="Gaussian")
 detectnonaws <- fmri.pvalue(resultnonaws)
-npmask <- apply(detectnonaws$pvalue<0.05,c(1,2),sum)
+npmask <- apply(detectnonaws$pvalue<0.05,c(1,2),sum,na.rm=TRUE)
 
 # at last show some nice images
-X11(width=11,height=4)
-par(mfrow=c(1,3),mar=c(2.5,2.5,3,0.5))
+X11(width=15,height=4)
+par(mfrow=c(1,4),mar=c(2.5,2.5,3,0.5))
 image(1:i,1:j,sig[,,1],col=grey(0:255/255),xlab="",ylab="",main="True activation")
+image(1:i,1:j,smask,xlab="",ylab="",main="Voxelwise detection")
 image(1:i,1:j,pmask,xlab="",ylab="",main="Detected using AWS")
 image(1:i,1:j,npmask,xlab="",ylab="",main="Detected using Gaussian filter")

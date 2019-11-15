@@ -220,6 +220,8 @@ fmri.lm <- function(ds,
   }
   if (is.null(mask)) mask <- ds$mask
     dm <- dim(mask)
+    mask <- array(as.logical(mask),dm)
+## mask needs to be logical for index operations
   if (length(dm) != 3)
     stop("fmri.lm: mask is not three-dimensional array!")
   if (any(dy[1:3] != dm))
@@ -433,7 +435,7 @@ fmri.lm <- function(ds,
   lags <- c(5, 5, 3)
   corr <- .Fortran(C_mcorr,
                    as.double(residuals),
-                   as.logical(mask),
+                   as.integer(mask),
                    as.integer(dy[1]),
                    as.integer(dy[2]),
                    as.integer(dy[3]),

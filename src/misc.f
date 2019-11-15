@@ -47,7 +47,7 @@ C
       sofw3D=sw*sw/sw2
       RETURN
       END
-      
+
       subroutine sofw3Df(bw,kern,wght,fw)
       implicit none
       integer kern
@@ -109,7 +109,7 @@ C         z=x+(value-fw1)/(fw2-fw1)*(y-x)
       implicit none
       integer n1,n2,n3,nv,lag(3)
       double precision scorr,res(nv,n1,n2,n3)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       double precision z2,y2,resi,resip1,vrm,vrmp1,zk,zcorr,z
       integer i1,i2,i3,i4,l1,l2,l3,k
       zk=nv
@@ -122,7 +122,8 @@ C  correlation in x
       do i1=1,n1-l1
          do i2=1,n2-l2
             do i3=1,n3-l3
-         if (.not.(mask(i1,i2,i3).and.mask(i1+l1,i2+l2,i3+l3))) CYCLE
+C         if (.not.(mask(i1,i2,i3).and.mask(i1+l1,i2+l2,i3+l3))) CYCLE
+         if ((mask(i1,i2,i3)*mask(i1+l1,i2+l2,i3+l3)).eq.0) CYCLE
                z2=0.d0
                y2=0.d0
                zcorr=0.d0
@@ -143,7 +144,11 @@ C  correlation in x
             enddo
          enddo
       enddo
-      scorr=z/k
+      if(k.ne.0) then
+        scorr=z/k
+      ELSE
+        scorr=0.d0
+      END IF
       return
       end
       subroutine sweepm(res,mask,n1,n2,n3,nv)
@@ -196,7 +201,7 @@ C  correlation in x
       implicit none
       integer n1,n2,n3,nv,l1,l2,l3,lag(3)
       double precision scorr(l1,l2,l3),res(nv,n1,n2,n3)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       integer i1,i2,i3
       Do i1=1,l1
          lag(1)=i1-1
@@ -216,7 +221,7 @@ C  correlation in x
       implicit none
       integer n1,n2,n3,nv,lag(3)
       double precision scorr,res(nv,n1,n2,n3)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       double precision z2,y2,resi,resip1,vrm,vrmp1,zk,zcorr,z
       integer i1,i2,i3,i4,l1,l2,l3,k
       zk=nv
@@ -229,7 +234,7 @@ C  correlation in x
       do i1=1,n1-l1
          do i2=1,n2-l2
             do i3=1,n3-l3
-         if (.not.(mask(i1,i2,i3).and.mask(i1+l1,i2+l2,i3+l3))) CYCLE
+         if ((mask(i1,i2,i3)*mask(i1+l1,i2+l2,i3+l3)).eq.0) CYCLE
                z2=0.d0
                y2=0.d0
                zcorr=0.d0
@@ -250,7 +255,11 @@ C  correlation in x
             enddo
          enddo
       enddo
-      scorr=z/k
+      if(k.ne.0) THEN
+         scorr=z/k
+      ELSE
+        scorr=0.d0
+      END IF
       return
       end
       subroutine imcorr(res,mask,n1,n2,n3,nv,scorr,l1,l2,l3)
@@ -258,7 +267,7 @@ C  correlation in x
       implicit none
       integer n1,n2,n3,nv,l1,l2,l3,lag(3)
       double precision scorr(l1,l2,l3),res(nv,n1,n2,n3)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       integer i1,i2,i3
       Do i1=1,l1
          lag(1)=i1-1
@@ -335,12 +344,12 @@ C  correlation in x
 
       subroutine ivar(res,resscale,mask,n1,n2,n3,nv,var)
 C
-C   compute variance estimates !!! (not the inverse)
+C   compute variance estimates from residuals in spm !!! (not the inverse)
 C
       implicit none
       integer n1,n2,n3,nv
       double precision resscale,var(n1,n2,n3),res(nv,n1,n2,n3)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       double precision z2,zk,resi,ressc2,z1
       integer i1,i2,i3,i4
       zk=nv
@@ -349,7 +358,7 @@ C
          do i2=1,n2
             do i3=1,n3
                var(i1,i2,i3)=1.d20
-               if (.not.mask(i1,i2,i3)) CYCLE
+               if (mask(i1,i2,i3).eq.0) CYCLE
                z2=0.d0
                z1=0.d0
                do i4=1,nv
@@ -373,18 +382,19 @@ C   that contains seed voxel (i1,i2,i3)
 C   result: mask == .TRUE. if voxel is connected to seed
       implicit none
       integer n1,n2,n3,i1,i2,i3,ind1(*),ind2(*),ind3(*)
-      logical final,checked(*),mask(n1,n2,n3),segm(n1,n2,n3)
+      logical final
+      integer checked(*),mask(n1,n2,n3),segm(n1,n2,n3)
       integer j1,j2,j3,k,l1,l2,l3,lind,lind0,n
 C     first find pixel close to (i1,i2) with segm(j1,j2)=0
       n=n1*n2*n3
       DO j1=1,n1
          DO j2=1,n2
             DO j3=1,n3
-               mask(j1,j2,j3)=.FALSE.
+               mask(j1,j2,j3)=0
             END DO
          END DO
       END DO
-      if(.not.segm(i1,i2,i3)) THEN
+      if(segm(i1,i2,i3).eq.0) THEN
          final=.FALSE.
          DO k=1,n1
             DO l1=-k,k
@@ -397,7 +407,7 @@ C     first find pixel close to (i1,i2) with segm(j1,j2)=0
                      if(j2.lt.1.or.j2.gt.n2) CYCLE
                      j3=i3+l3
                      if(j3.lt.1.or.j3.gt.n3) CYCLE
-                     if(segm(j1,j2,j3)) THEN
+                     if(segm(j1,j2,j3).ne.0) THEN
                         final=.TRUE.
                         i1=j1
                         i2=j2
@@ -412,19 +422,19 @@ C     first find pixel close to (i1,i2) with segm(j1,j2)=0
             if(final) EXIT
          END DO
       END IF
-      mask(i1,i2,i3)=.TRUE.
+      mask(i1,i2,i3)=1
       ind1(1)=i1
       ind2(1)=i2
       ind3(1)=i3
       lind=1
       lind0=1
       DO k=1,n1*n2*n3
-         checked(k)=.FALSE.
+         checked(k)=0
       END DO
       final=.FALSE.
       DO while(.not.final)
          DO k=1,lind0
-            if(checked(k)) CYCLE
+            if(checked(k).ne.0) CYCLE
             DO l1=-1,1
                DO l2=-1,1
                   DO l3=-1,1
@@ -435,8 +445,8 @@ C     first find pixel close to (i1,i2) with segm(j1,j2)=0
                      if(j2.lt.1.or.j2.gt.n2) CYCLE
                      j3=ind3(k)+l3
                      if(j3.lt.1.or.j3.gt.n3) CYCLE
-                     if(segm(j1,j2,j3).and..not.mask(j1,j2,j3)) THEN
-                        mask(j1,j2,j3)=.TRUE.
+                if(segm(j1,j2,j3).ne.0.and.mask(j1,j2,j3).eq.0) THEN
+                        mask(j1,j2,j3)=1
                         lind=lind+1
                         if(lind.gt.n) THEN
                call intpr("lconnect: lind exeeds maximum of",32,n,1)

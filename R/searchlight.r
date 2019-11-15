@@ -35,7 +35,7 @@ nregion <- dim(sregion)[2]
 mask <- array(TRUE,sdim)
 rsl <- .Fortran(C_slight,
                 as.double(rn),
-                as.logical(mask),
+                as.integer(mask),
                 as.integer(sdim[1]),
                 as.integer(sdim[2]),
                 as.integer(sdim[3]),
@@ -71,7 +71,7 @@ stat <- if(kind==0) abs(stat) else stat^2
 ##
 stat <- .Fortran(C_slight,
                 as.double(stat),
-                as.logical(mask),
+                as.integer(mask),
                 as.integer(dimspm[1]),
                 as.integer(dimspm[2]),
                 as.integer(dimspm[3]),
@@ -136,7 +136,7 @@ getSearchlightPattern <- function(spm, voxel, radius){
    nvox <- sum(voxel)
    z <- .Fortran(C_extrpatt,
                  as.double(spm$beta),
-                 as.logical(voxel),
+                 as.integer(voxel),
                  as.integer(ddim[1]),
                  as.integer(ddim[2]),
                  as.integer(ddim[3]),

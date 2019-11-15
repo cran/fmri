@@ -36,6 +36,7 @@ segm3D <- function(y,weighted=TRUE,
 #
 #  Auxilary functions
       getkrval <- function(df,ladj,fov,k,alpha){
+#  define threshold for segmantation
       dfinv <- 1/df
       lfov <- log(fov)
       idffov <- dfinv*log(fov)
@@ -88,7 +89,7 @@ segm3D <- function(y,weighted=TRUE,
   cat("\nfmri.smooth: first variance estimate","\n")
   varest0 <- .Fortran(C_ivar,as.double(residuals),
                            as.double(resscale),
-                           as.logical(mask),
+                           as.integer(mask),
                            as.integer(n1),
                            as.integer(n2),
                            as.integer(n3),
@@ -135,8 +136,8 @@ segm3D <- function(y,weighted=TRUE,
                        as.double(y),
                        as.double(residuals),
                        as.double(sigma2),
-                       as.logical(!mask),
-                       as.logical(weighted),
+                       as.integer(!mask),
+                       as.integer(weighted),
                        as.integer(n1),
                        as.integer(n2),
                        as.integer(n3),
@@ -158,7 +159,7 @@ segm3D <- function(y,weighted=TRUE,
                        as.double(vq),
                        as.double(varest0),
                        varest=as.double(varest),
-                       as.logical(restricted))[c("bi","thnew","hakt","segm","varest")]
+                       as.integer(restricted))[c("bi","thnew","hakt","segm","varest")]
       gc()
       theta <- array(tobj$thnew,dy[1:3])
       segm <- array(tobj$segm,dy[1:3])

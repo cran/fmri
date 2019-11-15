@@ -88,21 +88,26 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
      1                  theta,bi,thn,kern,skern,spmin,spmax,
      2                  lwght,wght)
 C
-C   y        observed values of regression function
+C   y        3D parameter map
+C   si2      variance estimate^{-1} (1/arg to function segm3D)
+C   mask     brain mask
+C   wlse     (arg weighted to function segm3D)
 C   n1,n2,n3    design dimensions
 C   hakt     actual bandwidth
-C   lambda   lambda or lambda*sigma2 for Gaussian models
+C   lambda   lambda
 C   theta    estimates from last step   (input)
-C   bi       \sum  Wi   (output)
-C   ai       \sum  Wi Y     (output)
-C   model    specifies the probablilistic model for the KL-Distance
-C   kern     specifies the location kernel
-C   spmax    specifies the truncation point of the stochastic kernel
-C   wght     scaling factor for second and third dimension (larger values shrink)
+C   bi       \sum  Wi (wi depends on si2 in case of wlse)  (output)
+C   thn      new estimates (output)
+C   kern     indicator for K_{loc}
+C   skern    indicator for K_{st}
+C   spmin    shape parameter for plateo kernel  (skern=1)
+C   spmax    shape parameter for kernel K_{st}  (skern=1,2)
+C   lwght    array for non-adaptive weights (auxiliary)
+C   wght     rations of voxel dimensions
 C
       implicit none
-      integer n1,n2,n3,kern,skern
-      logical aws,wlse,mask(*)
+      integer n1,n2,n3,kern,skern,wlse,mask(*)
+      logical aws
       double precision y(*),theta(*),bi(*),thn(*),lambda,spmax,
      1       wght(2),si2(*),hakt,lwght(*),spmin,
      2       getlwght
@@ -153,7 +158,8 @@ C$OMP DO SCHEDULE(GUIDED)
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
          i3=(iind-i1-(i2-1)*n1)/n12+1
-         if(mask(iind)) THEN
+         if(mask(iind).ne.0) THEN
+C        if(mask(iind)) THEN
             thn(iind)=0.d0
             CYCLE
          END IF
@@ -211,7 +217,7 @@ C  first stochastic term
                   j1=jw1-clw1+i1
 C                  if(j1.lt.1.or.j1.gt.n1) CYCLE
                   jind=j1+jind2
-                  IF(mask(jind)) CYCLE
+                  IF(mask(jind).ne.0) CYCLE
                   wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                   if(wj.le.0.d0) CYCLE
                   IF (aws) THEN
@@ -219,7 +225,7 @@ C                  if(j1.lt.1.or.j1.gt.n1) CYCLE
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN
+                  if(wlse.ne.0) THEN
                      wj=wj*si2(jind)
                   ELSE
                      swjv=swjv+wj/si2(jind)
@@ -230,7 +236,7 @@ C                  if(j1.lt.1.or.j1.gt.n1) CYCLE
             END DO
          END DO
          thn(iind)=swjy/swj
-         IF(wlse) THEN
+         IF(wlse.ne.0) THEN
             bi(iind)=swj
          ELSE
             bi(iind)=swj*swj/swjv
@@ -250,21 +256,29 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
      1                  lambda,theta,bi,resnew,thn,kern,skern,
      2                  spmin,spmax,lwght,wght,resi)
 C
-C   y        observed values of regression function
-C   n1,n2,n3    design dimensions
+C   y        3D array (estimated spm)
+C   res      residual array (4D)
+C   si2      variance estimate^{-1} (1/arg to function segm3D)
+C   mask     brain mask
+C   wlse     (arg weighted to function segm3D)
+C   n1,n2,n3,n4    design dimensions
 C   hakt     actual bandwidth
-C   lambda   lambda or lambda*sigma2 for Gaussian models
+C   lambda   lambda
 C   theta    estimates from last step   (input)
-C   bi       \sum  Wi   (output)
-C   ai       \sum  Wi Y     (output)
-C   model    specifies the probablilistic model for the KL-Distance
-C   kern     specifies the location kernel
-C   spmax    specifies the truncation point of the stochastic kernel
-C   wght     scaling factor for second and third dimension (larger values shrink)
+C   bi       \sum  Wi (wi depends on si2 in case of wlse)  (output)
+C   resnew   smoothed residuals (output)
+C   thn      new estimates (output)
+C   kern     indicator for K_{loc}
+C   skern    indicator for K_{st}
+C   spmin    shape parameter for plateo kernel  (skern=1)
+C   spmax    shape parameter for kernel K_{st}  (skern=1,2)
+C   lwght    array for non-adaptive weights (auxiliary)
+C   wght     rations of voxel dimensions
+C   resi     auxilary array
 C
       implicit none
-      integer n1,n2,n3,n4,kern,skern
-      logical aws,wlse,mask(*)
+      integer n1,n2,n3,n4,kern,skern,wlse,mask(*)
+      logical aws
       double precision res(n4,*),y(*),theta(*),
      1       bi(*),thn(*),lambda,spmax,wght(2),
      1       si2(*),hakt,lwght(*),spmin,
@@ -315,7 +329,7 @@ C$OMP DO SCHEDULE(GUIDED)
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
          i3=(iind-i1-(i2-1)*n1)/n1/n2+1
-         if(mask(iind)) THEN
+         if(mask(iind).ne.0) THEN
                thn(iind)=0.d0
             DO k=1,n4
                resnew(k,iind)=0.d0
@@ -343,7 +357,7 @@ C  first stochastic term
                   j1=jw1-clw1+i1
                   if(j1.lt.1.or.j1.gt.n1) CYCLE
                   jind=j1+n1*(j2-1)+n1*n2*(j3-1)
-                  IF(mask(jind)) CYCLE
+                  IF(mask(jind).ne.0) CYCLE
                   wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                   if(wj.le.0.d0) CYCLE
                   IF (aws) THEN
@@ -351,7 +365,7 @@ C  first stochastic term
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN
+                  if(wlse.ne.0) THEN
                      wj=wj*si2(jind)
                   END IF
                   swj=swj+wj
@@ -387,20 +401,29 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
      1                  theta,ncores,bi,thn,kern,skern,spmin,spmax,
      2                  lwght,wght,swjy)
 C
-C   y        observed values of regression function
+C   y        values of residuals
+C   si2      variance estimate^{-1} (1/arg to function segm3D)
+C   mask     brain mask
+C   wlse     (arg weighted to function segm3D)
 C   n1,n2,n3    design dimensions
+C   dv       length of fMRI time serien
 C   hakt     actual bandwidth
-C   lambda   lambda or lambda*sigma2 for Gaussian models
+C   lambda   lambda
 C   theta    estimates from last step   (input)
-C   bi       \sum  Wi       (input)
-C   model    specifies the probablilistic model for the KL-Distance
-C   kern     specifies the location kernel
-C   spmax    specifies the truncation point of the stochastic kernel
-C   wght     scaling factor for second and third dimension (larger values shrink)
+C   ncores   number of cores used in openMP
+C   bi       \sum  Wi (wi depends on si2 in case of wlse)  (output)
+C   thn      new estimates (output)
+C   kern     indicator for K_{loc}
+C   skern    indicator for K_{st}
+C   spmin    shape parameter for plateo kernel  (skern=1)
+C   spmax    shape parameter for kernel K_{st}  (skern=1,2)
+C   lwght    array for non-adaptive weights (auxiliary)
+C   wght     rations of voxel dimensions
+C   swjy     auxilary array
 C
       implicit none
-      integer dv,n1,n2,n3,kern,skern,ncores
-      logical aws,wlse,mask(*)
+      integer dv,n1,n2,n3,kern,skern,ncores,wlse,mask(*)
+      logical aws
       double precision theta(*),bi(*),y(dv,*),
      1       lambda,spmax,wght(2),si2(*),thn(dv,*),
      1       hakt,lwght(*),spmin,getlwght,swjy(dv,ncores)
@@ -446,7 +469,7 @@ C$OMP DO SCHEDULE(GUIDED)
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
          i3=(iind-i1-(i2-1)*n1)/n1/n2+1
-         if(mask(iind)) THEN
+         if(mask(iind).ne.0) THEN
             DO k=1,dv
                thn(k,iind)=0.d0
             END DO
@@ -471,7 +494,7 @@ C  first stochastic term
                   j1=jw1-clw1+i1
                   if(j1.lt.1.or.j1.gt.n1) CYCLE
                   jind=j1+n1*(j2-1)+n1*n2*(j3-1)
-                  IF(mask(jind)) CYCLE
+                  IF(mask(jind).ne.0) CYCLE
                   wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                   if(wj.le.0.d0) CYCLE
                   IF (aws) THEN
@@ -479,7 +502,7 @@ C  first stochastic term
      1                             skern,spf,spmin,spmax,bii,wj)
                      if(wj.le.0.d0) CYCLE
                   END IF
-                  if(wlse) THEN
+                  if(wlse.ne.0) THEN
                      wj=wj*si2(jind)
                   END IF
                   swj=swj+wj
@@ -498,7 +521,7 @@ C$OMP FLUSH(thn)
       END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
-C   Perform one iteration in local constant three-variate aws (gridded)
+C   Perform 3D smoothing on a grid (gridded)
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine smooth3d(y,si2,mask,wlse,n1,n2,n3,dv,hakt,
@@ -517,8 +540,7 @@ C   spmax    specifies the truncation point of the stochastic kernel
 C   wght     scaling factor for second and third dimension (larger values shrink)
 C
       implicit none
-      integer n1,n2,n3,kern,dv
-      logical wlse,mask(n1,n2,n3)
+      integer n1,n2,n3,kern,dv,wlse,mask(n1,n2,n3)
       double precision y(n1,n2,n3,dv),thn(n1,n2,n3,dv),wght(2),
      1       si2(n1,n2,n3),hakt,lwght(*),getlwght
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,
@@ -547,7 +569,7 @@ C
       DO i3=1,n3
          DO i2=1,n2
             DO i1=1,n1
-               if(mask(i1,i2,i3)) THEN
+               if(mask(i1,i2,i3).ne.0) THEN
                   DO k=1,dv
                      thn(i1,i2,i3,k)=0.d0
                   END DO
@@ -568,10 +590,10 @@ C   scaling of sij outside the loop
 C  first stochastic term
                         j1=jw1-clw1+i1
                         if(j1.lt.1.or.j1.gt.n1) CYCLE
-                        IF(mask(j1,j2,j3)) CYCLE
+                        IF(mask(j1,j2,j3).ne.0) CYCLE
                         wj=getlwght(lwght,dlw1,dlw2,dlw3,jw1,jw2,jw3)
                         if(wj.le.0.d0) CYCLE
-                        if(wlse) THEN
+                        if(wlse.ne.0) THEN
                            wj=wj*si2(j1,j2,j3)
                         END IF
                         swj=swj+wj

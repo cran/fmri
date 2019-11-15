@@ -13,7 +13,6 @@ export(gen_fmridata)
 # export(findclusters,simclusterthr)
 export(fmri.designG,fmri.lmePar,fmri.metaPar)
 export(niftiImage2fmri)
-import(parallel,awsMethods,nlme)
   importFrom("grDevices", "col2rgb", "dev.new", "gray", "grey",
              "heat.colors", "hsv", "rainbow")
   importFrom("graphics", "image", "layout", "legend", "lines", "par",
@@ -26,7 +25,11 @@ import(parallel,awsMethods,nlme)
              "rt", "var", "vcov", "sd", "spectrum", "dist", "as.dist", "hclust")
   importFrom("utils", "flush.console", "setTxtProgressBar",
              "txtProgressBar")
+
 importFrom(metafor,rma.uni)
+importFrom(nlme, lme, lmeControl, varIdent, corAR1, fixef, pdDiag)
+importFrom(parallel, makeCluster, clusterEvalQ, parApply, stopCluster)
+importFrom(awsMethods, setCores)
 importFrom(aws, kernsm)
 S3method(plot,fmridata)
 S3method(plot,fmripvalue)

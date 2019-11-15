@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.9
-Date: 2019-05-08
+Version: 1.9.2.1
+Date: 2019-11-14
 Title: Analysis of fMRI Experiments
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "tabelow@wias-berlin.de"),
@@ -8,9 +8,9 @@ Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "polzehl@wias-berlin.de"),
              person("Brandon", "Whitcher", role = c("ctb")),
              person("Dames", "Sibylle", role = c("ctb")))
-Depends: R (>= 3.2.0), awsMethods (>= 1.0-1), nlme
+Depends: R (>= 3.2.0), awsMethods (>= 1.1-1), nlme
 Imports: parallel, metafor, methods, aws
-Suggests: tcltk, tkrplot, fastICA, adimpro, oro.nifti
+Suggests: tcltk, tkrplot, fastICA, adimpro (>= 0.9), oro.nifti
 LazyData: true
 Description: Contains R-functions to perform an fMRI analysis as described in
              Tabelow et al. (2006) <DOI:10.1016/j.neuroimage.2006.06.029>,
@@ -24,11 +24,11 @@ Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
 RoxygenNote: 6.1.0
 NeedsCompilation: yes
-Packaged: 2019-05-09 11:30:42 UTC; polzehl
+Packaged: 2019-11-14 12:06:50 UTC; polzehl
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
   Brandon Whitcher [ctb],
   Dames Sibylle [ctb]
 Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
 Repository: CRAN
-Date/Publication: 2019-05-11 16:40:07 UTC
+Date/Publication: 2019-11-15 16:00:03 UTC

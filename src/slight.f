@@ -4,14 +4,14 @@ C  compute mean over searchlights
 C
       implicit none
       integer n1,n2,n3,nsl,slght(3,nsl)
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       double precision stat(n1,n2,n3),slstat(n1,n2,n3)
       integer i1,i2,i3,anz,k,j1,j2,j3
       double precision z
       do i1=1,n1
         do i2=1,n2
           do i3=1,n3
-             if(.not.mask(i1,i2,i3)) CYCLE
+             if(mask(i1,i2,i3).eq.0) CYCLE
              z=0.d0
              anz=0
              do k=1,nsl
@@ -21,7 +21,7 @@ C
                if(j2.lt.1.or.j2.gt.n2) CYCLE
                j3=i3+slght(3,k)
                if(j3.lt.1.or.j3.gt.n3) CYCLE
-               if(.not.mask(j1,j2,j3)) CYCLE
+               if(mask(j1,j2,j3).eq.0) CYCLE
                anz=anz+1
                z=z+stat(j1,j2,j3)
              end do
@@ -61,14 +61,14 @@ C
       subroutine extrpatt(beta,voxel,n1,n2,n3,nb,sl,nsl,pattern,nvox)
       implicit none
       integer n1,n2,n3,nb,nsl,nvox,sl(3,nsl)
-      logical voxel(n1,n2,n3)
+      integer voxel(n1,n2,n3)
       double precision beta(n1,n2,n3,nb), pattern(nb,nsl,nvox)
       integer i1,i2,i3,ib,ivox,k,j1,j2,j3
       ivox = 0
       do i3=1,n3
         do i2=1,n2
           do i1=1,n1
-             if(.not.voxel(i1,i2,i3)) CYCLE
+             if(voxel(i1,i2,i3).eq.0) CYCLE
              ivox=ivox+1
              do k=1,nsl
                j1=i1+sl(1,k)
