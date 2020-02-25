@@ -26,7 +26,7 @@ rn <- array(rt(nsim,df),sdim)
 if(any(bw>0)){
 # emulate correlation structure in spm
     sdrn <- sd(rn)
-    rn <- kernsm(rn, h=bw, unit="FWHM")@yhat
+    rn <- aws::kernsm(rn, h=bw, unit="FWHM")@yhat
     rn <- rn*sdrn/sd(rn)
 }
 rn <- if(kind==0) abs(rn) else rn^2
@@ -112,7 +112,6 @@ mask[stat < thresh] <- FALSE
         z$roit <- spm$roit
         z$header <- spm$header
         z$format <- spm$format
-        z$dim0 <- spm$dim0
         z$call <- args
         attr(z, "file") <- attr(spm, "file")
         attr(z, "white") <- attr(spm, "white")

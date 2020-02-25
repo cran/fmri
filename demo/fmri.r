@@ -122,7 +122,7 @@ spm <- fmri.lm(data1,z)
 detectspm <- fmri.pvalue(spm)
 smask <- apply(detectspm$pvalue<0.05,c(1,2),sum,na.rm=TRUE)
 # adaptively smooth the spm
-resultaws <- fmri.smooth(spm,hmax=hmax,lkern="Gaussian")
+resultaws <- fmri.smooth(spm,hmax=hmax,lkern="Gaussian",adaptation="fullaws")
 detectaws <- fmri.pvalue(resultaws)
 pmask <- apply(detectaws$pvalue<0.05,c(1,2),sum,na.rm=TRUE)
 

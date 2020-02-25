@@ -203,9 +203,10 @@ fmri.lm <- function(ds,
   actype <- match.arg(actype)
 
   ## extract the compressed data
-  ttt <- extractData(ds)
+  if(!is.null(mask)) ds <- condensefMRI(ds, mask=mask)
+  ttt <- extractData(ds, maskOnly=TRUE)
   ## test dimensionality of object and design matrix
-  dy <- dim(ttt)
+  dy <- ds$dim
   if (length(dy) != 4)
     stop("fmri.lm: Hmmmm, this does not seem to be a fMRI time series. I better stop executing! Sorry!")
   dz <- dim(z)
@@ -214,13 +215,14 @@ fmri.lm <- function(ds,
     stop("fmri.lm: Something is wrong with the design matrix")
   slicetiming <- ldz==3
   if(slicetiming){
-     if(dz[3] != dim(ttt)[3]){
+     if(dz[3] != dy[3]){
        stop("fmri.lm: Slice timing requested with inapproriate number of slices in design")
        }
   }
-  if (is.null(mask)) mask <- ds$mask
-    dm <- dim(mask)
-    mask <- array(as.logical(mask),dm)
+  mask <- ds$mask
+  dm <- dim(mask)
+  mask <- array(as.logical(mask),dm)
+  nvoxel <- sum(mask)
 ## mask needs to be logical for index operations
   if (length(dm) != 3)
     stop("fmri.lm: mask is not three-dimensional array!")
@@ -278,14 +280,13 @@ fmri.lm <- function(ds,
 
   ## define some variables and make object a matrix
   voxelcount <- prod(dy[1:3])
-  dim(ttt) <- c(voxelcount, dy[4])
-  ttt <- ttt[mask,] ## reduce to information needed
-  voxelcount0 <- dim(ttt)[1]
-  arfactor <- numeric(voxelcount0)
-  variance <- numeric(voxelcount0)
+  if(nvoxel==voxelcount) ttt <- ttt[mask,]
+  dim(ttt) <- c(nvoxel, dy[4]) ## ttt only contains voxel in mask
+  arfactor <- numeric(nvoxel)
+  variance <- numeric(nvoxel)
   if(slicetiming){
-    beta <- matrix(0,voxelcount0,dim(zinv)[2])
-     cxtx <- matrix(0,voxelcount0)
+    beta <- matrix(0,nvoxel,dim(zinv)[2])
+     cxtx <- matrix(0,nvoxel)
      residuals <- ttt
      for(i in 1:nslices){
         cxtx[inslice==i] <- t(contrast) %*% xtx[,,i] %*% contrast
@@ -293,7 +294,7 @@ fmri.lm <- function(ds,
         residuals[inslice==i,] <- ttt[inslice==i,] - beta[inslice==i,] %*% t(z[,,slices[i]])
      }
   } else {
-     cxtx <- rep.int(t(contrast) %*% xtx %*% contrast, voxelcount0)
+     cxtx <- rep.int(t(contrast) %*% xtx %*% contrast, nvoxel)
      beta <- ttt %*% zinv
      residuals <- ttt - beta %*% t(z)
   }
@@ -306,9 +307,9 @@ fmri.lm <- function(ds,
   if (actype %in% c("smooth", "accalc", "ac")) {
     if (verbose) {
       cat("fmri.lm: calculating AR(1) model\n")
-      #      pb <- txtProgressBar(0, voxelcount0, style = 3)
+      #      pb <- txtProgressBar(0, nvoxel, style = 3)
     }
-    #    for (i in (1:voxelcount0)) {
+    #    for (i in (1:nvoxel)) {
     #     if (verbose) setTxtProgressBar(pb, i)
     #
     ## calculate the coefficients of ACR(1) time series model
@@ -320,7 +321,7 @@ fmri.lm <- function(ds,
     a0 <- as.vector((residuals^2)%*%rep(1,dy[4]))
     a1 <- as.vector((residuals[, -1]*residuals[, -dim(z)[1]])%*%rep(1,dy[4]-1))
     if(slicetiming){
-       an <- matrix(0,2,voxelcount0)
+       an <- matrix(0,2,nvoxel)
        for(i in 1:nslices) an[,inslice==i] <- Minv[,,i] %*% rbind(a0[inslice==i], a1[inslice==i])
     } else {
        an <- Minv %*% rbind(a0, a1)
@@ -331,14 +332,11 @@ fmri.lm <- function(ds,
     #    if (verbose) close(pb)
 
     if (actype == "smooth") {
-      arfactor1 <- array(0,dy[1:3])
-      arfactor1[mask] <- arfactor
-      hmax <- 3.52
-      if (verbose) cat("fmri.lm: smoothing AR(1) parameters with (hmax):", hmax, "... ")
-      ## now smooth (if actype is such) with AWS
-      arfactor <- smooth3D(arfactor1, lkern = "Gaussian", hmax = hmax, wghts = ds$weights, mask = mask)[mask]
-      rm(arfactor1)
-      gc()
+      har <- 3.52
+      if (verbose) cat("fmri.lm: smoothing AR(1) parameters with (har):", har, "... ")
+      ## now smooth arfactor (if actype is such) with AWS
+      ## arfactor only contains voxel within mask
+      arfactor <- aws::smooth3D(arfactor, lkern = "Gaussian", h = har, wghts = ds$weights, mask = mask)
       if (verbose) cat("done\n")
     }
     ##
@@ -401,7 +399,6 @@ fmri.lm <- function(ds,
         }
       }
       rm(ttt,tttprime)
-      gc()
       if (verbose) close(pb)
       ##  prewhitened residuals don't have zero mean, therefore sweep mean over time from them
       meanres <- residuals%*%rep(1/dy[4],dy[4])
@@ -412,7 +409,7 @@ fmri.lm <- function(ds,
   ##
   ##  now calculate variances in prewhitened model
   ##
-       variance <- apply(residuals^2, 1, sum) / (dy[4] - dim(z)[2]) * cxtx
+  variance <- apply(residuals^2, 1, sum) / (dy[4] - dim(z)[2]) * cxtx
   residuals <- t(residuals)
   variance[variance == 0] <- 1e20
 
@@ -422,33 +419,18 @@ fmri.lm <- function(ds,
   ##    we now need the full arrays
   ##
 
-  ## re-arrange residual dimensions
-  residuals0 <- residuals
-  residuals <- matrix(0,dy[4],voxelcount)
-  residuals[,mask] <- residuals0
-  rm(residuals0)
-  gc()
-  dim(residuals) <- dy[c(4, 1:3)]    # n * vx * vy * vz
-
-  if (verbose) cat("fmri.lm: calculating spatial correlation ... ")
+  ## re-arrange residual dimensions,
+    if (verbose) cat("fmri.lm: calculating spatial correlation ... ")
 
   lags <- c(5, 5, 3)
-  corr <- .Fortran(C_mcorr,
-                   as.double(residuals),
-                   as.integer(mask),
-                   as.integer(dy[1]),
-                   as.integer(dy[2]),
-                   as.integer(dy[3]),
-                   as.integer(dy[4]),
-                   scorr = double(prod(lags)),
-                   as.integer(lags[1]),
-                   as.integer(lags[2]),
-                   as.integer(lags[3]))$scorr
-  dim(corr) <- lags
-
-  ## "compress" the residuals
+  corr <- aws::residualSpatialCorr(residuals,mask,lags=lags,compact=TRUE)
+  #
+  #    "compress" the residuals
+  #
   scale <- max(abs(range(residuals)))/32767
   residuals <- writeBin(as.integer(residuals/scale), raw(), 2)
+  ## residuals (condensed to mask) will be returned with results
+  gc()
 
   ## determined local smoothness
   bw <- optim(c(2, 2, 2),
@@ -492,7 +474,7 @@ fmri.lm <- function(ds,
   cx <- u %*% diag(lambda1) %*% vt %*% contrast
   tau1 <- sum(cx[-1] * cx[-length(cx)]) / sum(cx * cx)
   df <- switch(white,
-               abs(diff(dim(z)[1:2])) / (1 + 2*(1 + 2 * prod(hmax/bw)^0.667)^(-1.5) * tau1^2),
+               abs(diff(dim(z)[1:2])) / (1 + 2*(1 + 2 * prod(har/bw)^0.667)^(-1.5) * tau1^2),
                abs(diff(dim(z)[1:2])) / (1 + 2* tau1^2),
                abs(diff(dim(z)[1:2])))
   if (verbose) cat(df, "done\n")
@@ -505,6 +487,7 @@ fmri.lm <- function(ds,
   result$mask <- mask
   result$res <- residuals
   result$resscale <- scale
+  result$maskOnly <- TRUE
   result$arfactor <- arfactor
   result$rxyz <- rxyz
   result$scorr <- corr
@@ -527,7 +510,6 @@ fmri.lm <- function(ds,
   result$roit <- ds$roit
   result$header <- ds$header
   result$format <- ds$format
-  result$dim0 <- ds$dim0
   class(result) <- c("fmridata","fmrispm")
 
   attr(result, "file") <- attr(ds, "file")
@@ -554,7 +536,11 @@ slicetiming <- function(fmridataobj, sliceorder=NULL){
 #
 #  performs sinc interpolation for slicetiming
 #
-   data <- extractData(fmridataobj)
+   dy <- fmridataobj$dim
+   mask <- fmridataobj$mask
+   if(is.null(mask)) mask <- array(TRUE,dy[1:3])
+   nvoxel <- sum(mask)
+   data <- extractData(fmridataobj, maskOnly=FALSE)
    data <- aperm(data,c(4,1:3))
    if(is.null(sliceorder)) sliceorder <- 1:dim(data)[4]
    if(length(sliceorder)!=dim(data)[4])
@@ -571,6 +557,10 @@ slicetiming <- function(fmridataobj, sliceorder=NULL){
                        as.integer(sliceorder))$slicetimed
     dim(newdata) <- dim(data)
     newdata <- aperm(newdata,c(2:4,1))
-    fmridataobj$ttt <- writeBin(as.numeric(newdata), raw(), 4)
+    datascale <- max(abs(range(newdata)))/32767
+    dim(ttt) <- c(prod(dy[1:3]), dy[4])
+    fmridataobj$ttt <- writeBin(as.integer(ttt[mask,]/datascale),raw(),2)
+    fmridataobj$datascale <- datascale
+    fmridataobj$maskOnly <- TRUE
     fmridataobj
 }

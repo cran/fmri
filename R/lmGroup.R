@@ -109,7 +109,7 @@ fmri.designG <- function (hrf,
 #            (default in case of one group without repeated measures)
 #       e.g. random <- ~ 0 + hrf|subj/session
 #            (default in case of one group with repeated measures)
-#       e.g. random <- list(subj = pdDiag(~ 0 + hrf:group))
+#       e.g. random <- list(subj = nlme::pdDiag(~ 0 + hrf:group))
 #            (default in case of two groups without repeated measures)
 # ac    = AR1-coefficent(s), single value (global) or voxel specific array (local)
 # mask  = head mask, if available
@@ -256,7 +256,7 @@ fmri.lmePar <- function (bold,
     # ... but subject-specific error terms still be valid, whereas
     # homoscedasticity assumption mostly not acceptable (dames: LR-tests)
     if (vtype=="individual") {
-      weights <- varIdent(form =~ 1|subj)
+      weights <- nlme::varIdent(form =~ 1|subj)
     }
     if (vtype=="equal") {
       weights <- NULL
@@ -266,14 +266,14 @@ fmri.lmePar <- function (bold,
     funcA <- function(y, z, fe.model, random, ar1, weights, dot = FALSE) {
       z$y <- y[-1]
       if (dot) cat(".")
-      lmm <-  lme(fixed = fe.model,
+      lmm <-  nlme::lme(fixed = fe.model,
                   random = random,
-                  correlation = corAR1(value=y[1], form = ar1, fixed=TRUE),
+                  correlation = nlme::corAR1(value=y[1], form = ar1, fixed=TRUE),
                   weights = weights,
                   method ="REML",
-                  control = lmeControl(rel.tol=1e-6, returnObject = TRUE),
+                  control = nlme::lmeControl(rel.tol=1e-6, returnObject = TRUE),
                   data = z)
-      cbeta <- fixef(lmm)[1] # alternatively: fixef(lmm)["hrf"]
+      cbeta <- nlme::fixef(lmm)[1] # alternatively: fixef(lmm)["hrf"]
       var <- vcov(lmm)[1,1]  # alternatively: vcov(lmm)["hrf","hrf"]
       resid <- resid(lmm)
       arfactor <- y[1]
@@ -309,12 +309,8 @@ fmri.lmePar <- function (bold,
 
     cat("fmri.lme: calculating spatial correlation\n")
     lags <- c(5, 5, 3)
-    corr <- .Fortran(C_mcorr, as.double(resid), as.integer(mask),
-                     as.integer(dx), as.integer(dy), as.integer(dz),
-                     as.integer(dNt), scorr = double(prod(lags)), as.integer(lags[1]),
-                     as.integer(lags[2]), as.integer(lags[3]))$scorr
-    dim(corr) <- lags
-    # attention: NaNs in corr
+    scorr <- aws::residualSpatialCorr(resid,mask,lags)
+    # attention: NaNs in scorr
     # if analyzed brain region is too small (e.g. 1 or 2 Slices)
 
     ## "compress" the residuals
@@ -323,7 +319,7 @@ fmri.lmePar <- function (bold,
     resid <- writeBin(as.integer(resid/scale), raw(), 2)
 
     ## determine local smoothness
-    if (sum(!is.finite(corr))) {
+    if (sum(!is.finite(scorr))) {
       warning("fmri.lme: infinite spatial correlations were found.
               The analyzed region maybe too small. No bandwidths determinable.")
       bw <- NULL
@@ -331,7 +327,7 @@ fmri.lmePar <- function (bold,
     } else {
       bw <- optim(c(2, 2, 2), corrrisk, method = "L-BFGS-B",
                   lower = c(0.25, 0.25, 0.25), upper = c(6, 6, 6),
-                  lag = lags, data = corr)$par
+                  lag = lags, data = scorr)$par
       bw[bw <= 0.25] <- 0
       dim(bw) <- c(1, 3)
       rxyz <- c(resel(1, bw[1]), resel(1, bw[2]), resel(1, bw[3]))
@@ -364,7 +360,7 @@ fmri.lmePar <- function (bold,
 
     if (is.null(random)) {
       if (runs == 1) {
-        random <- list(subj = pdDiag(~ 0 + hrf:group)) # independent groups
+        random <- list(subj = nlme::pdDiag(~ 0 + hrf:group)) # independent groups
       } else if (runs > 1) {
         stop("fmri.lme: Sorry, repeated measures for two groups are not predefined.")
       }
@@ -373,7 +369,7 @@ fmri.lmePar <- function (bold,
                                        collapse = ""), classes=class(random$subj))
 
     if (vtype=="individual") {
-      weights <- varIdent(form =~ 1|subj)
+      weights <- nlme::varIdent(form =~ 1|subj)
     }
     if (vtype=="equal") {
       weights <- NULL
@@ -388,16 +384,16 @@ fmri.lmePar <- function (bold,
     {
       z$y <- y[-1]
       if (dot) cat(".")
-      lmm <-  lme(fixed = fe.model,
+      lmm <-  nlme::lme(fixed = fe.model,
                   random = random,
-                  correlation = corAR1(value=y[1], form = ~ 1|subj/session, fixed=TRUE),
+                  correlation = nlme::corAR1(value=y[1], form = ~ 1|subj/session, fixed=TRUE),
                   weights = weights,
                   method ="REML",
-                  control = lmeControl(rel.tol=1e-6, returnObject = TRUE),
+                  control = nlme::lmeControl(rel.tol=1e-6, returnObject = TRUE),
                   data = z)
 
-      cbeta1 <- fixef(lmm)[cbeta.label[1]]
-      cbeta2 <- fixef(lmm)[cbeta.label[2]]
+      cbeta1 <- nlme::fixef(lmm)[cbeta.label[1]]
+      cbeta2 <- nlme::fixef(lmm)[cbeta.label[2]]
       var1 <- vcov(lmm)[cbeta.label[1],cbeta.label[1]]
       var2 <- vcov(lmm)[cbeta.label[2],cbeta.label[2]]
       resid1 <- resid(lmm)[z$group==levels(z$group)[1]]
@@ -448,18 +444,10 @@ fmri.lmePar <- function (bold,
 
     cat("fmri.lme: calculating spatial correlation\n")
     lags <- c(5, 5, 3)
-    corr <- .Fortran(C_mcorr, as.double(resid), as.integer(mask),
-                      as.integer(dx), as.integer(dy), as.integer(dz),
-                      as.integer(dNt1), scorr = double(prod(lags)), as.integer(lags[1]),
-                      as.integer(lags[2]), as.integer(lags[3]))$scorr
-    dim(corr) <- lags
+    scorr <- aws::residualSpatialCorr(resid,mask,lags)
+    scorr2 <- aws::residualSpatialCorr(resid2,mask,lags)
 
-    corr2 <- .Fortran(C_mcorr, as.double(resid2), as.integer(mask),
-                      as.integer(dx), as.integer(dy), as.integer(dz),
-                      as.integer(dNt2), scorr = double(prod(lags)), as.integer(lags[1]),
-                      as.integer(lags[2]), as.integer(lags[3]))$scorr
-    dim(corr2) <- lags
-    # attention: NaNs in corr
+    # attention: NaNs in scorr
     # if analyzed brain region is too small (e.g. 1 or 2 Slices)
 
     ## "compress" the residuals
@@ -474,7 +462,7 @@ fmri.lmePar <- function (bold,
     attr(resid2, "resid") <- paste(c("res:group",gr.label[2]), collapse = "")
 
     ## determine local smoothness
-    if (sum(!is.finite(corr))) {
+    if (sum(!is.finite(scorr))) {
       warning("fmri.lme:  infinite spatial correlations were found.
             The analyzed region maybe too small. No bandwidths determinable.")
       bw <- NULL
@@ -482,31 +470,31 @@ fmri.lmePar <- function (bold,
     } else {
       bw <- optim(c(2, 2, 2), corrrisk, method = "L-BFGS-B",
                   lower = c(0.25, 0.25, 0.25), upper = c(6, 6, 6),
-                  lag = lags, data = corr)$par
+                  lag = lags, data = scorr)$par
       bw[bw <= 0.25] <- 0
       dim(bw) <- c(1, 3)
       rxyz <- c(resel(1, bw[1]), resel(1, bw[2]), resel(1, bw[3]))
       dim(rxyz) <- c(1, 3)
     }
 
-    if (sum(!is.finite(corr2))) {
+    if (sum(!is.finite(scorr2))) {
       bw2 <- NULL
       rxyz2 <- NULL
     } else {
       bw2 <- optim(c(2, 2, 2), corrrisk, method = "L-BFGS-B",
                    lower = c(0.25, 0.25, 0.25), upper = c(6, 6, 6),
-                   lag = lags, data = corr2)$par
+                   lag = lags, data = scorr2)$par
       bw2[bw2 <= 0.25] <- 0
       dim(bw2) <- c(1, 3)
       rxyz2 <- c(resel(1, bw2[1]), resel(1, bw2[2]), resel(1, bw2[3]))
       dim(rxyz2) <- c(1, 3)
     }
     attr(scale, "resid") <- paste(c("res:group",gr.label[1]), collapse = "")
-    attr(corr, "spatial correlations:group") <- gr.label[1]
+    attr(scorr, "spatial correlations:group") <- gr.label[1]
     attr(bw, "bandwidths:group") <- gr.label[1]
     attr(rxyz, "smoothness in resel space:group") <- gr.label[1]
     attr(scale2, "resid") <- paste(c("res:group",gr.label[2]), collapse = "")
-    attr(corr2, "spatial correlations:group") <- gr.label[2]
+    attr(scorr2, "spatial correlations:group") <- gr.label[2]
     attr(bw2, "bandwidths:group") <- gr.label[2]
     attr(rxyz2, "smoothness in resel space:group") <- gr.label[2]
     cat("fmri.lme: finished\n")
@@ -527,9 +515,9 @@ fmri.lmePar <- function (bold,
                  resscale2 = scale2,
                  arfactor = arfactor,
                  rxyz = rxyz,
-                 scorr = corr,
+                 scorr = scorr,
                  rxyz2 = rxyz2,
-                 scorr2 = corr2,
+                 scorr2 = scorr2,
                  bw = bw,
                  bw2 = bw2,
                  weights = wghts,
@@ -597,7 +585,7 @@ fmri.lmePar <- function (bold,
 #          should be fitted
 # weighted = logical indicating whether weighted (weighted=TRUE, default) or
 #            unweighted (FALSE) least squares should be used to fit the model.
-# knha  = logical specifying whether the method by Knapp and Hartung (2003) 
+# knha  = logical specifying whether the method by Knapp and Hartung (2003)
 #         should be used for adjusting standard errors (default=FALSE)
 # mask  = head mask, if available
 # cluster = number of CPU cores for parallel voxel calculating,
@@ -693,7 +681,7 @@ fmri.metaPar <- function (Cbold,
     c <- y[1:dk]
     v <- y[(dk+1):(2*dk)]
     if (dot) cat(".")
-    fit <- rma.uni(c,
+    fit <- metafor::rma.uni(c,
                    v,
                    mods = mods,
                    data = XG,
@@ -747,12 +735,8 @@ fmri.metaPar <- function (Cbold,
 
   cat("fmri.meta: calculating spatial correlation\n")
   lags <- c(5, 5, 3)
-  corr <- .Fortran(C_mcorr, as.double(resid), as.integer(mask),
-                   as.integer(dx), as.integer(dy), as.integer(dz),
-                   as.integer(dk), scorr = double(prod(lags)), as.integer(lags[1]),
-                   as.integer(lags[2]), as.integer(lags[3]))$scorr
-  dim(corr) <- lags
-  # attention: NaNs in corr
+  scorr <- aws::residualSpatialCorr(resid,mask,lags)
+  # attention: NaNs in scorr
   # if analyzed brain region is too small (e.g. 1 or 2 Slices)
 
   ## "compress" the residuals
@@ -761,7 +745,7 @@ fmri.metaPar <- function (Cbold,
   resid <- writeBin(as.integer(resid/scale), raw(), 2)
 
   ## determine local smoothness
-  if (sum(!is.finite(corr))) {
+  if (sum(!is.finite(scorr))) {
     warning("fmri.meta:  infinite spatial correlations were found.
               The analyzed region maybe too small. No bandwidths determinable.")
     bw <- NULL
@@ -769,7 +753,7 @@ fmri.metaPar <- function (Cbold,
   } else {
     bw <- optim(c(2, 2, 2), corrrisk, method = "L-BFGS-B",
                 lower = c(0.25, 0.25, 0.25), upper = c(6, 6, 6),
-                lag = lags, data = corr)$par
+                lag = lags, data = scorr)$par
     bw[bw <= 0.25] <- 0
     dim(bw) <- c(1, 3)
     rxyz <- c(resel(1, bw[1]), resel(1, bw[2]), resel(1, bw[3]))
@@ -787,7 +771,7 @@ fmri.metaPar <- function (Cbold,
                  resscale = scale,
                  tau2 = tau2,
                  rxyz = rxyz,
-                 scorr = corr,
+                 scorr = scorr,
                  bw = bw,
                  weights = wghts,
                  dim = c(dim.spm,dk),

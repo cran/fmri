@@ -108,7 +108,6 @@ getkv0 <- function(param,mpredf=mpredfactor,irho=1,alpha=.05,ncmin=2){
         z$roit <- spm$roit
         z$header <- spm$header
         z$format <- spm$format
-        z$dim0 <- spm$dim0
         z$call <- args
 
         attr(z, "file") <- attr(spm, "file")

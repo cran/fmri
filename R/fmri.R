@@ -43,8 +43,21 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
         bw <- spm$bw
     }
     cat("fmri.smooth: smoothing the Statistical Parametric Map\n")
+#
+#   only employ voxel within mask
+#
+    mask <- spm$mask
+    if(is.null(mask)) mask <- array(TRUE,spm$dim)
+# reduce data entries to contain only voxel within mask
+    if(is.null(spm$maskOnly)|!spm$maskOnly) spm <- condensefMRI(spm)
+    cbeta <- spm$cbeta[mask]
+    variance <- variance[mask]
+    res <- extractData(spm, what="residuals", maskOnly=TRUE)
+    if(is.null(res)) {
+        return(warning("Please specify keep=''all'' when calling fmri.lm"))
+    }
     ttthat <- switch(tolower(adaptation),
-                     aws = aws3D(y = spm$cbeta,
+                     aws = aws3D(y = cbeta,
                                   sigma2 = variance,
                                   hmax = hmax,
                                   mask = spm$mask,
@@ -53,12 +66,10 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                   lkern = lkern,
                                   skern = skern,
                                   weighted = weighted,
-                                  res = spm$res,
-                                  resscale = spm$resscale,
-                                  ddim = spm$dim,
+                                  res = res,
                                   ladjust = ladjust,
                                   testprop = propagation),
-                     fullaws = aws3Dfull(y = spm$cbeta,
+                     fullaws = aws3Dfull(y = cbeta,
                                           sigma2 = variance,
                                           hmax = hmax,
                                           mask = spm$mask,
@@ -66,12 +77,10 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                           lkern = lkern,
                                           skern = skern,
                                           weighted = weighted,
-                                          res = spm$res,
-                                          resscale = spm$resscale,
-                                          ddim = spm$dim,
+                                          res = res,
                                           ladjust = ladjust,
                                           testprop = propagation),
-                     none = aws3D(y = spm$cbeta,
+                     none = aws3D(y = cbeta,
                                    sigma2 = variance,
                                    hmax = hmax,
                                    mask = spm$mask,
@@ -81,11 +90,9 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                    lkern = lkern,
                                    skern = skern,
                                    weighted = weighted,
-                                   res = spm$res,
-                                   resscale = spm$resscale,
-                                   ddim = spm$dim,
+                                   res = res,
                                    ladjust = ladjust),
-                     segment = segm3D(y = spm$cbeta,
+                     segment = segm3D(y = cbeta,
                                       sigma2 = variance,
                                       hmax = hmax,
                                       mask = spm$mask,
@@ -93,13 +100,15 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
                                       df = spm$df,
                                       h0 = bw,
                                       weighted = weighted,
-                                      res = spm$res,
-                                      resscale = spm$resscale,
-                                      ddim = spm$dim,
+                                      residuals = res,
                                       ladjust = ladjust,
                                       delta = delta,
                                       alpha = alpha,
                                       restricted = restricted))
+    scale <- max(abs(range(ttthat$res)))/32767
+    ttthat$res <- writeBin(as.integer(ttthat$res/scale), raw(), 2)
+    ttthat$resscale <- scale
+
     cat("\n")
     cat("fmri.smooth: determine local smoothness\n")
     if (is.null(ttthat$scorr)) {
@@ -120,16 +129,27 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
         bw0[, 3]))
     dim(rxyz0) <- c(dim(bw0)[1], 3)
     cat("fmri.smooth: exiting function\n")
-    z <- list(cbeta = ttthat$theta, var = ttthat$var, rxyz = rxyz,
+    cbeta <- variance <- array(0, dim(mask))
+    cbeta[mask] <- ttthat$theta
+    variance[mask] <- ttthat$var
+    if(!is.null(ttthat$segm)){
+        segm <- array(0, dim(mask))
+        segm[mask] <- ttthat$segm
+    } else {
+        segm <- NULL
+    }
+    z <- list(cbeta = cbeta, var = variance, rxyz = rxyz,
               rxyz0 = rxyz0, scorr = spm$scorr, weights = spm$weights,
               bw = bw, hmax = ttthat$hmax, dim = spm$dim, hrf = spm$hrf,
-              segm = ttthat$segm, mask = ttthat$mask,scale=ttthat$scale,res=ttthat$residuals, call = args)
+              segm = segm, mask = mask,
+              resscale=ttthat$resscale, res=ttthat$residuals,
+              maskOnly=TRUE, call = args)
     if (adaptation == "segment") {
       class(z) <- c( "fmrisegment", "fmridata")
       z$alpha <- alpha
       z$delta <- delta
     } else {
-      class(z) <- c("fmridata", "fmrispm")
+      class(z) <- c("fmrispm", "fmridata")
     }
     z$roixa <- spm$roixa
     z$roixe <- spm$roixe
@@ -140,7 +160,6 @@ fmri.smooth <- function (spm, hmax = 4, adaptation = "aws",
     z$roit <- spm$roit
     z$header <- spm$header
     z$format <- spm$format
-    z$dim0 <- spm$dim0
     z$scorr <- ttthat$scorr
     z$call <- args
     attr(z, "file") <- attr(spm, "file")
@@ -247,7 +266,6 @@ fmri.pvalue <- function(spm, mode="basic", na.rm=FALSE, minimum.signal=0, alpha=
   z$roit <- spm$roit
   z$header <- spm$header
   z$format <- spm$format
-  z$dim0 <- spm$dim0
   z$call <- args
   z$alpha <- alpha
   z$thresh <- thresh

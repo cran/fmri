@@ -206,43 +206,7 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "",
     } else {
       weights <- NULL
     }
-#    orientation <- switch(header$orient, "0", c(),
-#                                         "1", c(),
-#                                         "2", c(),
-#                                         "3", c(),
-#                                         "4", c(),
-#                                         "5", c(),
-#                                         "6", c(),
-#                                         c(0,2,5))
-#   if (any(sort((orientation)%/%2) != 0:2)) stop("invalid orientation",orientation,"found! \n")
     delta <- header$pixdim[2:4]
-#
-#   set correct orientation
-#   DO IT IN plot.fmridata()
-#
-#    xyz <- (orientation)%/%2+1
-#    swap <- orientation-2*(orientation%/%2)
-#    if(any(xyz!=1:3)) {
-#      abc <- 1:3
-#      abc[xyz] <- abc
-#      ttt <- aperm(ttt,c(abc,4))
-#      swap[xyz] <- swap
-#      delta[xyz] <- delta
-#      weights[xyz] <- weights
-#      ddim[xyz]<- ddim[1:3]
-#    }
-#    if(swap[1]==1) {
-#      ttt <- ttt[ddim[1]:1,,,,drop=FALSE]
-#    }
-#    if(swap[2]==1) {
-#      ttt <- ttt[,ddim[2]:1,,,drop=FALSE]
-#    }
-#    if(swap[3]==0) {
-#      ttt <- ttt[,,ddim[3]:1,,drop=FALSE]
-#    }
-
-
-
     mask0 <- array(TRUE,ddim[1:3])
     if (setmask) {
       mask0[ttt[,,,1] < quantile(ttt[,,,1],level,na.rm = TRUE)] <- FALSE
@@ -259,7 +223,6 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "",
               origin=NULL,
               orient=NULL,
               dim=ddim,
-              dim0=ddim,
               roixa=1,
               roixe=ddim[1],
               roiya=1,
@@ -278,7 +241,6 @@ read.ANALYZE <- function(prefix = c(""), numbered = FALSE, postfix = "",
               origin=NULL,
               orient=NULL,
               dim=NULL,
-              dim0=NULL,
               roixa=NULL,
               roixe=NULL,
               roiya=NULL,
@@ -554,7 +516,6 @@ read.AFNI <- function(filename, vol=NULL, level=0.75, mask=NULL, setmask=TRUE){
            origin=values$ORIGIN,
            orient=c(0,2,5),
            dim=c(ddim,length(vol)),
-           dim0=c(ddim,length(vol)),
            roixa=1,
            roixe=ddim[1],
            roiya=1,
@@ -573,7 +534,6 @@ read.AFNI <- function(filename, vol=NULL, level=0.75, mask=NULL, setmask=TRUE){
               origin=NULL,
               orient=NULL,
               dim=NULL,
-              dim0=NULL,
               roixa=NULL,
               roixe=NULL,
               roiya=NULL,
@@ -1215,7 +1175,6 @@ read.NIFTI <- function(filename, level=0.75, mask=NULL, setmask=TRUE) {
               origin=c(header$qoffsetx,header$qoffsety,header$qoffsetz),
               orient=NULL,
               dim=header$dimension[2:5],
-              dim0=header$dimension[2:5],
               roixa=1,
               roixe=dx,
               roiya=1,
@@ -1235,7 +1194,6 @@ read.NIFTI <- function(filename, level=0.75, mask=NULL, setmask=TRUE) {
               origin=c(header$qoffsetx,header$qoffsety,header$qoffsetz),
               orient=NULL,
               dim=c(dx,dy,dz,dd),
-              dim0=c(dx,dy,dz,dd),
               roixa=1,
               roixe=dx,
               roiya=1,
@@ -1457,27 +1415,150 @@ write.NIFTI <- function(ttt, header=NULL, filename) {
   close(con)
 }
 
-extractData <- function(z,what="data"){
-  if (what=="residuals") {
-      if(!is.null(z$resscale)){
-          ttt <- readBin(z$res,"integer",prod(z$dim),2)*z$resscale
-          dim(ttt) <- z$dim[c(4,1:3)]
-          } else {
-          warning("extractData: No residuals available, returning NULL")
-          ttt <- NULL
-      }
-      } else {
-      if(!is.null(z$ttt)){
-        if(is.null(z$datascale)){
-           ttt <- readBin(z$ttt,"numeric",prod(z$dim),4)
-        } else {
-           ttt <- readBin(z$ttt,"integer",prod(z$dim),2)*z$datascale
+extractData <- function(z, what="data", maskOnly=FALSE){
+  #
+  #  extract data or residuals in either compact (mask only) or expanded (full images) form
+  #
+    if(is.null(z$maskOnly)) z$maskOnly <- FALSE
+  # z$maskOnly was not set, i.e, we have complete data cubes
+    expand <- z$maskOnly & !maskOnly
+    condense <- !z$maskOnly & maskOnly
+    if (z$maskOnly){
+       mask <- as.logical(z$mask)
+       nvoxel <- sum(mask)
+    } else {
+       nvoxel <- prod(z$dim[1:3])
+       mask <- array(TRUE,z$dim[1:3])
+    }
+    nt <- z$dim[4]
+    n <- nt*nvoxel
+    if (what == "residuals") {
+        if (!is.null(z$resscale)) {
+            ttt <- readBin(z$res, "integer", n, 2) * z$resscale
+            dim(ttt) <- c(nt,nvoxel)
         }
-        dim(ttt) <- z$dim
-        } else {
-          warning("extractData: No residuals available, returning NULL")
-          ttt <- NULL
+        else {
+            warning("extractData: No residuals available, returning NULL")
+            ttt <- NULL
+        }
+    }
+    else {
+        if (!is.null(z$ttt)) {
+            if (is.null(z$datascale)) {
+                ttt <- readBin(z$ttt, "numeric", n, 4)
+            }
+            else {
+                ttt <- readBin(z$ttt, "integer", n, 2) * z$datascale
+            }
+            dim(ttt) <- c(nvoxel,nt)
+        }
+        else {
+            warning("extractData: No residuals available, returning NULL")
+            ttt <- NULL
+        }
+    }
+## now expand to full arrays if needed
+    if(!is.null(ttt)&expand){
+      ttt0 <- ttt
+      if(what=="data"){
+         ttt <- matrix(0,n/nt,nt)
+         ttt[mask,] <- ttt0
+      } else {
+        ttt <- matrix(0,nt,n/nt)
+        ttt[,mask] <- ttt0
       }
+    }
+## now condense to mask if required
+    if(!is.null(ttt)&condense){
+      if(what=="data"){
+        ttt <- ttt[mask,]
+      } else {
+        ttt <- ttt[,mask]
       }
-  invisible(ttt)
+    }
+    if(!is.null(ttt)&!maskOnly){
+      if(what=="data") ind <- 1:4 else ind <- c(4,1:3)
+      dim(ttt) <- z$dim[ind]
+    }
+    invisible(ttt)
+}
+
+expandfMRI <- function(z){
+# expand fmridataobj to contain full images
+if(!is.null(z$maskOnly)&z$maskOnly){
+  mask <- z$mask
+  nvoxel <- sum(mask)
+  nt <- z$dim[4]
+  n <- nt*nvoxel
+  if(!is.null(z$residuals)){
+    ttt0 <- readBin(z$res, "integer", n, 2)
+    ttt <- matrix(0L, nt, nvoxel)
+    ttt[,mask] <- ttt
+    z$res <- writeBin(as.integer(ttt),raw(),2)
+  }
+  if(!is.null(z$ttt)){
+#    object contains data
+     if (is.null(z$datascale)) {
+         ttt0 <- readBin(z$ttt, "numeric", n, 4)
+     }
+     else {
+         ttt0 <- readBin(z$ttt, "integer", n, 2) * z$datascale
+     }
+     datascale <- max(abs(range(ttt)))/32767
+     ttt <- matrix(0L, nvoxel, nt)
+     ttt[mask,] <- ttt
+     z$ttt <- writeBin(as.integer(ttt/datascale),raw(),2)
+     z$datascale <- datascale
+  }
+}
+z$maskOnly <- FALSE
+invisible(z)
+}
+
+condensefMRI <- function(z, mask=NULL){
+#
+#  reduce size of fmri object to voxel in mask
+#  can also be used to set a more restrictive mask
+#
+  if(is.null(z$maskOnly)) z$maskOnly <- FALSE
+  if(is.null(z$mask)) z$mask <- array(TRUE, z$dim[1:3])
+  if(z$maskOnly&is.null(mask)){
+    warning("condensefMRI: nothing to do\n returning unchanged object")
+    invisible(z)
+  }
+  if(z$maskOnly) z <- expandfMRI(z)
+  if(!is.null(z$mask)&!is.null(mask)){
+    if(any(mask&!z$mask))
+    warning("condensefMRI: new mask is not a subset of old mask, using intesection")
+    mask[!z$mask] <- FALSE
+  }
+  if(is.null(mask)) mask <- z$mask
+  if(is.null(mask)){
+    warning("condensefMRI: no mask available\n returning unchanged object")
+    invisible(z)
+  }
+  z$mask <- mask
+  nt <- z$dim[4]
+  ncube <- prod(z$dim[1:3])
+  n <- nt*ncube
+  nvoxel <- sum(mask)
+  if(!is.null(z$residuals)){
+    ttt <- matrix(readBin(z$res, "integer", n, 2), nt, ncube)
+    z$res <- writeBin(as.integer(ttt[,mask]),raw(),2)
+  }
+  if(!is.null(z$ttt)){
+#    object contains data
+     if (is.null(z$datascale)) {
+         ttt <- readBin(z$ttt, "numeric", n, 4)
+     }
+     else {
+         ttt <- readBin(z$ttt, "integer", n, 2) * z$datascale
+     }
+     datascale <- max(abs(range(ttt)))/32767
+     dim(ttt) <- c(ncube, nt)
+     z$ttt <- writeBin(as.integer(ttt[mask,]/datascale),raw(),2)
+     z$datascale <- datascale
+  }
+  z$maskOnly <- TRUE
+  invisible(z)
 }
