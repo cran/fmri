@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.9.3
-Date: 2020-02-25
+Version: 1.9.6
+Date: 2021-01-11
 Title: Analysis of fMRI Experiments
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "tabelow@wias-berlin.de"),
@@ -24,13 +24,13 @@ Copyright: This package is Copyright (C) 2006-2020 Weierstrass
 URL: http://www.wias-berlin.de/software/imaging/
 Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: yes
-Packaged: 2020-02-25 10:39:14 UTC; polzehl
+Packaged: 2021-01-12 11:05:17 UTC; polzehl
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
   Brandon Whitcher [ctb],
   Dames Sibylle [ctb]
 Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
 Repository: CRAN
-Date/Publication: 2020-02-25 13:10:02 UTC
+Date/Publication: 2021-01-12 14:30:08 UTC

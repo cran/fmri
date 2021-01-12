@@ -1,5 +1,5 @@
 ff5aea3d78dc24846b39d73d00c02a86 *ChangeLog
-b79f186c5fb61e6cb74ee203e8bbb00b *DESCRIPTION
+bf3cbfd7c0b72299b0b3144784f1d9c7 *DESCRIPTION
 81c6a771fa9f53bb97c2fa84f41c80d8 *NAMESPACE
 8ebe0c3d5629a74dd89edea31ce30da2 *R/aws.r
 a1e0804d0e909ce0840c2736157dfdd6 *R/cluster.R
@@ -9,7 +9,7 @@ a1e0804d0e909ce0840c2736157dfdd6 *R/cluster.R
 731849b06c0d342888d2de6a3c9feda5 *R/gen_fmridata.R
 3552d4f2eeef87aa059c51a2853b9623 *R/io.R
 cba7e5f09bb6c9dc35632f4789a63f03 *R/lmGroup.R
-6f3e9971cdc5ae3a3c6ef9fafae6a2f8 *R/lmslicetime.R
+3c677b20d61d1a62e0904c0c29ff23f0 *R/lmslicetime.R
 a5cb9f749e9ad01b34b6c1880a5c5906 *R/misc.r
 e1342fdb7b0003b95e00439723dd1059 *R/oro2fmri.R
 becf497268a4c75645c4ff7a76fb8801 *R/plot.r
@@ -20,11 +20,12 @@ aff92fb257b0646d4ff3b89e86c7dd0b *R/sysdata.rda
 b9085d8c84f55b39087808e92b0125d8 *R/tcltk.r
 f25e80e9bb1207f269ac6bb43a457ecd *R/utilities.r
 94972892d6680c189f67367e2d7011b7 *R/view23D.r
+03c6bd4397fb5a84e1ca3b62fa100e6f *README.md
 7730fc9e7d6688b8fd5bdfbbfef574c9 *cleanup
 f262f5187b14c076a2f4ab5ab91a6e33 *data/hvred.rda
 e37afe408a727e29a4912bf581919587 *demo/00Index
 9a05186ff7a5080466aa8eca3c2c4cf3 *demo/fmri.r
-7ff01d96d4c0052d6e37a7b062af1c37 *inst/CITATION
+7442e178e4b727d4d66aa1816f128a2d *inst/CITATION
 12250aac50ce77d2dd352917181f20c1 *inst/img/wias.jpeg
 a3ceb80e92f27626e45de48951d28be6 *man/ICAfingerprint.Rd
 7becfce501a20fbe85741daa89e08175 *man/cutroi.Rd
@@ -62,7 +63,7 @@ b5bdfd8b1f28a3aab94bc8cbf4913015 *man/slicetiming.Rd
 833efaa92165ada58d99a1fcb9aa26c6 *man/write.AFNI.Rd
 e1f3b1440fa97ad86be40dee481f9e67 *man/write.ANALYZE.Rd
 4ea87ef68fc497f4eccbbfa77ab8b8ca *man/write.NIFTI.Rd
-680c646e3ffd555f7ee0b146d2156e36 *src/Makevars
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
 761af553eb71d04ee728b73fbff07fa3 *src/Rentries.c
 551733e47280841a2b7a3b738a7aba7f *src/clusterthresh.f
 07b7e9122ac511a948ec046709f4f591 *src/init.c

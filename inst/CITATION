@@ -9,13 +9,13 @@ citEntry(entry = "Article",
   volume       = "44",
   number       = "11",
   pages        = "1--21",
-  url          = "http://www.jstatsoft.org/v44/i11/",
+  url          = "https://www.jstatsoft.org/v44/i11/",
 
   textVersion  =
   paste("Karsten Tabelow, Joerg Polzehl (2011).",
         "Statistical Parametric Maps for Functional MRI Experiments in R: The Package fmri.",
         "Journal of Statistical Software, 44(11), 1-21.",
-        "URL http://www.jstatsoft.org/v44/i11/.")
+        "URL https://www.jstatsoft.org/v44/i11/")
 )
 
 citEntry(entry = "Article",

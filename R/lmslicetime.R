@@ -557,9 +557,9 @@ slicetiming <- function(fmridataobj, sliceorder=NULL){
                        as.integer(sliceorder))$slicetimed
     dim(newdata) <- dim(data)
     newdata <- aperm(newdata,c(2:4,1))
+    dim(newdata) <- c(prod(dy[1:3]),dy[4])
     datascale <- max(abs(range(newdata)))/32767
-    dim(ttt) <- c(prod(dy[1:3]), dy[4])
-    fmridataobj$ttt <- writeBin(as.integer(ttt[mask,]/datascale),raw(),2)
+    fmridataobj$ttt <- writeBin(as.integer(newdata[mask,]/datascale),raw(),2)
     fmridataobj$datascale <- datascale
     fmridataobj$maskOnly <- TRUE
     fmridataobj
