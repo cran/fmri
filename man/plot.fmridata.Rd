@@ -41,7 +41,7 @@
   \item{...}{ additional arguments for plot}
 }
 \details{
-  Provides a sliceswise view of "fmridata" objects with anatomic overlay (if
+  Provides a slicewise view of "fmridata" objects with anatomic overlay (if
   appropriate, that is for class "fmripvalue"). For objects of class
   "fmrispm" it plots the t-statistics for the estimated effects if \code{spm} is
   \code{TRUE}, or the estimated effect otherwise. For objects of class
@@ -63,7 +63,7 @@
   "fmripvalue" the pvalues with overlay are shown.
 }
 \value{
-  If 'type' is "3d" the Tk-object is returned. (Remove the diplay with \code{tkdestroy(object)})
+  If 'type' is "3d" the Tk-object is returned. (Remove the display with \code{tkdestroy(object)})
 }
 \references{
   Polzehl, J. and Tabelow, K. (2007)

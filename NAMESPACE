@@ -11,7 +11,7 @@ export(fmri.detrend, fmri.sICA, ICAfingerprint, plot.fmriICA, fmri.sgroupICA,
 export(plot.fmridata, plot.fmripvalue)
 export(oro2fmri,fmri2oro)
 export(gen_fmridata)
-# export(findclusters,simclusterthr)
+
 export(fmri.designG,fmri.lmePar,fmri.metaPar)
 export(niftiImage2fmri)
 importFrom("grDevices", "col2rgb", "dev.new", "gray", "grey",
@@ -26,6 +26,7 @@ importFrom("stats", "IQR", "convolve", "dchisq", "density", "dnorm", "qnorm",
              "rt", "var", "vcov", "sd", "spectrum", "dist", "as.dist", "hclust")
 importFrom("utils", "flush.console", "setTxtProgressBar",
              "txtProgressBar")
+importFrom("oro.nifti", "is.nifti")
 importFrom(metafor,rma.uni)
 importFrom(nlme, lme, lmeControl, varIdent, corAR1, fixef, pdDiag)
 importFrom(parallel, makeCluster, clusterEvalQ, parApply, stopCluster)

@@ -4,7 +4,7 @@
         integer :: n1,n2,n3,x(n1,n2,n3),z(n1,n2,n3)
 C   x - cluster size, initially 1 if above threshold, zero else
 C   z - cluster number
-        integer :: i1,i2,i3,k,l,nk,nl
+        integer :: i1,i2,i3,k,l,nk,nl,i1e,i2e,i3e
 C initialize
         k=0
         DO i1 = 1,n1
@@ -18,10 +18,13 @@ C initialize
         END DO
 C determine clusters
         DO i1 = 1,n1
+          i1e=min(i1,n1-1)
           DO i2 = 1,n2
+            i2e=min(i2,n2-1)
             DO i3 = 1,n3
+              i3e=min(i3,n3-1)
               if(x(i1,i2,i3).eq.0) CYCLE
-              if(i1.lt.n1.and.x(i1+1,i2,i3).gt.0) THEN
+              if(i1.lt.n1.and.x(i1e+1,i2,i3).gt.0) THEN
                  if(z(i1,i2,i3).ne.z(i1+1,i2,i3)) THEN
                    k=z(i1,i2,i3)
                    l=z(i1+1,i2,i3)
@@ -30,7 +33,7 @@ C determine clusters
                    call jcluster(x,z,n1*n2*n3,k,l,nk,nl)
                 END IF
               END IF
-              if(i2.lt.n2.and.x(i1,i2+1,i3).gt.0) THEN
+              if(i2.lt.n2.and.x(i1,i2e+1,i3).gt.0) THEN
                  if(z(i1,i2,i3).ne.z(i1,i2+1,i3)) THEN
                    k=z(i1,i2,i3)
                    l=z(i1,i2+1,i3)
@@ -39,7 +42,7 @@ C determine clusters
                    call jcluster(x,z,n1*n2*n3,k,l,nk,nl)
                 END IF
               END IF
-              if(i3.lt.n3.and.x(i1,i2,i3+1).gt.0) THEN
+              if(i3.lt.n3.and.x(i1,i2,i3e+1).gt.0) THEN
                  if(z(i1,i2,i3).ne.z(i1,i2,i3+1)) THEN
                    k=z(i1,i2,i3)
                    l=z(i1,i2,i3+1)

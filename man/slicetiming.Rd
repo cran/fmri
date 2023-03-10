@@ -5,10 +5,10 @@
 slicetiming for fmridata-objects
 }
 \description{
-Perform slicetiming for fMRI data, idealy before preprocessing (registration).
+Perform slicetiming for fMRI data, ideally before preprocessing (registration).
 Recording times for slices are assumed to be equispaced between scans with
 argument \code{sliceorder} providing the order of slice acquisitions.
-Interpolation between slices is performed uing a sinc filter.
+Interpolation between slices is performed using a sinc filter.
 }
 \usage{
 slicetiming(fmridataobj, sliceorder = NULL)
@@ -19,7 +19,7 @@ slicetiming(fmridataobj, sliceorder = NULL)
  object of class fmridata
 }
   \item{sliceorder}{
- order of lice acqisions
+ order of lice acquisitions
 }
 }
 

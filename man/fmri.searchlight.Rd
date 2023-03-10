@@ -20,7 +20,7 @@ fmri.searchlight(spm, alpha = 0.05, radius, minimum.signal = 0,
   multiple test (over volume) adjusted significance level.
 }
   \item{radius}{
-  radius of searchlight. Value needs to be larger or eaqual than 1.
+  radius of searchlight. Value needs to be larger or equal than 1.
 }
   \item{minimum.signal}{
   allows to specify a (positive) minimum value for detected signals. If minimum.signal >0

@@ -21,7 +21,7 @@ cutroi(data, xind = 1:data$dim[1], yind = 1:data$dim[2],
   Cut a region of interest from frmidata.
 }
 \value{
-  Corresponding cutted fmridata object.
+  Corresponding cut fmridata object.
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{read.AFNI}}, \code{\link{read.ANALYZE}}, \code{\link{read.NIFTI}} }

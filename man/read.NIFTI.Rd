@@ -10,14 +10,14 @@ read.NIFTI(filename, level = 0.75, mask=NULL, setmask=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{filename}{ name of the NIFTI file }
+  \item{filename}{ name of the NIfTI file }
   \item{level}{Quantile level defining the mask}
   \item{mask}{array or nifti-object containing the mask. If set this replaces
   the mask defined by argument level.}
   \item{setmask}{Logical (default \code{TRUE}), whether to define a suitable mask based on \code{level}}
 }
 \details{
-  This function reads fMRI data files in NIFTI format.
+  This function reads fMRI data files in NIfTI format.
 
   The filename can be given with or without extension. If extension is
   not included, the function searches for the ".nii" file and then for
@@ -44,6 +44,6 @@ read.NIFTI(filename, level = 0.75, mask=NULL, setmask=TRUE)
 }
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \seealso{ \code{\link{read.ANALYZE}}, \code{\link{read.AFNI}} }
-\examples{ \dontrun{analyze <- read.NIFIT("niftifile.nii")}}
+\examples{ \dontrun{analyze <- read.NIFTI("niftifile.nii")}}
 \keyword{ IO }% at least one, from doc/KEYWORDS
 \keyword{ utilities }% __ONLY ONE__ keyword per line

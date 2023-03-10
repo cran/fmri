@@ -13,13 +13,13 @@ write.AFNI(filename, ttt, label = NULL, note = NULL, origin = NULL,
 \arguments{
   \item{filename}{ name of the file }
   \item{ttt}{ datacube }
-  \item{label}{ labels (BRICK\_LABS), depreciated - see header}
-  \item{note}{ notes on data (HISTORY\_NOTE), depreciated - see header }
+  \item{label}{ labels (BRICK_LABS), depreciated - see header}
+  \item{note}{ notes on data (HISTORY_NOTE), depreciated - see header }
   \item{origin}{ origin of datacube (ORIGIN), depreciated - see header }
   \item{delta}{ voxel dimensions (DELTA), depreciated - see header }
-  \item{idcode}{ idcode of data (IDCODE\_STRING), depreciated - see header }
+  \item{idcode}{ idcode of data (IDCODE_STRING), depreciated - see header }
   \item{header}{ This is a list of header information such as 
-                 DATASET\_RANK to be written to the .HEAD file.
+                 DATASET_RANK to be written to the .HEAD file.
                  Arguments \code{label}, ... are depreciated and to be substituted
                  by a corresponding list entry. For backward compatibility
                  the use of the old arguments is still supported and should 

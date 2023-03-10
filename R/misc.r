@@ -151,7 +151,7 @@ niftiImage2fmri <- function(niftiobj, level=0.75, mask=NULL, setmask=TRUE,
 }
 
 setmask <- function(fmriobj, mask){
-   if(class(fmriobj)!="fmridata") stop("setmask 1st argument needs to be of class fmridata\n")
+   if(!inherits(fmriobj, "fmridata")) stop("setmask 1st argument needs to be of class fmridata\n")
    if(!is.array(mask)) stop("setmask 2nd argument needs to be an array\n")
    if(any(fmriobj$dim[1:3]!=dim(mask))) stop("setmask incompatible dimensions of arguments\n")
    fmriobj$mask <- mask

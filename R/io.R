@@ -1434,7 +1434,7 @@ extractData <- function(z, what="data", maskOnly=FALSE){
     n <- nt*nvoxel
     if (what == "residuals") {
         if (!is.null(z$resscale)) {
-            ttt <- readBin(z$res, "integer", n, 2) * z$resscale
+            ttt <- readBin(z$residuals, "integer", n, 2) * z$resscale
             dim(ttt) <- c(nt,nvoxel)
         }
         else {
@@ -1491,10 +1491,10 @@ if(!is.null(z$maskOnly)&z$maskOnly){
   nt <- z$dim[4]
   n <- nt*nvoxel
   if(!is.null(z$residuals)){
-    ttt0 <- readBin(z$res, "integer", n, 2)
+    ttt0 <- readBin(z$residuals, "integer", n, 2)
     ttt <- matrix(0L, nt, nvoxel)
     ttt[,mask] <- ttt
-    z$res <- writeBin(as.integer(ttt),raw(),2)
+    z$residuals <- writeBin(as.integer(ttt),raw(),2)
   }
   if(!is.null(z$ttt)){
 #    object contains data
@@ -1543,8 +1543,8 @@ condensefMRI <- function(z, mask=NULL){
   n <- nt*ncube
   nvoxel <- sum(mask)
   if(!is.null(z$residuals)){
-    ttt <- matrix(readBin(z$res, "integer", n, 2), nt, ncube)
-    z$res <- writeBin(as.integer(ttt[,mask]),raw(),2)
+    ttt <- matrix(readBin(z$residuals, "integer", n, 2), nt, ncube)
+    z$residuals <- writeBin(as.integer(ttt[,mask]),raw(),2)
   }
   if(!is.null(z$ttt)){
 #    object contains data

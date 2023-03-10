@@ -12,7 +12,7 @@ fmri.detrend(data, degree = 1, nuisance=NULL, accoef = 0)
 \arguments{
   \item{data}{ fMRI dataset of class ''\code{fmridata}'' }
   \item{degree}{ Degree of the polynomial used to detrend the data. defaults to 1 (linear trends). }
-  \item{nuisance}{ Matrix of additional nuisance parameters to regree against. }
+  \item{nuisance}{ Matrix of additional nuisance parameters to regress against. }
   \item{accoef}{ Coefficient of AR(1) model used for prewhitening. default 0. }
 }
 \details{

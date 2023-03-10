@@ -15,7 +15,7 @@ write.ANALYZE(ttt, header=NULL, filename)
   \item{filename}{ file name }
 }
 \details{
-  Writes the datacube \code{ttt} to a file named \code{file} in ANLYZE file
+  Writes the datacube \code{ttt} to a file named \code{file} in ANALYZE file
   format. \code{header} is a list that contains the header information
   as documented by the Mayo Foundation. We give here a short summary. If
   a value is not provided, it will be tried to fill it with reasonable

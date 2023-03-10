@@ -1805,7 +1805,7 @@ pixdim <- function(header,format) {
 }
 
 conv.ip <- function(data, what="i2p") {
-  if (!("fmridata" %in% class(data)))
+  if (!inherits(data,"fmridata"))
        stop("Cannot evaluate real-space position for this dataset. Not type fmridata!")
   if (data$format == "NIFTI") {
     if (data$header$qform > 0) {

@@ -29,7 +29,7 @@ fmri.sgroupICA(icaobjlist, thresh = 0.75, minsize=2)
 The fMRI time series need to be preprocessed and registered
 before thr ICA decomposition is performed.
 
-The function employes a hierarchical clustering algorithm (complete
+The function employs a hierarchical clustering algorithm (complete
 linkage) on the combined set of spatial independent components
 obtained from the individual time series. A distance matrix is obtained from
 correlations of the independent component images. Aggregation of two components from
@@ -44,7 +44,7 @@ An object of class ''\code{fmrigroupICA}'' with components
   \item{size}{Size of selected clusters}
   \item{cl}{Number of selected clusters}
   \item{cluster}{Cluster membership corresponding to \code{thresh}.}
-  \item{height}{Distance value at which the cluster was createt.
+  \item{height}{Distance value at which the cluster was created.
   Elements correspond to elements of cluster.}
   \item{hdm}{Object returned by function \code{\link[stats]{hclust}}.}
 }

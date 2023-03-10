@@ -5,7 +5,7 @@ cutroi <- function(data,
                     zind=1:data$dim[3],
                     tind=1:data$dim[4]) {
 
-  if (("fmridata" %in% class(data)) & (!any(c("fmrispm","fmripvalue") %in% class(data)))) {
+  if (inherits(data,"fmridata") & !inherits(data,c("fmrispm","fmripvalue"))) {
     ttt <- extractData(data)[xind,yind,zind,tind]
     data$ttt <- writeBin(as.numeric(ttt),raw(),4)
     data$dim <- c(length(xind),length(yind),length(zind),length(tind))
@@ -31,7 +31,7 @@ cutroi <- function(data,
 }
 
 summary.fmridata <- function(object,...) {
-  if ("fmripvalue" %in% class(object)) {
+  if (inherits(object,"fmripvalue")) {
     cat("Object of class fmripvalue created by\n")
     print(object$call)
     dt <- dim(object$pvalue)
@@ -47,7 +47,7 @@ summary.fmridata <- function(object,...) {
     cat(attr(object, "mode"), "\n")
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
                    z=attr(object, "design")))
-  } else if ("fmrispm" %in% class(object)) {
+  } else if (inherits(object,"fmrispm")) {
     cat("Object of class fmrispm created by\n")
     print(object$call)
     dt <- object$dim
@@ -62,7 +62,7 @@ summary.fmridata <- function(object,...) {
     if (!is.null(attr(object, "smooth"))) cat(attr(object, "smooth"))
     invisible(list(dim=dt,values=values, files=attr(object, "read"),
               z=attr(object, "design")))
-  }else if ("fmrisegment" %in% class(object)) {
+  } else if (inherits(object,"fmrisegment")) {
     cat("Object of class fmrisegment created by\n")
     print(object$call)
     dt <- object$dim
@@ -95,7 +95,7 @@ summary.fmridata <- function(object,...) {
 }
 
 print.fmridata <- function(x,...) {
-  if ("fmripvalue" %in% class(x)) {
+  if (inherits(x,"fmripvalue")) {
     cat("Object of class fmripvalue created by\n")
     print(x$call)
     cat("Data Dimension             :", dim(x$pvalue),"\n")
@@ -108,7 +108,7 @@ print.fmridata <- function(x,...) {
                                  cat("No prewhitening performed!\n"))
     if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"),"\n")
     cat(attr(x, "mode"), "\n")
-  } else if ("fmrispm" %in% class(x)) {
+  } else if (inherits(x,"fmrispm")) {
     cat("Object of class fmrispm created by\n")
     print(x$call)
     cat("Data Dimension               :", x$dim,"\n")
@@ -122,7 +122,7 @@ print.fmridata <- function(x,...) {
     if (!is.null(attr(x, "smooth"))) cat(attr(x, "smooth"))
 #    lmcall <- attr(x, "lm")
 #    cat("Linear Model - Number of stimuli
-  }else if ("fmrisegment" %in% class(x)) {
+  } else if (inherits(x,"fmrisegment")) {
     cat("Object of class fmrisegment created by\n")
     print(x$call)
     cat("Data Dimension               :", x$dim,"\n")

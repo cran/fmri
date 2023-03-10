@@ -16,7 +16,7 @@ fmri.pvalue(spm, mode="basic", na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
    in voxel where the time series information did not allow for estimating parameters and their variances
    or where the time series information where constant over time. A high (1e19) value of the variance
    and a parameter of 0 are used to characterize NA's. If \code{na.rm=TRUE} the pvalue for the corresponding voxels
-   is set to 1. Otehrwise pvalues are assigned according to the information found in the SPM at the voxel.}
+   is set to 1. Otherwise pvalues are assigned according to the information found in the SPM at the voxel.}
   \item{minimum.signal}{allows to specify a (positive) minimum value for detected signals. If minimum.signal >0
    the thresholds are to conservative, this case needs further improvements.}
   \item{alpha}{Significance level in case of \code{mode="FDR"}}
@@ -50,7 +50,7 @@ fmri.pvalue(spm, mode="basic", na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
   adaptive smoothing. In contrast to "basic", "global" takes a global
   median to adjust for the randomness of the weighting scheme generated
   by adaptive smoothing. "global" and "local" are more conservative than
-  "basic", that is, they generate sligthly larger p-values.}
+  "basic", that is, they generate slightly larger p-values.}
 \value{
   Object with class attributes "fmripvalue" and "fmridata"
   \item{pvalue}{ p-value. use with \code{\link{plot}} for thresholding.}
@@ -77,7 +77,7 @@ fmri.pvalue(spm, mode="basic", na.rm=FALSE, minimum.signal = 0, alpha= 0.05)
 \author{ Karsten Tabelow \email{tabelow@wias-berlin.de} }
 \note{Unexpected side effects may occur if spm does not meet the
   requirements, especially if a parameter estimate vector of length greater than 2 through
-  argument \code{vvector} in \code{\link{fmri.lm}} has beeen produced for every voxel.}
+  argument \code{vvector} in \code{\link{fmri.lm}} has been produced for every voxel.}
 \seealso{\code{\link{fmri.lm}},  \code{\link{fmri.smooth}}, \code{\link{plot.fmridata}},
 \code{\link{fmri.cluster}}, \code{\link{fmri.searchlight}}  }
 \examples{

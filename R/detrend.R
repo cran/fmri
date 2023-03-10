@@ -1,5 +1,5 @@
 fmri.detrend <- function(data,degree=1,nuisance=NULL,accoef=0) {
-  if (!class(data) == "fmridata") {
+  if (!inherits(data, "fmridata")) {
     warning("fmri.lm: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
   cat("Start trend removal \n")
@@ -36,7 +36,7 @@ fmri.detrend <- function(data,degree=1,nuisance=NULL,accoef=0) {
 }
 
 smooth.fmridata <- function(data,bw=0,unit=c("SD","FWHM"),what="spatial"){
-  if (!class(data) == "fmridata") {
+  if (!inherits(data, "fmridata")) {
     warning("smooth.fmridata: data not of class <fmridata>. Try to proceed but strange things may happen")
   }
   ttt <- extractData(data)

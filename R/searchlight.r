@@ -51,7 +51,7 @@ fmri.searchlight <- function(spm, alpha=.05, radius, minimum.signal=0, kind=c("a
 
 cat("fmri.searchlight: entering function\n")
 
-if (!("fmrispm" %in% class(spm)) ) {
+if (!inherits(spm,"fmrispm")) {
   warning("fmri.searchlight: data not of class <fmrispm>. Try to proceed but strange things may happen")
 }
 stat <- spm$cbeta
@@ -122,7 +122,7 @@ mask[stat < thresh] <- FALSE
     }
 
 getSearchlightPattern <- function(spm, voxel, radius){
-   if(!"fmrispm"%in%class(spm)) stop("getSearchlightPattern: first argument needs to be an SPM")
+   if(!inherits(spm,"fmrispm")) stop("getSearchlightPattern: first argument needs to be an SPM")
    if(!is.logical(voxel)) stop("getSearchlightPattern: second argument needs to be a voxel mask")
    if(any(dim(voxel)!=spm$dim[1:3])) stop("getSearchlightPattern: Incompatible dimensions")
    if(!is.numeric(radius) ||radius < 1) stop("getSearchlightPattern: illegal radius")

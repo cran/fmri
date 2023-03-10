@@ -14,7 +14,7 @@ plot.fmrisegment <- function(x,
 
    if (is.null(anatomic)) anatomic <- array( 0, dim = x$dim[1:3])
 
-   if ("fmridata" %in% class(anatomic)) {
+   if (inherits(anatomic,"fmridata")) {
 
 	   if (verbose) cat( "plot.fmrisegment: calculate exact overlay\n")
 	   img <- show.segmentslice(x, anatomic, slice =  slice, view = view, col.u = col.u, col.o = col.o, zlim.u, zlim.o)
@@ -118,8 +118,8 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
   if (cutOff[1] > cutOff[2]) cutOff[2] <- 1
   inputStuff <- list(anatomic,maxpvalue,cutOff)
 
-  if ("fmripvalue" %in% class(x)) {
-    if ("fmridata" %in% class(anatomic)) {
+  if (inherits(x,"fmripvalue")) {
+    if (inherits(anatomic,"fmridata")) { 
       img <- show.slice(x, anatomic, maxpvalue = maxpvalue, slice =  slice,
                         view = view, col.u, col.o, zlim.u, zlim.o)
       displayImage(img, ...)
@@ -157,7 +157,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
                     posNew=position(anatomic),localx=x,inputStuff=inputStuff)
       }
     }
-  } else if ("fmrispm" %in% class(x)) {
+  } else if (inherits(x,"fmrispm")) {
     signal <- if (spm) x$cbeta/sqrt(x$var) else x$cbeta
     # re-scale signal to 0 ... 1
     signal <- scaleSignal(signal,cutOff)
@@ -177,7 +177,7 @@ plot.fmridata <- function(x, anatomic = NULL , maxpvalue = 0.05, spm = TRUE,
               scale=signal$scale,scalecol=mri.colors(255,255)$gray,type= "spm",
               maxpvalue=maxpvalue,posNew=position(x),localx=x,inputStuff=inputStuff)
     }
-  } else if ("fmridata" %in% class(x)) {
+  } else if (inherits(x,"fmridata")) {
     signal <- extractData(x)
     signal <- scaleSignal(signal,cutOff)
     # re-scale signal to 0 ... 1
@@ -210,7 +210,7 @@ getAlignedCoords <- function(img1,img2){
 #
 #  compute indices of closest representants
 #
-   if(class(img1)=="nifti"){
+   if(is.nifti(img1)){
       scode1 <- img1@sform_code
       qcode1 <- img1@qform_code
       if(qcode1>0){
@@ -223,7 +223,7 @@ getAlignedCoords <- function(img1,img2){
          stop("img1: need method 2 or 3 in nifti")
       }
       dim1 <- img1@dim_[2:4]
-   } else if(class(img1)%in%c("fmripvalue","fmrisegment")) {
+   } else if(inherits(img1,c("fmripvalue","fmrisegment"))) {
       hdr <- img1$header
       scode1 <- hdr$sformcode
       qcode1 <- hdr$qformcode
@@ -243,7 +243,7 @@ getAlignedCoords <- function(img1,img2){
    } else {
       stop("can't handle img1")
    }
-   if(class(img2)=="nifti"){
+   if(is.nifti(img2)){
       scode2 <- img2@sform_code
       qcode2 <- img2@qform_code
       if(qcode2>0){
@@ -294,7 +294,16 @@ plot.fmripvalue <- function(x, template=NULL, mask=NULL,
   pvalue <- x$pvalue
   alpha <- x$alpha
   ddim <- dim(pvalue)
-  if(is.null(template)) template <- x$pvalue
+  if(is.null(template)) template <- x$pvalue else {
+    if(is.nifti(template)){
+      scode <- template@sform_code
+      qcode <- template@qform_code
+      if(scode==0&qcode==0){
+        template <- x$pvalue
+        warning("img2: need method 2 or 3 in nifti, no overlay used")
+      }
+    }
+  }
   if(is.null(mask)) mask <- if(is.null(x$mask)) array(TRUE,dim(pvalue)) else x$mask
   if(any(ddim!=dim(mask))) stop("mask dimension does not match")
   pvalue[pvalue>=alpha] <- NA

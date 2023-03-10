@@ -1,61 +1,57 @@
-citHeader("To cite fmri in publications use:")
+bibentry(bibtype = "Article",
+         title   = "Statistical Parametric Maps for Functional MRI Experiments in {R}: The Package {fmri}",
+         author  = c(person("Karsten", "Tabelow"),
+                     person("J\\\"org", "Polzehl")),
+         journal = "Journal of Statistical Software",
+         year    = "2011",
+         volume  = "44",
+         number  = "11",
+         pages   = "1--21",
+         doi     = "10.18637/jss.v044.i11",
 
-citEntry(entry = "Article",
-  title        = "Statistical Parametric Maps for Functional MRI Experiments in {R}: The Package {fmri}",
-  author       = personList(as.person("Karsten Tabelow"),
-                   as.person("J\\\"org Polzehl")),
-  journal      = "Journal of Statistical Software",
-  year         = "2011",
-  volume       = "44",
-  number       = "11",
-  pages        = "1--21",
-  url          = "https://www.jstatsoft.org/v44/i11/",
-
-  textVersion  =
-  paste("Karsten Tabelow, Joerg Polzehl (2011).",
+    textVersion  = paste("Karsten Tabelow, Joerg Polzehl (2011).",
         "Statistical Parametric Maps for Functional MRI Experiments in R: The Package fmri.",
         "Journal of Statistical Software, 44(11), 1-21.",
-        "URL https://www.jstatsoft.org/v44/i11/")
+        "DOI: 10.18637/jss.v044.i11"),
+        header   = "To cite the package fmri in publications use:"
 )
 
-citEntry(entry = "Article",
-         title = "Analyzing fMRI experiments with structural adaptive smoothing procedures",
-         author = personList(as.person("Karsten Tabelow"), 
-	                     as.person("J\\\"org Polzehl"),
-	                     as.person("Henning U. Voss"),
-                             as.person("Vladimir Spokoiny")),
-         journal      = "NeuroImage",
-         year         = "2006",
-	 volume       = "33",
-	 number       = "1",
-	 pages        = "55--62",
-	 doi          = "10.1016/j.neuroimage.2006.06.029",
-         
-         textVersion = 
-         paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
-               "Analyzing fMRI experiments with structural adaptive smoothing procedures.",
-	       "NeuroImage, 33(1), 55-62.",
-	       "doi:10.1016/j.neuroimage.2006.06.029"),
-	 header = "For the underlying structural adaptive smoothing method please cite:"
+bibentry(bibtype = "Article",
+         title   = "Analyzing fMRI experiments with structural adaptive smoothing procedures",
+         author  = c(person("Karsten", "Tabelow"), 
+	                   person("J\\\"org", "Polzehl"),
+	                   person(c("Henning", "U."), "Voss"),
+                     person("Vladimir", "Spokoiny")),
+         journal = "NeuroImage",
+         year    = "2006",
+	       volume  = "33",
+	       number  = "1",
+	       pages   = "55--62",
+	       doi     = "10.1016/j.neuroimage.2006.06.029",
+
+     textVersion = paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
+                         "Analyzing fMRI experiments with structural adaptive smoothing procedures.",
+	                       "NeuroImage, 33(1), 55-62.",
+	                       "doi:10.1016/j.neuroimage.2006.06.029"),
+	        header = "For the implemented structural adaptive smoothing method please cite:"
 )
 
-citEntry(entry = "Article",
-         title = "Structural adaptive segmentation for statistical parametric mapping",
-         author = personList(as.person("J\\\"org Polzehl"),
-	                     as.person("Henning U. Voss"),
-                             as.person("Karsten Tabelow")),
-         journal      = "NeuroImage",
-         year         = "2010",
-	 volume       = "52",
-	 number       = "2",
-	 pages        = "515--523",
-	 doi          = "10.1016/j.neuroimage.2010.04.241",
+bibentry(bibtype = "Article",
+         title   = "Structural adaptive segmentation for statistical parametric mapping",
+         author  = c(person("J\\\"org", "Polzehl"),
+	                   person(c("Henning", "U."), "Voss"),
+                     person("Karsten", "Tabelow")),
+         journal = "NeuroImage",
+         year    = "2010",
+	       volume  = "52",
+	       number  = "2",
+	       pages   = "515--523",
+	       doi     = "10.1016/j.neuroimage.2010.04.241",
          
-         textVersion = 
-         paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
-               "Structural adaptive segmentation for statistical parametric mapping.",
-	       "NeuroImage, 52(2), 515-523.",
-	       "doi:10.1016/j.neuroimage.2010.04.241"),
-	 header = "For the underlying structural adaptive segmentation method please cite:"
+     textVersion = paste("Karsten Tabelow, Joerg Polzehl, Henning U. Voss, Vladimir Spokoiny (2006).", 
+                         "Structural adaptive segmentation for statistical parametric mapping.",
+	                       "NeuroImage, 52(2), 515-523.",
+	                       "doi:10.1016/j.neuroimage.2010.04.241"),
+	       header = "For the implemented structural adaptive segmentation method please cite:"
 )
 

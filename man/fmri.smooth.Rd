@@ -37,16 +37,16 @@ fmri.smooth(spm, hmax = 4, adaptation="aws",
    are highly variable, e.g. for short time series.}
   \item{...}{Further internal arguments for the smoothing algorithm usually not
     to be set by the user. Allows e.g. for parameter adjustments by
-    simulation using our propagation condition. Usefull exceptions
+    simulation using our propagation condition. Useful exceptions
     can be used for \code{adaptation="segment"}: Specifically
     \code{alpha} (default 0.05) defines the significance level for the
-    signal detection. It can be choosen between 0.01 and 0.2 as for
+    signal detection. It can be chosen between 0.01 and 0.2 as for
     other values we did not determine the critical values for the
     statistical tests. \code{delta} (default 0) defines the minimum
     signal which should be detected. 
     \code{restricted} determines if smoothing for voxel detected to be significant is restricted to use only voxel from the same segment. The 
-    default is \code{restricted=FALSE}. \code{restricted} slighty changes 
-    the behaviour under the altenative, i.e. not the interpretation of results.}
+    default is \code{restricted=FALSE}. \code{restricted} slightly changes 
+    the behaviour under the alternative, i.e. not the interpretation of results.}
 }
 \details{
   This function performs the smoothing on the Statistical Parametric Map

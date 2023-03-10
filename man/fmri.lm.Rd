@@ -13,10 +13,10 @@
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{ds}{ Data object of class "fmridata" }
-  \item{z}{ Designmatrix specifying the expected BOLD response(s)
+  \item{z}{ Design matrix specifying the expected BOLD response(s)
             and additional components for trend and other effects. This can
             either be a matrix (in case that no slice timing is required at
-            this stage) or an 3D - array with 3rd dimension correspnding
+            this stage) or an 3D - array with 3rd dimension corresponding
             to the slice number. It can be interpreted as stacked array of
             of design matrices for the individual slices.  }
   \item{mask}{ Array of dimensionality of the data describing a (brain) mask
@@ -35,9 +35,9 @@
   fitted, in each voxel, to the time series of residuals. The estimated
   AR-coefficients are corrected for bias. If \code{actype=="smooth"}
   the estimated AR-coefficients are spatially smoothed. If \code{actype}
-  \code{\%in\%} \code{c("ac", "smooth")} the linear model is pre-withened
+  \code{\%in\%} \code{c("ac", "smooth")} the linear model is pre-whitened
   using the estimated (and possibly smoothed) AR-coefficients. Parameter
-  and variance estimates are then obtained from the pre-withened
+  and variance estimates are then obtained from the pre-whitened
   data. The argument \code{keep} describes the amount of data which is
   returned. The estimated effects
   \deqn{\tilde{\gamma}_i = C^T\tilde{\beta}_i}
@@ -66,7 +66,7 @@
   \item{cbeta}{estimated contrast of parameters}
   \item{var}{estimated variance of the contrast of parameters.}
   \item{varm}{covariance matrix of the parameters given by \code{vvector}}
-  \item{res}{raw (integer size 2) vector containing residuals of the estimated linear model
+  \item{residuals}{raw (integer size 2) vector containing residuals of the estimated linear model
              up to scale factor resscale.}
   \item{resscale}{\code{resscale*extractData(object,"residuals")} are the residuals. }
   \item{dim}{dimension of the data cube and residuals}
@@ -76,7 +76,7 @@
   \item{scorr}{array of spatial correlations with maximal lags 5, 5, 3 in x,y and z-direction. }
   \item{bw}{vector of bandwidths (in FWHM) corresponding to the spatial correlation within the data.}
   \item{weights}{ratio of voxel dimensions }
-  \item{vwghts}{ratio of estimated variances for the stimululi given by
+  \item{vwghts}{ratio of estimated variances for the stimuli given by
   \code{vvector}}
   \item{mask}{head mask.}
   \item{df}{Degrees of freedom for t-statistics.}

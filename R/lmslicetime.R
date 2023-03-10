@@ -12,7 +12,7 @@ fmri.stimulus <- function(scans = 1,
 
   ## match the type of HRF function to the defaults
   type <- match.arg(type)
-  if ((type == "user") && (class(hrf) != "function"))
+  if ((type == "user") && (!inherits(hrf, "function")))
     stop("HRF type is user, but specified hrf is not a function!")
 
   ## is information for slice timing present ?
@@ -30,6 +30,7 @@ fmri.stimulus <- function(scans = 1,
      slicetimes <- (1:nslices-1)[sliceorder]/TR*scale
   }
   ## consider microtime
+  if(scale<1/TR) scale <- 1/TR
   onsets <- onsets * scale
   durations <- durations * scale
   scans <- scans * TR * scale
@@ -102,11 +103,13 @@ fmri.stimulus <- function(scans = 1,
         convolve(stimulus[,j], rev(y), type="open")[1:dim(stimulus)[1]]
       }
       ## final operations to get BOLD at scan time
-    stimulus <- stimulus[unique((scale:scans)%/%(scale^2*TR))*scale^2*TR,]/(scale^2*TR)
+    ind <- unique((trunc(min(scale*TR,1)*scale):scans)%/%(scale^2*TR))*scale^2*TR
+    stimulus <- stimulus[ind,]/(scale^2*TR)
   } else {
      stimulus <- convolve(stimulus, rev(y), type="open")
     ## final operations to get BOLD at scan time
-     stimulus <- stimulus[unique((scale:scans)%/%(scale^2*TR))*scale^2*TR]/(scale^2*TR)
+     ind <- unique((trunc(min(scale*TR,1)*scale):scans)%/%(scale^2*TR))*scale^2*TR
+     stimulus <- stimulus[ind]/(scale^2*TR)
   }
   ## return mean corrected stimulus function
   if(slicetiming) sweep(stimulus,2,apply(stimulus,2,mean),"-") else stimulus - mean(stimulus)
@@ -349,7 +352,7 @@ fmri.lm <- function(ds,
       step <- 0.01
       arlist <- seq(min(arfactor) - step/2, max(arfactor) + step/2,  length = diff(range(arfactor)) / step + 2)
       if (verbose) {
-        cat("fmri.lm: re-calculating linear model with prewithened object\n")
+        cat("fmri.lm: re-calculating linear model with prewhitened object\n")
         pb <- txtProgressBar(0, length(arlist) - 1, style = 3)
       }
       for (i in 1:(length(arlist)-1)) {
@@ -485,7 +488,7 @@ fmri.lm <- function(ds,
   result$cbeta <- cbeta
   result$var <- variance
   result$mask <- mask
-  result$res <- residuals
+  result$residuals <- residuals
   result$resscale <- scale
   result$maskOnly <- TRUE
   result$arfactor <- arfactor

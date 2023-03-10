@@ -37,11 +37,11 @@ object of class ''\code{fmriICA}''
   \item{mask}{Brain mask}
   \item{pixdim}{voxelsize}
   \item{TR}{Repetition Time (TR)}
-  \item{fingerprint}{matrix of IC characteristics. Colums correspond to IC's .}
+  \item{fingerprint}{matrix of IC characteristics. Columns correspond to IC's .}
 }
 \references{
 De Martino et. al., Classification of fMRI independent components using IC-fingerprints
-and support vector machine classifieres, Neuroimage 34 (2007) 177-194.
+and support vector machine classifiers, Neuroimage 34 (2007) 177-194.
 }
 \author{
 Joerg Polzehl \email{polzehl@wias-berlin.de}

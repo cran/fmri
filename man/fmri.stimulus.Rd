@@ -37,7 +37,7 @@
   hemodynamic response function.
 
   If \code{sliceorder} provides an ordering of slice acquisitions a matrix of
-  expected Bold responses with colums corresponding to the slice number is
+  expected Bold responses with columns corresponding to the slice number is
   computed.
 
   For \code{type} is \code{"canonical"} the latter is modelled by the difference

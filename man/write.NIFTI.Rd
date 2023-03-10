@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ I/O Functions }
 \description{
-  Write a 4 dimensional datacube in NIFTI file format.
+  Write a 4 dimensional datacube in NIfTI file format.
 }
 \usage{
 write.NIFTI(ttt, header=NULL, filename)
@@ -15,11 +15,11 @@ write.NIFTI(ttt, header=NULL, filename)
   \item{filename}{ file name }
 }
 \details{
-  Writes the datacube \code{ttt} to a file named \code{file} in NIFTI file
+  Writes the datacube \code{ttt} to a file named \code{file} in NIfTI file
   format. \code{header} is a list that contains the header
   information.
 
-  See NIFTI documentation for details.
+  See NIfTI documentation for details.
 }
 \value{
   Nothing is returned.

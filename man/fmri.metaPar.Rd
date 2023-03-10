@@ -52,7 +52,7 @@ An object of class \code{"fmrispm"} and \code{"fmridata"}, basically a list with
   \item{cbeta}{estimated BOLD contrast parameters for the group. Always the first regression coefficient is taken.}
   \item{var}{estimated variance of the BOLD contrast parameters}
   \item{mask}{brain mask}
-  \item{res}{raw (integer size 2) vector containing residuals of the estimated linear mixed-effects meta-analytic model up to scale factor \code{resscale}}
+  \item{residuals}{raw (integer size 2) vector containing residuals of the estimated linear mixed-effects meta-analytic model up to scale factor \code{resscale}}
   \item{resscale}{\code{resscale*extractData(object,"residuals")} are the residuals.}
   \item{tau2}{estimated amount of (residual) heterogeneity. Always 0 when \code{method = "FE"}.}
   \item{rxyz}{array of smoothness from estimated correlation for each voxel in resel space (for analysis without smoothing).}
