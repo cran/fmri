@@ -15,11 +15,11 @@
 \arguments{
   \item{scans}{ number of scans }
   \item{onsets}{ vector of onset times (in scans) }
-  \item{durations}{ vector of duration of ON stimulus in scans or
-    seconds (if \code{!is.null(times)})  }
+  \item{durations}{ vector of duration of ON stimulus in scans 
+    (if \code{times==FALSE)}) or
+    seconds (if \code{times==TRUE)})  }
   \item{TR}{ time between scans in seconds (TR) }
-  \item{times}{ onset times in seconds. If present \code{onsets}
-    arguments is ignored. }
+  \item{times}{ logical. If TRUE onsets and durations are given in units of time not number of scans. Defaults to FALSE. }
   \item{sliceorder}{ order of slice acquisition. If provided separate
     expected bold responses are calculated for the slices taking slice
     acquisition times into account. Default: no slice timing.

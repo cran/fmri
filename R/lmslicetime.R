@@ -310,17 +310,9 @@ fmri.lm <- function(ds,
   if (actype %in% c("smooth", "accalc", "ac")) {
     if (verbose) {
       cat("fmri.lm: calculating AR(1) model\n")
-      #      pb <- txtProgressBar(0, nvoxel, style = 3)
     }
-    #    for (i in (1:nvoxel)) {
-    #     if (verbose) setTxtProgressBar(pb, i)
     #
     ## calculate the coefficients of ACR(1) time series model
-    #    a0 <- residuals[i, ] %*% residuals[i, ]
-    #    a1 <- residuals[i, -1] %*% residuals[i, -dim(z)[1]]
-    #    an <- Minv %*% c(a0, a1)
-    #    if (an[1] != 0) arfactor[i] <- an[2]/an[1]
-    #  }
     a0 <- as.vector((residuals^2)%*%rep(1,dy[4]))
     a1 <- as.vector((residuals[, -1]*residuals[, -dim(z)[1]])%*%rep(1,dy[4]-1))
     if(slicetiming){

@@ -1,6 +1,6 @@
 Package: fmri
-Version: 1.9.11
-Date: 2023-03-06
+Version: 1.9.12
+Date: 2023-09-05
 Title: Analysis of fMRI Experiments
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "tabelow@wias-berlin.de"),
@@ -26,11 +26,11 @@ Note: This software comes with NO warranty! It is NOT intended to be
         used in clinical applications! For evaluation only!
 RoxygenNote: 7.2.3
 NeedsCompilation: yes
-Packaged: 2023-03-10 14:46:43 UTC; tabelow
+Packaged: 2023-09-05 21:11:53 UTC; polzehl
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
   Brandon Whitcher [ctb],
   Dames Sibylle [ctb]
 Maintainer: Karsten Tabelow <tabelow@wias-berlin.de>
 Repository: CRAN
-Date/Publication: 2023-03-10 16:20:12 UTC
+Date/Publication: 2023-09-06 12:30:02 UTC

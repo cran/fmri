@@ -1,5 +1,5 @@
 ff5aea3d78dc24846b39d73d00c02a86 *ChangeLog
-cb296847fd3a023ef00170028b269e5c *DESCRIPTION
+ae622ab25bd01e60159512c6c4dced3e *DESCRIPTION
 18c73bd15e5719a2c027490204c7af7e *NAMESPACE
 8ebe0c3d5629a74dd89edea31ce30da2 *R/aws.r
 cff7537e1cd5eef831c8181afa219f81 *R/cluster.R
@@ -9,7 +9,7 @@ f0465f2ac38433df0733b3d2619f6aee *R/fmri.R
 731849b06c0d342888d2de6a3c9feda5 *R/gen_fmridata.R
 173cecd0d7d5c9fa3ecc4c294eafd3cc *R/io.R
 cba7e5f09bb6c9dc35632f4789a63f03 *R/lmGroup.R
-aeea8f001aad50542f25a5a3c282f562 *R/lmslicetime.R
+f88d4aeddd198397fd316905449264ce *R/lmslicetime.R
 527bc5228cea581fa914c488f3f34748 *R/misc.r
 e1342fdb7b0003b95e00439723dd1059 *R/oro2fmri.R
 577fa93d0e88a42b570fe268b09d3790 *R/plot.r
@@ -42,7 +42,7 @@ bf24598df66e25053cfa563b99158e67 *man/fmri.pvalue.Rd
 51bffa6db092b03cec8f16e2b5029ca3 *man/fmri.searchlight.Rd
 8e1b1553e371b53f8a8ed695b29472e5 *man/fmri.sgroupICA.Rd
 507464f43054aa4049ea0e01c9ce4b38 *man/fmri.smooth.Rd
-3324af6c7e0b76487b83e60b308033f4 *man/fmri.stimulus.Rd
+ac990344d329ee5183a1ebdb0a0be9c5 *man/fmri.stimulus.Rd
 0d596a1f1266dccb445918e5b8250b3f *man/gen_fmridata.Rd
 1fd7df0272dc80a42ce4c642aeb39728 *man/getSearchlightPattern.Rd
 85df1a49f76adaa3e69c36d1df38558d *man/hvred.Rd
