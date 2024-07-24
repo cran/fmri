@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ Linear Mixed-effects Model for fMRI data }
 \description{
-Group maps are directly estimated from the BOLD time series data of all subjects using \code{\link{lme}} from R package \pkg{nlme} to fit a Linear Mixed-effects Model with temporally correlated and heteroscedastic within-subject errors. Voxel-wise regression analysis is accelerated by optional parallel processing using R package \pkg{parallel}.
+Group maps are directly estimated from the BOLD time series data of all subjects using \code{\link[nlme]{lme}} from R package \pkg{nlme} to fit a Linear Mixed-effects Model with temporally correlated and heteroscedastic within-subject errors. Voxel-wise regression analysis is accelerated by optional parallel processing using R package \pkg{parallel}.
 }
 \usage{
 fmri.lmePar(bold, z, fixed = NULL, random = NULL, mask = NULL,
@@ -32,7 +32,7 @@ fmri.lmePar(bold, z, fixed = NULL, random = NULL, mask = NULL,
   }
   \item{ac}{ if available, a numeric 3D-Array of dimensionality of the data (without time component) with spatially smoothed autocorrelation parameters should be used in the AR(1) models fitted in each voxel, e.g. locally estimated and smoothed AR(1)-coefficients from \code{\link{fmri.lm}} applied to the first subject. Alternatively, a global approach with uniform value can be used. In this case enter a number between 0 and 1. Default is \code{0.3} applied to all voxels.
   }
-  \item{vtype}{ a character string choosing the residual variance model. If \code{"equal"}, homoscedastic variance across subjects is assumed setting weights argument in function \code{lme()} to zero, whereas \code{"individual"} allows different within-subject variances. Default method is \code{"individual"} that means subject-specific error variances using formula: \code{weights <- varIdent(form =~ 1|subj)}.
+  \item{vtype}{ a character string choosing the residual variance model. If \code{"equal"}, homoscedastic variance across subjects is assumed setting weights argument in function \code{\link[nlme]{lme}} to zero, whereas \code{"individual"} allows different within-subject variances. Default method is \code{"individual"} that means subject-specific error variances using formula: \code{weights <- varIdent(form =~ 1|subj)}.
   }
   \item{cluster}{ number of threads for parallel processing, which is limited to available multi-core CPUs. If you do not know your CPUs, try: \code{detectCores()} from \pkg{parallel} package. Presets are 2 threads. \code{cluster = 1} does not use \pkg{parallel} package.
   }
@@ -41,9 +41,9 @@ fmri.lmePar(bold, z, fixed = NULL, random = NULL, mask = NULL,
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-\code{fmri.lmePar()} fits the configured Linear Mixed-effects Model separately at each voxel and extracts estimated BOLD contrasts, corresponding squared standard errors and degrees of freedom as well as the residuals from resulting \code{lme()} objects to produce a statistical parametric map (SPM) for the group(s). Voxel-by-voxel analysis is performed by either the function \code{\link{apply}} or \code{\link{parApply}} from \pkg{parallel} package, which walks through the \code{bold} array.
+\code{fmri.lmePar()} fits the configured Linear Mixed-effects Model separately at each voxel and extracts estimated BOLD contrasts, corresponding squared standard errors and degrees of freedom as well as the residuals from resulting \code{\link[nlme]{lme}} objects to produce a statistical parametric map (SPM) for the group(s). Voxel-by-voxel analysis is performed by either the function \code{\link{apply}} or \code{\link{parApply}} from \pkg{parallel} package, which walks through the \code{bold} array.
 
-If one group is analyzed, from each fitted model the first fixed-effects coefficient and corresponding parameters are stored in results object. This should be the first specified predictor in the fixed-effects part of the model (verify the attribute of \code{"df"} in returned object). However, in two-sample case this principle does not work. The order changes, estimated session-specific intercepts now comes first and the number of these coefficients is not fixed. Therefore in current version it has explicitly been looked for the coefficient names: \var{"hrf:group1"} and \var{"hrf:group2"}. Available functions within the \pkg{nlme} package to extract estimated values from \code{lme()} objects do not operate at contrast matrices.
+If one group is analyzed, from each fitted model the first fixed-effects coefficient and corresponding parameters are stored in results object. This should be the first specified predictor in the fixed-effects part of the model (verify the attribute of \code{"df"} in returned object). However, in two-sample case this principle does not work. The order changes, estimated session-specific intercepts now comes first and the number of these coefficients is not fixed. Therefore in current version it has explicitly been looked for the coefficient names: \var{"hrf:group1"} and \var{"hrf:group2"}. Available functions within the \pkg{nlme} package to extract estimated values from \code{\link[nlme]{lme}} objects do not operate at contrast matrices.
 
 Spatial correlation among voxels, e.g. through the activation of nearby voxels, is ignored at this stage, but corrects for it, when random field theory define a threshold for significant activation at inference stage.
 
@@ -63,7 +63,7 @@ with components:
   \item{bw, bw2}{vector of bandwidths (in FWHM) corresponding to the spatial correlation within the data separated for the groups 1 and 2}
   \item{weights}{ ratio of voxel dimensions }
   \item{dim, dim2}{dimension of the data cube and residuals separated for the groups 1 and 2}
-  \item{df, df2}{degrees of freedom for t-statistics reported in \code{lme()} objects for the extracted regression coefficients separated for the groups 1 and 2. The name of the coefficient belonging to this df-value appears as attribute.}
+  \item{df, df2}{degrees of freedom for t-statistics reported in \code{\link[nlme]{lme}} objects for the extracted regression coefficients separated for the groups 1 and 2. The name of the coefficient belonging to this df-value appears as attribute.}
   \item{subjects}{number of subjects in the study}
   \item{subj.runs}{number of repeated measures within subjects}
   \item{sessions}{number of total sessions that were analyzed}
@@ -96,7 +96,7 @@ The function cannot handle experimental designs with:
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-  \code{\link{lme}}, \code{\link{fmri.designG}},
+  \code{\link[nlme]{lme}}, \code{\link{fmri.designG}},
   \code{\link{fmri.design}}, \code{\link{fmri.stimulus}},
   \code{\link{fmri.metaPar}}
 }

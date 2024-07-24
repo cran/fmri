@@ -1,7 +1,7 @@
 ff5aea3d78dc24846b39d73d00c02a86 *ChangeLog
-ae622ab25bd01e60159512c6c4dced3e *DESCRIPTION
+b27ab45b2bcd57414daca708b80517bb *DESCRIPTION
 18c73bd15e5719a2c027490204c7af7e *NAMESPACE
-8ebe0c3d5629a74dd89edea31ce30da2 *R/aws.r
+3a6cc9e910bd6155e6551be60a59909c *R/aws.r
 cff7537e1cd5eef831c8181afa219f81 *R/cluster.R
 93af9fe699295cc700f9f298e87c54fb *R/detrend.R
 f0465f2ac38433df0733b3d2619f6aee *R/fmri.R
@@ -35,8 +35,8 @@ d46f7d89b91a0f534c0045c0454ced0d *man/cutroi.Rd
 6af4ab602128c2e797c158ceb3a4d88f *man/fmri.designG.Rd
 88e8ce53b0c2832535696e9e429bc888 *man/fmri.detrend.Rd
 48ef87b92f745f02cca070e24e903d12 *man/fmri.lm.Rd
-c4678b251207bcb45f394e11691a6647 *man/fmri.lmePar.Rd
-a08c4064a82a63085776e12b341da000 *man/fmri.metaPar.Rd
+996216bed8bb7834f723b2c957bb70f1 *man/fmri.lmePar.Rd
+505d23e45b43e71342ef9f6f8c6292da *man/fmri.metaPar.Rd
 bf24598df66e25053cfa563b99158e67 *man/fmri.pvalue.Rd
 02e8abaf07587f48e06938efbca35437 *man/fmri.sICA.Rd
 51bffa6db092b03cec8f16e2b5029ca3 *man/fmri.searchlight.Rd

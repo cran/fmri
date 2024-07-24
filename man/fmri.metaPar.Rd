@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ Linear Mixed-effects Meta-Analysis model for fMRI data }
 \description{
-Group maps are estimated from BOLD effect estimates and their variances previously determined for each subject. The function \code{\link{rma.uni}} from R package \pkg{metafor} is used to fit mixed-effects meta-analytic models at group level. Voxel-wise regression analysis is accelerated by optional parallel processing using R package \pkg{parallel}.
+Group maps are estimated from BOLD effect estimates and their variances previously determined for each subject. The function \code{\link[metafor]{rma.uni}} from R package \pkg{metafor} is used to fit mixed-effects meta-analytic models at group level. Voxel-wise regression analysis is accelerated by optional parallel processing using R package \pkg{parallel}.
 }
 \usage{
 fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML",
@@ -20,7 +20,7 @@ fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML",
 }
   \item{model}{ optionally, a one-sided formula of the form: \code{model <- ~ mod1 + mod2 + mod3} describing a model with moderator variables. Adding \code{"-1"} removes the intercept term.
 }
-  \item{method}{ a character string specifying whether a fixed- (method = "FE") or a random/mixed-effects model (method = "REML", default) should be fitted. Further estimators for random/mixed-effects models are available, see documentation of \code{\link{rma.uni}} function for more details.
+  \item{method}{ a character string specifying whether a fixed- (method = "FE") or a random/mixed-effects model (method = "REML", default) should be fitted. Further estimators for random/mixed-effects models are available, see documentation of \code{\link[metafor]{rma.uni}} function for more details.
 }
   \item{weighted}{ logical indicating whether weighted (\code{weighted = TRUE}, default) or unweighted estimation should be used to fit the model.
 }
@@ -35,7 +35,7 @@ fmri.metaPar(Cbold, Vbold, XG = NULL, model = NULL, method = "REML",
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-\code{fmri.metaPar()} fits the configured linear mixed-effects meta-analytic (MEMA) model separately at each voxel and extracts the first regression coefficient (usually the overall group mean), corresponding squared standard errors and degrees of freedom as well as the residuals from resulting \code{rma.uni()} objects, to obtain a statistical parametric map (SPM) for the group. Voxel-by-voxel analysis is performed by either the function \code{\link{apply}} or \code{\link{parApply}} from \pkg{parallel} package, which walks through the \code{Cbold} array.
+\code{fmri.metaPar()} fits the configured linear mixed-effects meta-analytic (MEMA) model separately at each voxel and extracts the first regression coefficient (usually the overall group mean), corresponding squared standard errors and degrees of freedom as well as the residuals from resulting \code{\link[metafor]{rma.uni}} objects, to obtain a statistical parametric map (SPM) for the group. Voxel-by-voxel analysis is performed by either the function \code{\link{apply}} or \code{\link{parApply}} from \pkg{parallel} package, which walks through the \code{Cbold} array.
 
 This two-stage approach reduces the computational burden of fitting a full linear mixed-effects (LME) model, \code{\link{fmri.lmePar}} would do. It assumes first level design is same across subjects and normally distributed not necessarily homogeneous within-subject errors. Warping to standard space has been done before first-stage analyses are carried out. Either no masking or a uniform brain mask should be applied at individual subject analysis level, to avoid loss of information at group level along the edges.
 
@@ -95,7 +95,7 @@ The function cannot handle:
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-  \code{\link{rma.uni}}, \code{\link{fmri.lm}}, \code{\link{fmri.lmePar}}
+  \code{\link[metafor]{rma.uni}}, \code{\link{fmri.lm}}, \code{\link{fmri.lmePar}}
 }
 \examples{
 \dontrun{## Generate some fMRI data sets: noise + stimulus

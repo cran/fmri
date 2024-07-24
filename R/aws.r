@@ -84,7 +84,7 @@ aws3Dfull <- function(y, qlambda=NULL, lkern="Gaussian", skern="Plateau", weight
 								Exponential=.9995)
   if (qlambda<.9) warning("Inappropriate value of qlambda")
   if (qlambda<1) {
-    lambda <- qchisq(qlambda,1)
+    lambda <- ladjust*qchisq(qlambda,1)
   } else {
     lambda <- 1e50
   }
